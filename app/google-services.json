@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "505177823288",
+    "project_id": "stepupp12-5aeeb",
+    "storage_bucket": "stepupp12-5aeeb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:505177823288:android:f41d7ed47c0755abd1aecd",
+        "android_client_info": {
+          "package_name": "com.breezefsmp12"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "505177823288-iu058q6oluk8m94oliu4hmc529vi5jlm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDNAg19agPJ65sSRESOALRI9QuW4IUjSKU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "505177823288-iu058q6oluk8m94oliu4hmc529vi5jlm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
