@@ -62,6 +62,11 @@ class AdapterOrdCartOptimized(val mContext:Context,val cartL:ArrayList<FinalOrde
             }else{
                 itemView.ll_row_ord_opti_cart_discount_root.visibility = View.GONE
             }
+            if(Pref.IsDiscountEditableInOrder){
+                itemView.et_row_ord_opti_cart_discount.isEnabled = true
+            }else{
+                itemView.et_row_ord_opti_cart_discount.isEnabled = false
+            }
             if(Pref.IsViewMRPInOrder && Pref.IsDiscountInOrder){
                 itemView.ll_row_ord_opti_cart_mrp_discount_root.visibility = View.VISIBLE
             }else if(!Pref.IsViewMRPInOrder){

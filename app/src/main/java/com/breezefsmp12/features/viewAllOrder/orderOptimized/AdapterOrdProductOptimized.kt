@@ -65,6 +65,11 @@ class AdapterOrdProductOptimized(val mContext: Context,var proList : ArrayList<P
             }else{
                 itemView.ll_row_ord_pro_list_discount_root.visibility = View.GONE
             }
+            if(Pref.IsDiscountEditableInOrder){
+                itemView.tv_row_ord_pro_list_discount.isEnabled = true
+            }else{
+                itemView.tv_row_ord_pro_list_discount.isEnabled = false
+            }
             if(Pref.IsViewMRPInOrder && Pref.IsDiscountInOrder){
                 itemView.ll_row_ord_pro_list_mrp_discount_root.visibility = View.VISIBLE
                 try{
