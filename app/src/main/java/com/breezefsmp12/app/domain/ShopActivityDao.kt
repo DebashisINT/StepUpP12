@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import com.breezefsmp12.app.AppConstant
+import com.breezefsmp12.features.marketAssist.ShopActivityCnt
 
 /**
  * Created by Pratishruti on 07-12-2017.
@@ -245,5 +246,12 @@ interface ShopActivityDao {
             "(select date(order_details_list.date) from order_details_list where shop_id=:shopid) \n" +
             "order by shopActivityId desc limit 30")
     fun getShopActivityOrderWise(shopid: String):List<ShopActivityEntity>
+
+    @Query("select shopid,count(shopid) as cnt from shop_activity group by shopid")
+    fun getCUstomShopActivityCount():List<ShopActivityCnt>
+
+    @Query("Select * from shop_activity where shopid=:shopId and date=:date ORDER by shopActivityId DESC")
+    fun getMultipleVisitShopByShopId(shopId: String, date: String): List<ShopActivityEntity>
+
 
 }

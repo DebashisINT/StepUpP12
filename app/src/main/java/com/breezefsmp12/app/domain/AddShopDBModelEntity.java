@@ -285,6 +285,145 @@ public class AddShopDBModelEntity {
     @ColumnInfo(name = "shopStatusUpdate")
     private String shopStatusUpdate = "1";
 
+    @ColumnInfo(name = "GSTN_Number")
+    private String GSTN_Number = null;
+
+    @ColumnInfo(name = "ShopOwner_PAN")
+    private String ShopOwner_PAN =null;
+
+    @ColumnInfo(name = "purpose")
+    private String purpose = null;
+
+
+    @ColumnInfo(name = "FSSAILicNo")
+    public String FSSAILicNo = null;
+
+    @ColumnInfo(name = "isUpdateAddressFromShopMaster")
+    public Boolean isUpdateAddressFromShopMaster = false;
+
+
+//new column
+    @ColumnInfo(name = "companyName")
+    public String companyName = null;
+
+    @ColumnInfo(name = "companyName_id")
+    public String companyName_id = null;
+
+    @ColumnInfo(name = "jobTitle")
+    public String jobTitle = null;
+
+    @ColumnInfo(name = "crm_assignTo")
+    public String crm_assignTo = null;
+
+    @ColumnInfo(name = "crm_assignTo_ID")
+    public String crm_assignTo_ID = null;
+
+    @ColumnInfo(name = "crm_type")
+    public String crm_type = null;
+
+    @ColumnInfo(name = "crm_type_ID")
+    public String crm_type_ID = null;
+
+    @ColumnInfo(name = "crm_status")
+    public String crm_status = null;
+
+    @ColumnInfo(name = "crm_status_ID")
+    public String crm_status_ID = null;
+
+    @ColumnInfo(name = "crm_source")
+    public String crm_source = null;
+
+    @ColumnInfo(name = "crm_source_ID")
+    public String crm_source_ID = null;
+
+    @ColumnInfo(name = "crm_reference")
+    public String crm_reference = null;
+
+    @ColumnInfo(name = "crm_reference_ID")
+    public String crm_reference_ID = null;
+
+    @ColumnInfo(name = "crm_reference_ID_type")
+    public String crm_reference_ID_type = null;
+
+    @ColumnInfo(name = "crm_stage")
+    public String crm_stage = null;
+
+    @ColumnInfo(name = "crm_stage_ID")
+    public String crm_stage_ID = null;
+
+    @ColumnInfo(name = "crm_saved_from")
+    public String crm_saved_from = null;
+
+    @ColumnInfo(name = "crm_firstName")
+    public String crm_firstName = null;
+
+    @ColumnInfo(name = "crm_lastName")
+    public String crm_lastName = null;
+
+    public String getCrm_assignTo_ID() {
+        return crm_assignTo_ID;
+    }
+
+    public void setCrm_assignTo_ID(String crm_assignTo_ID) {
+        this.crm_assignTo_ID = crm_assignTo_ID;
+    }
+
+    public String getCrm_assignTo() {
+        return crm_assignTo;
+    }
+
+    public void setCrm_assignTo(String crm_assignTo) {
+        this.crm_assignTo = crm_assignTo;
+    }
+
+    public String getCrm_status() {
+        return crm_status;
+    }
+
+    public void setCrm_status(String crm_status) {
+        this.crm_status = crm_status;
+    }
+
+    public String getCrm_source() {
+        return crm_source;
+    }
+
+    public void setCrm_source(String crm_source) {
+        this.crm_source = crm_source;
+    }
+
+    public String getCrm_reference() {
+        return crm_reference;
+    }
+
+    public void setCrm_reference(String crm_reference) {
+        this.crm_reference = crm_reference;
+    }
+
+    public String getCompanyName_id() {
+        return companyName_id;
+    }
+
+    public void setCompanyName_id(String companyName_id) {
+        this.companyName_id = companyName_id;
+    }
+
+    public String getJobTitle() {
+        return jobTitle;
+    }
+
+    public void setJobTitle(String jobTitle) {
+        this.jobTitle = jobTitle;
+    }
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
+
     public String getShopStatusUpdate() {
         return shopStatusUpdate;
     }
@@ -297,15 +436,9 @@ public class AddShopDBModelEntity {
         return GSTN_Number;
     }
 
-
-
-    @ColumnInfo(name = "GSTN_Number")
-    private String GSTN_Number = null;
-
     public void setGSTN_Number(String GSTN_Number) {
         this.GSTN_Number = GSTN_Number;
     }
-
 
     public String getShopOwner_PAN() {
         return ShopOwner_PAN;
@@ -315,8 +448,15 @@ public class AddShopDBModelEntity {
         ShopOwner_PAN = shopOwner_PAN;
     }
 
-    @ColumnInfo(name = "ShopOwner_PAN")
-    private String ShopOwner_PAN =null;
+
+    public Boolean getUpdateAddressFromShopMaster() {
+        return isUpdateAddressFromShopMaster;
+    }
+
+    public void setUpdateAddressFromShopMaster(Boolean updateAddressFromShopMaster) {
+        isUpdateAddressFromShopMaster = updateAddressFromShopMaster;
+    }
+
 
     public boolean isOwnshop() {
         return isOwnshop;
@@ -340,8 +480,15 @@ public class AddShopDBModelEntity {
         this.purpose = purpose;
     }
 
-    @ColumnInfo(name = "purpose")
-    private String purpose = null;
+
+
+    public String getFSSAILicNo() {
+        return FSSAILicNo;
+    }
+
+    public void setFSSAILicNo(String FSSAILicNo) {
+        this.FSSAILicNo = FSSAILicNo;
+    }
 
     public String getAlternateNoForCustomer() {
         return alternateNoForCustomer;

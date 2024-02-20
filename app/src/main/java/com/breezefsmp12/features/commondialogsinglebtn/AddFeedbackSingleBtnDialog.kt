@@ -4,12 +4,16 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.DatePickerDialog
+import android.app.Dialog
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.provider.MediaStore
 import android.speech.RecognizerIntent
 import android.text.Editable
@@ -28,14 +32,21 @@ import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import cafe.adriel.androidaudiorecorder.AndroidAudioRecorder
+import cafe.adriel.androidaudiorecorder.model.AudioSampleRate
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.StringRequest
+import com.breezefsmp12.MySingleton
 import com.breezefsmp12.R
 import com.breezefsmp12.app.AppDatabase
 import com.breezefsmp12.app.NetworkConstant
 import com.breezefsmp12.app.Pref
+import com.breezefsmp12.app.domain.AddShopDBModelEntity
 import com.breezefsmp12.app.domain.ProspectEntity
 import com.breezefsmp12.app.domain.ShopExtraContactEntity
 import com.breezefsmp12.app.domain.ShopVisitCompetetorModelEntity
 import com.breezefsmp12.app.domain.VisitRemarksEntity
+import com.breezefsmp12.app.domain.VisitRevisitWhatsappStatus
 import com.breezefsmp12.app.utils.AppUtils
 import com.breezefsmp12.app.utils.FTStorageUtils
 import com.breezefsmp12.app.utils.PermissionUtils
@@ -51,6 +62,7 @@ import com.breezefsmp12.widgets.AppCustomEditText
 import com.breezefsmp12.widgets.AppCustomTextView
 
 import com.google.android.material.textfield.TextInputLayout
+import com.google.gson.JsonParser
 import com.squareup.picasso.Picasso
 import com.themechangeapp.pickimage.PermissionHelper
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -282,6 +294,8 @@ class AddFeedbackSingleBtnDialog : DialogFragment(), View.OnClickListener {
             R.id.ok_TV -> {
                 iv_close_icon.isEnabled=true
 
+                dialogOk.isEnabled = false
+
                 var str_remarks =  ""
                 str_remarks = tv_remarks_dropdown.text.toString().trim().toString()
 
@@ -293,36 +307,125 @@ class AddFeedbackSingleBtnDialog : DialogFragment(), View.OnClickListener {
 
                 if(Pref.IsContactPersonSelectionRequiredinRevisit && sel_extraContName.equals("")){
                     Toaster.msgShort(mContext, "Please select Contact Person")
+                    dialogOk.isEnabled = true
                     return
                 }
 
                 //if (Pref.RevisitRemarksMandatory && TextUtils.isEmpty(tv_remarks_dropdown.text.toString().trim()))
-                if (Pref.RevisitRemarksMandatory && !msg.equals(""))
+                if (Pref.RevisitRemarksMandatory && !msg.equals("")){
                     Toaster.msgShort(mContext, msg)
-                else if (Pref.isNextVisitDateMandatory && TextUtils.isEmpty(nextVisitDate))
+                    dialogOk.isEnabled = true
+                }
+                else if (Pref.isNextVisitDateMandatory && TextUtils.isEmpty(nextVisitDate)){
                     Toaster.msgShort(mContext, getString(R.string.error_message_next_visit_date))
-                else if (Pref.isRecordAudioEnable && TextUtils.isEmpty(et_audio.text.toString().trim()))
+                    dialogOk.isEnabled = true
+                }
+                else if (Pref.isRecordAudioEnable && TextUtils.isEmpty(et_audio.text.toString().trim())){
                     Toaster.msgShort(mContext, getString(R.string.error_message_audio))
-                else if (Pref.IsnewleadtypeforRuby && shopType.equals("16") && TextUtils.isEmpty(et_approxvalue_name.text.toString().trim()))
+                    dialogOk.isEnabled = true
+                }
+                else if (Pref.IsnewleadtypeforRuby && shopType.equals("16") && TextUtils.isEmpty(et_approxvalue_name.text.toString().trim())){
                     Toaster.msgShort(mContext, getString(R.string.error_message_approx))
+                    dialogOk.isEnabled = true
+                }
                 else {
                     dialogOk.isSelected = true
-                    dismiss()
-                    if (Pref.RevisitRemarksMandatory){
+
+                    if(Pref.IsAutomatedWhatsAppSendforRevisit && sel_extraContPh!= ""){
+                        var shopObj: AddShopDBModelEntity = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(mShopID)
+                        var obj = VisitRevisitWhatsappStatus()
+                        obj.shop_id = mShopID
+                        obj.shop_name = shopObj.shopName
+                        obj.contactNo = sel_extraContPh
+                        obj.isNewShop = false
+                        obj.date = AppUtils.getCurrentDateForShopActi()
+                        obj.time = AppUtils.getCurrentTime()
+                        obj.isWhatsappSent = false
+                        obj.whatsappSentMsg =""
+                        obj.isUploaded = false
+                        AppDatabase.getDBInstance()?.visitRevisitWhatsappStatusDao()!!.insert(obj)
+
+                        //whatsapp api call off https://theultimate.io/WAApi/send
+                        if(AppUtils.isOnline(mContext) && false){
+                            var shopWiseWhatsObj = AppDatabase.getDBInstance()?.visitRevisitWhatsappStatusDao()!!.getByShopIDDate(mShopID,AppUtils.getCurrentDateForShopActi())
+                            try{
+                                val stringRequest: StringRequest = object : StringRequest(
+                                    Request.Method.POST, "https://theultimate.io/WAApi/send",
+                                    Response.Listener<String?> { response ->
+
+                                        var resp = JsonParser.parseString(response)
+                                        var statusCode = resp.asJsonObject.get("statusCode").toString().drop(1).dropLast(1)
+                                        var statusMsg = resp.asJsonObject.get("reason").toString().drop(1).dropLast(1)
+                                        var transId = resp.asJsonObject.get("transactionId").toString().drop(1).dropLast(1)
+                                        if(transId == null){
+                                            transId = ""
+                                        }
+
+                                        if(statusCode.equals("200",ignoreCase = true) && statusMsg.equals("success",ignoreCase = true)){
+                                            AppDatabase.getDBInstance()?.visitRevisitWhatsappStatusDao()!!.
+                                            updateWhatsStatus(true,"Sent Successfully",shopWiseWhatsObj!!.sl_no,transId)
+                                        }else{
+                                            AppDatabase.getDBInstance()?.visitRevisitWhatsappStatusDao()!!.
+                                            updateWhatsStatus(false,statusMsg.toString(),shopWiseWhatsObj!!.sl_no,transId)
+                                        }
+                                    },
+                                    Response.ErrorListener { error ->
+                                        var e = error.toString()
+                                    })
+                                {
+                                    override fun getParams(): Map<String, String>? {
+                                        val params: MutableMap<String, String> = HashMap()
+                                        params.put("userid", "eurobondwa")
+                                        params.put("msg", "Hey there!\n" +
+                                                "Hope you had a successful meeting with (${Pref.user_name} - ${Pref.UserLoginContactID})\n" +
+                                                "We’ll be happy to assist you further with any inquiries or support you may require.\n" +
+                                                "*Team Eurobond*\n")
+                                        params.put("wabaNumber", "917888488891")
+                                        params.put("output", "json")
+                                        //params.put("mobile", "919830916971")
+                                        params.put("mobile", "91${obj.contactNo}")
+                                        params.put("sendMethod", "quick")
+                                        params.put("msgType", "text")
+                                        params.put("templateName", "incoming_call_response_2")
+                                        return params
+                                    }
+                                    override fun getHeaders(): MutableMap<String, String> {
+                                        val params: MutableMap<String, String> = HashMap()
+                                        params["apikey"] = "36328e9735f7012988e6ed58f9fffaec4c7a79eb"
+                                        return params
+                                    }
+                                }
+                                MySingleton.getInstance(mContext.applicationContext)!!.addToRequestQueue(stringRequest)
+                            }
+                            catch (ex:Exception){
+                                ex.printStackTrace()
+                            }
+                        }
+                    }
+
+                    Handler().postDelayed(Runnable {
+                        dismiss()
+
+                        dialogOk.isEnabled = false
+
+                        if (Pref.RevisitRemarksMandatory){
 //                        mListener.onOkClick(tv_remarks_dropdown.text.toString().trim(), nextVisitDate, filePath,et_approxvalue_name.text.toString(),ProsId)
-                        // 1.0  AppV 4.0.6  AddFeedbackSingleBtnDialog  start
-                        if (!Pref.isShowVisitRemarks)
-                            mListener.onOkClick(et_feedback.text.toString().trim(), nextVisitDate, filePath,et_approxvalue_name.text.toString(),ProsId,sel_extraContName,sel_extraContPh)
-                        else
-                            mListener.onOkClick(tv_remarks_dropdown.text.toString().trim(), nextVisitDate, filePath,et_approxvalue_name.text.toString(),ProsId,sel_extraContName,sel_extraContPh)
-                        // 1.0  AppV 4.0.6  AddFeedbackSingleBtnDialog  end
-                    }
-                    else{
-                        if (!Pref.isShowVisitRemarks)
-                            mListener.onOkClick(et_feedback.text.toString().trim(), nextVisitDate, filePath,et_approxvalue_name.text.toString(),ProsId,sel_extraContName,sel_extraContPh)
-                        else
-                            mListener.onOkClick(tv_remarks_dropdown.text.toString().trim(), nextVisitDate, filePath,et_approxvalue_name.text.toString(),ProsId,sel_extraContName,sel_extraContPh)
-                    }
+                            // 1.0  AppV 4.0.6  AddFeedbackSingleBtnDialog  start
+                            if (!Pref.isShowVisitRemarks)
+                                mListener.onOkClick(et_feedback.text.toString().trim(), nextVisitDate, filePath,et_approxvalue_name.text.toString(),ProsId,sel_extraContName,sel_extraContPh)
+                            else
+                                mListener.onOkClick(tv_remarks_dropdown.text.toString().trim(), nextVisitDate, filePath,et_approxvalue_name.text.toString(),ProsId,sel_extraContName,sel_extraContPh)
+                            // 1.0  AppV 4.0.6  AddFeedbackSingleBtnDialog  end
+                        }
+                        else{
+                            if (!Pref.isShowVisitRemarks)
+                                mListener.onOkClick(et_feedback.text.toString().trim(), nextVisitDate, filePath,et_approxvalue_name.text.toString(),ProsId,sel_extraContName,sel_extraContPh)
+                            else
+                                mListener.onOkClick(tv_remarks_dropdown.text.toString().trim(), nextVisitDate, filePath,et_approxvalue_name.text.toString(),ProsId,sel_extraContName,sel_extraContPh)
+                        }
+                    }, 1700)
+
+
                 }
             }
             R.id.iv_close_icon -> {
@@ -371,7 +474,7 @@ class AddFeedbackSingleBtnDialog : DialogFragment(), View.OnClickListener {
                         .setRequestCode(PermissionHelper.REQUEST_CODE_AUDIO)
                         .setAutoStart(false)
                         .setKeepDisplayOn(true)
-
+                    .setSampleRate(AudioSampleRate.HZ_100)
                         // Start recording
                         .record()
             }
@@ -468,6 +571,20 @@ class AddFeedbackSingleBtnDialog : DialogFragment(), View.OnClickListener {
 
     private var permissionUtils: PermissionUtils? = null
     private fun initPermissionCheckOne() {
+
+        //begin mantis id 26741 Storage permission updation Suman 22-08-2023
+        var permissionList = arrayOf<String>( Manifest.permission.CAMERA)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            permissionList += Manifest.permission.READ_MEDIA_IMAGES
+            permissionList += Manifest.permission.READ_MEDIA_AUDIO
+            permissionList += Manifest.permission.READ_MEDIA_VIDEO
+        }else{
+            permissionList += Manifest.permission.WRITE_EXTERNAL_STORAGE
+            permissionList += Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+//end mantis id 26741 Storage permission updation Suman 22-08-2023
+
         permissionUtils = PermissionUtils(mContext as Activity, object : PermissionUtils.OnPermissionListener {
             override fun onPermissionGranted() {
                 showPictureDialog()
@@ -476,8 +593,8 @@ class AddFeedbackSingleBtnDialog : DialogFragment(), View.OnClickListener {
             override fun onPermissionNotGranted() {
                 (mContext as DashboardActivity).showSnackMessage(getString(R.string.accept_permission))
             }
-
-        }, arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+// mantis id 26741 Storage permission updation Suman 22-08-2023
+        },permissionList)// arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
     }
 
     fun showPictureDialog() {

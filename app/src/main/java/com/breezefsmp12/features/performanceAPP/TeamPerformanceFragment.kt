@@ -11,7 +11,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
-import android.os.Looper
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
@@ -24,13 +23,11 @@ import androidx.cardview.widget.CardView
 import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.bitmap.RecyclableBufferedInputStream
 import com.breezefsmp12.R
 import com.breezefsmp12.app.AppDatabase
 import com.breezefsmp12.app.NetworkConstant
 import com.breezefsmp12.app.Pref
 import com.breezefsmp12.app.domain.CollectionDetailsEntity
-import com.breezefsmp12.app.domain.LeadTypeEntity
 import com.breezefsmp12.app.utils.AppUtils
 import com.breezefsmp12.app.utils.Toaster
 import com.breezefsmp12.base.presentation.BaseActivity
@@ -38,6 +35,10 @@ import com.breezefsmp12.base.presentation.BaseFragment
 import com.breezefsmp12.features.NewQuotation.dialog.MemberSalesmanListDialog
 import com.breezefsmp12.features.attendance.api.AttendanceRepositoryProvider
 import com.breezefsmp12.features.attendance.model.*
+import com.breezefsmp12.features.averageshop.api.ShopActivityRepositoryProvider
+import com.breezefsmp12.features.averageshop.model.ShopActivityRequest
+import com.breezefsmp12.features.averageshop.model.ShopActivityResponse
+import com.breezefsmp12.features.averageshop.model.ShopActivityResponseShopList
 import com.breezefsmp12.features.dashboard.presentation.DashboardActivity
 import com.breezefsmp12.features.member.api.TeamRepoProvider
 import com.breezefsmp12.features.member.model.TeamListDataModel
@@ -52,7 +53,8 @@ import com.breezefsmp12.features.newcollection.newcollectionlistapi.NewCollectio
 import com.breezefsmp12.features.orderList.api.neworderlistapi.NewOrderListRepoProvider
 import com.breezefsmp12.features.orderList.model.NewOrderListDataModel
 import com.breezefsmp12.features.orderList.model.NewOrderListResponseModel
-import com.breezefsmp12.features.performanceAPP.model.ChartDataModel
+import com.breezefsmp12.features.performanceAPP.model.AdapterNoVisitedRevisitShopList
+import com.breezefsmp12.features.performanceAPP.model.AdapterVisitedInactivityShop
 import com.breezefsmp12.features.performanceAPP.model.ChartDataModelNew
 import com.breezefsmp12.widgets.AppCustomTextView
 import com.github.aachartmodel.aainfographics.aachartcreator.AAChartView
@@ -73,6 +75,7 @@ import java.time.YearMonth
 import java.util.*
 import kotlin.collections.ArrayList
 
+
 /**
  * Created by Saheli on 26-03-2023 v 4.0.8 mantis 0025860.
  */
@@ -81,6 +84,8 @@ import kotlin.collections.ArrayList
 // 2.0 OwnPerformanceFragment AppV 4.1.3 Suman    22/05/2023 mantis 26188
 // 3.0 TeamPerformanceFragment AppV 4.1.3 Saheli   24/05/2023 mantis 0026221 Team performance MTD issue in Order value showing incorrect
 // 4.0 TeamPerformanceFragment AppV 4.1.6 Saheli   01/06/2023 mantis 26267 changes MTD section performance
+// 5.0 TeamPerformanceFragment v 4.1.6 Saheli mantis 26324 New Feature in Performance Insights 13-06-2023
+// 6.0 V 4.1.6 saheli 23-06-2023 mantis 0026414 : performance insight module show shop list & product list alphabetically
 class TeamPerformanceFragment: BaseFragment(), View.OnClickListener {
     private lateinit var aaChart : AAChartView
     private lateinit var tv_present_atten: TextView
@@ -152,6 +157,63 @@ class TeamPerformanceFragment: BaseFragment(), View.OnClickListener {
     var orderAmountSumPM3 = 0.0
     private lateinit var iv_red_alert_performance_reportTv:TextView
     // end v 4.1.6 mantis 26267 changes MTD section of performance
+
+    // start v 4.0.16. saheli 13-06-2023 mantis 26324
+    private lateinit var rv_no_order_taken_from_last3months:RecyclerView
+    private lateinit var tv_frag_own_performance_headerCount:TextView
+    private lateinit var rv_no_visited_taken_from_last3months:RecyclerView
+    private lateinit var  rv_no_coll_taken_from_last3months:RecyclerView
+    private lateinit var  cv_frag_own_performance:CardView
+    private lateinit var  cv_frag_own_performance_notVisited:CardView
+    private lateinit var  cv_frag_own_performance_notCollection:CardView
+    private lateinit var tv_frag_own_performance_headernotVisited:TextView
+    private lateinit var tv_frag_own_performance_headernotCollection:TextView
+    private lateinit var cv_frag_own_performance_noCollection:CardView
+    private lateinit var cv_frag_own_performance_notproductSold:CardView
+    private lateinit var tv_frag_own_performance_headerCountNotproductnotsell:TextView
+    private lateinit var  rv_product_nosell_taken_from_last3months:RecyclerView
+    private lateinit var cv_frag_own_performance_noproductSell:CardView
+
+    private lateinit var iv_frag_performance_MTDinfo: ImageView
+
+    private lateinit var iv_frag_performance_atteninfo: ImageView
+    private lateinit var iv_frag_performance_threemonthinfo: ImageView
+    private lateinit var iv_frag_performance_activityageinginfo: ImageView
+    private lateinit var iv_frag_performance_partywisesalesinfo: ImageView
+    private lateinit var iv_frag_performance_headerCountinfo: ImageView
+    private lateinit var iv_frag_performance_headerCountNotvisitedinfo: ImageView
+    private lateinit var iv_frag_performance_headerCountNotproductnotsellinfo: ImageView
+    private lateinit var iv_frag_performance_headerCountNotcollectioninfo: ImageView
+    private lateinit var iv_frag_performance_headerCount_zeroOrderinfo: ImageView
+    private lateinit var iv_frag_performance_headerCount_noVisitinfo: ImageView
+    private lateinit var iv_frag_performance_last10info: ImageView
+
+
+
+    private lateinit var NoOrderTakenList: ArrayList<NoOrderTakenShop>
+    private lateinit var finalL :ArrayList<NoOrderTakenShop>
+    private lateinit var finalLl:ArrayList<NoVisitedActivityInshop>
+
+    private lateinit var shopVistedList:ArrayList<ShopActivityResponseShopList>
+
+    private lateinit var no_sales_party_break:TextView
+
+    // end v 4.0.16. saheli 13-06-2023 mantis 26324
+
+
+    // start v 4.0.16. saheli 12-06-2023 mantis 26349
+    private lateinit var cv_frag_own_performance_noOrder_party:CardView
+    private lateinit var tv_frag_own_performance_headerCount_zeroOrder:TextView
+    private lateinit var rv_no_order_taken:RecyclerView
+
+    private lateinit var cv_frag_own_performance_noVisit_party:CardView
+    private lateinit var tv_frag_own_performance_headerCount_noVisit:TextView
+    private lateinit var rv_noVisit:RecyclerView
+
+    // end v 4.0.16. saheli 12-06-2023 mantis 26349
+
+    private lateinit var orderDate:String
+  
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
@@ -258,6 +320,72 @@ class TeamPerformanceFragment: BaseFragment(), View.OnClickListener {
         iv_frag_performance_threemonthshare.setOnClickListener(this)
         ll_last3month_view.visibility = View.GONE
         // end v 4.1.6 mantis 26267 changes MTD section of performance
+
+        // start v 4.0.16. saheli 13-06-2023 mantis 26324
+        rv_no_order_taken_from_last3months = view.findViewById(R.id.rv_no_order_taken_from_last3months)
+        rv_no_coll_taken_from_last3months = view.findViewById(R.id.rv_no_coll_taken_from_last3months)
+        tv_frag_own_performance_headerCount =  view.findViewById(R.id.tv_frag_own_performance_headerCount)
+        tv_frag_own_performance_headernotVisited = view.findViewById(R.id.tv_frag_own_performance_headernotVisited)
+        tv_frag_own_performance_headernotCollection = view.findViewById(R.id.tv_frag_own_performance_headernotCollection)
+        cv_frag_own_performance = view.findViewById(R.id.cv_frag_own_performance)
+        cv_frag_own_performance_notVisited = view.findViewById(R.id.cv_frag_own_performance_notVisited)
+        cv_frag_own_performance_noCollection =  view.findViewById(R.id.cv_frag_own_performance_notCollection)
+        rv_no_visited_taken_from_last3months =  view.findViewById(R.id.rv_no_visited_taken_from_last3months)
+        cv_frag_own_performance_notproductSold =  view.findViewById(R.id.cv_frag_own_performance_notproductSold)
+        tv_frag_own_performance_headerCountNotproductnotsell = view.findViewById(R.id.tv_frag_own_performance_headerCountNotproductnotsell)
+        rv_product_nosell_taken_from_last3months= view.findViewById(R.id.rv_product_nosell_taken_from_last3months)
+
+        no_sales_party_break =   view.findViewById(R.id.no_sales_party_break)
+        no_sales_party_break.visibility = View.VISIBLE
+        samplec.visibility = View.GONE
+
+        cv_frag_own_performance.visibility = View.GONE
+        cv_frag_own_performance_notVisited.visibility = View.GONE
+        cv_frag_own_performance_noCollection.visibility = View.GONE
+        cv_frag_own_performance_notproductSold.visibility = View.GONE
+        // end v 4.0.16. saheli 13-06-2023 mantis 26324
+
+        // start 8.0  v 4.1.6 Saheli mantis 26349 New Feature in Performance Insights 16-06-2023
+        cv_frag_own_performance_noOrder_party = view.findViewById(R.id.cv_frag_own_performance_noOrder_party)
+        tv_frag_own_performance_headerCount_zeroOrder = view.findViewById(R.id.tv_frag_own_performance_headerCount_zeroOrder)
+        rv_no_order_taken =  view.findViewById(R.id.rv_no_order_taken)
+        cv_frag_own_performance_noOrder_party.visibility = View.GONE
+
+        cv_frag_own_performance_noVisit_party = view.findViewById(R.id.cv_frag_own_performance_noVisit_party)
+        tv_frag_own_performance_headerCount_noVisit =  view.findViewById(R.id.tv_frag_own_performance_headerCount_noVisit)
+        rv_noVisit =  view.findViewById(R.id.rv_noVisit)
+        cv_frag_own_performance_noVisit_party.visibility = View.GONE
+
+
+        // end 8.0  v 4.1.6 Saheli mantis 26349 New Feature in Performance Insights 16-06-2023
+
+        iv_frag_performance_atteninfo = view.findViewById(R.id.iv_frag_performance_atteninfo)
+        iv_frag_performance_threemonthinfo = view.findViewById(R.id.iv_frag_performance_threemonthinfo)
+        iv_frag_performance_last10info = view.findViewById(R.id.iv_frag_performance_last10info)
+        iv_frag_performance_activityageinginfo = view.findViewById(R.id.iv_frag_performance_activityageinginfo)
+        iv_frag_performance_partywisesalesinfo = view.findViewById(R.id.iv_frag_performance_partywisesalesinfo)
+        iv_frag_performance_headerCountinfo = view.findViewById(R.id.iv_frag_performance_headerCountinfo)
+        iv_frag_performance_headerCountNotvisitedinfo = view.findViewById(R.id.iv_frag_performance_headerCountNotvisitedinfo)
+        iv_frag_performance_headerCountNotproductnotsellinfo = view.findViewById(R.id.iv_frag_performance_headerCountNotproductnotsellinfo)
+        iv_frag_performance_headerCountNotcollectioninfo = view.findViewById(R.id.iv_frag_performance_headerCountNotcollectioninfo)
+        iv_frag_performance_headerCount_zeroOrderinfo = view.findViewById(R.id.iv_frag_performance_headerCount_zeroOrderinfo)
+        iv_frag_performance_headerCount_noVisitinfo = view.findViewById(R.id.iv_frag_performance_headerCount_noVisitinfo)
+        iv_frag_performance_MTDinfo = view.findViewById(R.id.iv_frag_performance_MTDinfo)
+
+
+        iv_frag_performance_MTDinfo.setOnClickListener(this)
+        iv_frag_performance_atteninfo.setOnClickListener(this)
+        iv_frag_performance_threemonthinfo.setOnClickListener(this)
+        iv_frag_performance_last10info.setOnClickListener(this)
+        iv_frag_performance_activityageinginfo.setOnClickListener(this)
+        iv_frag_performance_partywisesalesinfo.setOnClickListener(this)
+        iv_frag_performance_headerCountinfo.setOnClickListener(this)
+        iv_frag_performance_headerCountNotvisitedinfo.setOnClickListener(this)
+        iv_frag_performance_headerCountNotproductnotsellinfo.setOnClickListener(this)
+        iv_frag_performance_headerCountNotcollectioninfo.setOnClickListener(this)
+        iv_frag_performance_headerCount_zeroOrderinfo.setOnClickListener(this)
+        iv_frag_performance_headerCount_noVisitinfo.setOnClickListener(this)
+
     }
 
     private fun callAttendanceListApi(attendanceReq: AttendanceRequest, firstDate:String, lastDate:String, daysInMonth:Int) {
@@ -270,6 +398,8 @@ class TeamPerformanceFragment: BaseFragment(), View.OnClickListener {
                     val attendanceList = result as AttendanceResponse
                     if (attendanceList.status == NetworkConstant.SUCCESS) {
                         atten_ll_frag_team_per.visibility = View.VISIBLE
+                        iv_frag_performance_atteninfo.visibility = View.VISIBLE
+                        iv_frag_performance_attenshare.visibility = View.VISIBLE
                         no_data_found_tv_frag_team_performance.visibility = View.GONE
                         attendanceLists = attendanceList.shop_list!!
 //                        val filteredAttendanceRecords = attendanceList.shop_list!!.filter { it.login_date!! in formattedFirstDate..formattedLastDate && it.Isonleave!!.equals("false")  }
@@ -284,12 +414,16 @@ class TeamPerformanceFragment: BaseFragment(), View.OnClickListener {
                     } else if (attendanceList.status == NetworkConstant.SESSION_MISMATCH) {
                         loadNotProgress()
                         atten_ll_frag_team_per.visibility = View.GONE
+                        iv_frag_performance_attenshare.visibility = View.GONE
+                        iv_frag_performance_atteninfo.visibility = View.GONE
                         ll_mtd_view.visibility = View.GONE
                         ll_last3month_view.visibility = View.GONE
                         Toaster.msgShort(mContext, "Something went wrong")
                     } else if (attendanceList.status == NetworkConstant.NO_DATA) {
                         loadNotProgress()
                         atten_ll_frag_team_per.visibility = View.GONE
+                        iv_frag_performance_attenshare.visibility = View.GONE
+                        iv_frag_performance_atteninfo.visibility = View.GONE
                         ll_mtd_view.visibility = View.GONE
                         ll_last3month_view.visibility = View.GONE
                         ll_activityageing_frag_own.visibility = View.GONE
@@ -305,7 +439,7 @@ class TeamPerformanceFragment: BaseFragment(), View.OnClickListener {
     }
 
     fun viewAttendanceReport(attend:Int,absent:Int){
-        aaChart.aa_drawChartWithChartModel(ChartDataModel.configurePieChart(attend,absent))
+        aaChart.aa_drawChartWithChartModel(ChartDataModelNew.configurePieChart(attend,absent))
         callShopListApi()
     }
 
@@ -317,6 +451,64 @@ class TeamPerformanceFragment: BaseFragment(), View.OnClickListener {
             R.id.iv_frag_performance_attenshare->{
                 ShareDataAsPdf("Attendance REPORT")
             }
+            R.id.iv_frag_performance_MTDinfo -> {
+                iButtonText(
+                    "1. Total Order Value : Total order value of current month \n" +
+                            "2. Total Order Count : Total order count of current month \n "+
+                            "3. Average Order Value : (Total order value of current month / Total order count of current month) \n"+
+                            "4. Average Order Count : (Total order count of current month / Present date of current month) \n")
+            }R.id.iv_frag_performance_atteninfo -> {
+            iButtonText(
+                "1. Present : Total count of attendance of last month\n" +
+                        "2. Not Logged In : Total count of not logged in of last month \n")
+        }R.id.iv_frag_performance_threemonthinfo  -> {
+            iButtonText(
+                "Last 3 months Comparative Average Order Value : (Total order value of the month / Total no of days of the month) \n"
+            )
+        }R.id.iv_frag_performance_last10info -> {
+            iButtonText(
+                "1. Total Order Value : Total value of last 10 orders  \n" +
+                        "2. Total Order Count : Total order count of last 10 order  \n"+
+                        "3. Average Order Value : (Total value of last 10 orders / Total no of orders) \n"
+            )
+        }R.id.iv_frag_performance_activityageinginfo -> {
+            iButtonText(
+                "1. Last Visit : No of days since last visit \n" +
+                        "2. Most Recent Visit : Last date of visit \n"+
+                        "3. Last Order : No of days since last order \n"+
+                        "4. Last Collection : No of days since last collection \n")
+        }R.id.iv_frag_performance_partywisesalesinfo -> {
+            iButtonText(
+                "Total Sales Value : Total sum of Sales Value \n" )
+        }R.id.iv_frag_performance_headerCountinfo -> {
+            iButtonText(
+                "Total Party Count : No of parties not placed order in last 3 months \n"
+            )
+        }R.id.iv_frag_performance_headerCountNotvisitedinfo -> {
+            iButtonText(
+                "Total Party Count : No of parties not visited in last 3 months \n"
+
+            )
+        }R.id.iv_frag_performance_headerCountNotproductnotsellinfo -> {
+            iButtonText(
+                "Total Product Count : No of non selling product in last 3 months \n"
+
+            )
+        }R.id.iv_frag_performance_headerCountNotcollectioninfo -> {
+            iButtonText(
+                "Total Party Count : No of parties where collection not received from last 3 months \n"
+
+            )
+        }R.id.iv_frag_performance_headerCount_zeroOrderinfo -> {
+            iButtonText(
+                "Total Party Count : No of parties not placed order \n"
+            )
+        }R.id.iv_frag_performance_headerCount_noVisitinfo -> {
+            iButtonText(
+                "1. Total Party Count : No of parties not visited \n"
+            )            }
+
+
             R.id.iv_frag_performance_MTDshare->{
                 ShareDataAsPdf("MTD")
             }
@@ -347,10 +539,9 @@ class TeamPerformanceFragment: BaseFragment(), View.OnClickListener {
         }
     }
 
-
     private fun getTeamList() {
       if (!AppUtils.isOnline(mContext)) {
-            (mContext as DashboardActivity).showSnackMessage(getString(R.string.no_internet))
+//            (mContext as DashboardActivity).showSnackMessage(getString(R.string.no_internet))
             return
         }
         val repository = TeamRepoProvider.teamRepoProvider()
@@ -387,14 +578,19 @@ class TeamPerformanceFragment: BaseFragment(), View.OnClickListener {
          orderAmountSumPM1 = 0.0
          orderAmountSumPM2 = 0.0
          orderAmountSumPM3 = 0.0
-        MemberSalesmanListDialog.newInstance("Select Team Member",member_list!!){
-            tv_sel_team_member.text=it.user_name
-            sel_team_userID=it.user_id
-            sel_team_userName = it.user_name
-            loadProgress()
-            ll_partynotvisitedlast20_frag_team.visibility = View.GONE
-            loadAttendanceData()
-        }.show((mContext as DashboardActivity).supportFragmentManager, "")
+        if(AppUtils.isOnline(mContext)){
+            MemberSalesmanListDialog.newInstance("Select Team Member",member_list!!){
+                tv_sel_team_member.text=it.user_name
+                sel_team_userID=it.user_id
+                sel_team_userName = it.user_name
+                loadProgress()
+                ll_partynotvisitedlast20_frag_team.visibility = View.GONE
+                loadAttendanceData()
+            }.show((mContext as DashboardActivity).supportFragmentManager, "")
+        }else{
+            (mContext as DashboardActivity).showSnackMessage(getString(R.string.no_internet))
+        }
+
     }
 
     private fun loadAttendanceData() {
@@ -456,6 +652,18 @@ class TeamPerformanceFragment: BaseFragment(), View.OnClickListener {
                         calculatedLastThreemonthData()
                     }, 1500)
                     ll_last3month_view.visibility = View.VISIBLE
+
+                    Handler().postDelayed(Runnable {
+                        noOrderTakenListOfShop()
+                    }, 500)
+                    cv_frag_own_performance.visibility = View.VISIBLE
+                    Handler().postDelayed(Runnable {
+                        noVisitMadeListOfShop()
+                    }, 500)
+                    cv_frag_own_performance_notVisited.visibility = View.VISIBLE
+
+
+
 
                 }, { error ->
                     error.printStackTrace()
@@ -919,14 +1127,38 @@ class TeamPerformanceFragment: BaseFragment(), View.OnClickListener {
                                 collection_details_list = ArrayList()
                                 println("coll_test ${collection.collection_list!!.size}")
                                 collection_details_list.addAll(collection.collection_list!!)
+
+                                Handler().postDelayed(Runnable {
+                                    noCollectionMadeListOfShop()
+                                }, 500)
+                                cv_frag_own_performance_noCollection.visibility = View.VISIBLE
+
+                                Handler().postDelayed(Runnable {
+                                    noProductSellOfShop()
+                                }, 1000)
+
+                                Handler().postDelayed(Runnable {
+                                    noOrderTakenShop()
+                                }, 1200)
+                        //        cv_frag_own_performance_noOrder_party.visibility = View.VISIBLE
+
+                                Handler().postDelayed(Runnable {
+                                    noVisitPartiesList()
+                                }, 1500)
+                        //        cv_frag_own_performance_noVisit_party.visibility = View.VISIBLE
+
+
                             }
                         }
                     }, { error ->
                         error.printStackTrace()
                         println("coll_test err ${error.message} ${error.localizedMessage}")
+
+                        Handler().postDelayed(Runnable {
+                            noProductSellOfShop()
+                        }, 1000)
                     })
             )
-
     }
 
     private fun loadShopDialog() {
@@ -1025,7 +1257,7 @@ class TeamPerformanceFragment: BaseFragment(), View.OnClickListener {
                         var partyWiseDataModel = PartyWiseDataModel()
                         partyWiseDataModel.shop_type_name = ""
                         partyWiseDataModel.shop_name = shopName
-                        partyWiseDataModel.total_sales_value = totalAmount.toString()
+                        partyWiseDataModel.total_sales_value = totalAmount.toDouble().toInt().toString()
                         mShopFilterList!!.add(partyWiseDataModel)
 //                        listwiseData = AppDatabase.getDBInstance()!!.orderDetailsListDao().getTotalShopNTwiseSalesValues(mshopId!!)
 //                        println("data class "+listwiseData)
@@ -1045,6 +1277,8 @@ class TeamPerformanceFragment: BaseFragment(), View.OnClickListener {
     }
 
     fun  setValuePartywiseList(mShopFilterList: ArrayList<PartyWiseDataModel>){
+        samplec.visibility = View.VISIBLE
+        no_sales_party_break.visibility = View.GONE
         if(mShopFilterList!!.size>0){
 
             var nameList = mShopFilterList.map { it.shop_name+"<br />"+it.shop_type_name } as ArrayList<String>
@@ -1167,9 +1401,9 @@ class TeamPerformanceFragment: BaseFragment(), View.OnClickListener {
                     val avgOrderValuePreviousMonth3 = totalOrderValuePreviousmonth3/lastDateOfPreviousMonth3.dayOfMonth
                     chart_three_month_performance_report.aa_drawChartWithChartModel(
                             ChartDataModelNew.configurePolarDynamicColumnChart(
-                                    String.format("%.2f", avgOrderValuePreviousMonth3).toDouble(),
-                                    String.format("%.2f", avgOrderValuePreviousMonth2).toDouble(),
-                                    String.format("%.2f", avgOrderValuePreviousMonth1).toDouble(),
+                                    String.format("%.0f", avgOrderValuePreviousMonth3).toDouble(),
+                                    String.format("%.0f", avgOrderValuePreviousMonth2).toDouble(),
+                                    String.format("%.0f", avgOrderValuePreviousMonth1).toDouble(),
                             )
                     )
                     if (avgOrderValuePreviousMonth3 > avgOrderValuePreviousMonth2 && avgOrderValuePreviousMonth2 > avgOrderValuePreviousMonth1){
@@ -1334,5 +1568,456 @@ class TeamPerformanceFragment: BaseFragment(), View.OnClickListener {
         )
     }
 
+    private fun noVisitPartiesList() {
+        doAsync {
+            //
+            var finalShopL :ArrayList<ShopDtlsCustom> = ArrayList()
+            var currentD = AppUtils.getCurrentDateForShopActi()
 
+//            var obj = shopList.data!!.shop_list!!.filter { it.added_date.split("T").get(0).equals(it.last_visit_date!!.split("T").get(0)) } as ArrayList<ShopData>
+            var obj = mshoplist!!.filter { it.added_date.split("T").get(0).equals(it.last_visit_date!!.split("T").get(0)) } as ArrayList<ShopData>
+            for(i in 0..obj.size-1){
+                var shopOb = ShopDtlsCustom()
+                shopOb.shop_id= obj.get(i).shop_id.toString()
+                shopOb.shop_name= obj.get(i).shop_name.toString()
+                shopOb.owner_contact_number=obj.get(i).owner_contact_no.toString()
+                shopOb.address=obj.get(i).address.toString()
+                shopOb.owner_name=obj.get(i).owner_name.toString()
+                shopOb.type=obj.get(i).type.toString()
+                shopOb.age_since_party_creation_count=AppUtils.getDateDiff(obj.get(i).added_date.split("T").get(0),obj.get(i).last_visit_date!!.split("T").get(0))
+                shopOb.dateAdded=obj.get(i).added_date.split("T").get(0)
+                shopOb.lastVisitedDate=obj.get(i).last_visit_date!!.split("T").get(0)
+                //Begin 9.0  v 4.1.6 Suman mantis 0026396 New Feature in Performance Insights 21-06-2023
+                //finalShopL.add(shopOb)
+                if(!shopOb.dateAdded.equals(currentD))
+                {
+                    finalShopL.add(shopOb)
+                }
+                //End of 9.0  v 4.1.6 Suman mantis 0026396 New Feature in Performance Insights 21-06-2023
+            }
+
+            uiThread {
+                if(finalShopL.size>0){
+                    // start 6.0 V 4.1.6 saheli 23-06-2023 mantis 0026414 : performance insight module show shop list & product list alphabetically
+                    var dt: ArrayList<ShopDtlsCustom> = finalShopL.sortedByDescending { it.shop_name.toUpperCase().trim() }.toCollection(ArrayList()).reversed() as ArrayList<ShopDtlsCustom>
+                    finalShopL = dt
+                    // end 6.0 V 4.1.6 saheli 23-06-2023 mantis 0026414 : performance insight module show shop list & product list alphabetically
+                    tv_frag_own_performance_headerCount_noVisit.text = finalShopL.size.toString()
+                    rv_noVisit.adapter = AdapterNoVisitedRevisitShopList(mContext, finalShopL)
+                    rv_noVisit.visibility = View.VISIBLE
+                    cv_frag_own_performance_noVisit_party.visibility = View.VISIBLE
+                }else{
+                    rv_noVisit.visibility = View.GONE
+                    cv_frag_own_performance_noVisit_party.visibility = View.GONE
+                }
+            }
+        }
+
+    }
+
+    private fun noOrderTakenShop() {
+        doAsync {
+            var filterShopIDList = order_details_list.map { it.shop_id }.distinctBy { it } as ArrayList<String>
+            var userShopL = shopList.data!!.shop_list!!.map { it.shop_id }.distinctBy { it } as ArrayList<String>
+            var finalShopL: ArrayList<String> = userShopL.minus(filterShopIDList) as ArrayList<String>
+            var NoOrderTakenL:ArrayList<NoOrderTakenList> = ArrayList()
+
+           /* var allShopTempL = ArrayList(shopList.data!!.shop_list)
+            println("order_tag entry ")
+            for(i in 0..finalShopL.size-1) {
+                //var obj = shopList.data!!.shop_list!!.filter { it.shop_id.equals(finalShopL.get(i)) }.first()
+                var obj :ShopData = ShopData()
+               innerL@ for(j in 0..allShopTempL.size-1){
+                    if(allShopTempL.get(j).shop_id!!.equals(finalShopL.get(i))){
+                        obj = allShopTempL.get(j)
+                        break@innerL
+                    }
+                }
+                allShopTempL.remove(obj)
+                println("NoorderL"+obj.shop_id)
+                NoOrderTakenL.add(NoOrderTakenList(obj.shop_id!!, obj.shop_name!!, obj.owner_contact_no!!,obj.address!!,obj.owner_name!!,obj.type!!,AppUtils.getDateDiff(AppUtils.getCurrentDateyymmdd(),obj.added_date!!.split("T").get(0))))
+                println("order_tag ${finalShopL.size} ${allShopTempL.size} ${shopList.data!!.shop_list!!.size}")
+            }*/
+            /*var NoOrderTakenL:ArrayList<NoOrderTakenList> = ArrayList()
+            for(i in 0..finalShopL.size-1) {
+                var obj = shopList.data!!.shop_list!!.filter { it.shop_id.equals(finalShopL.get(i)) }.first()
+                println("NoorderL"+obj.shop_id)
+                NoOrderTakenL.add(NoOrderTakenList(obj.shop_id!!, obj.shop_name!!, obj.owner_contact_no!!,obj.address!!,obj.owner_name!!,obj.type!!,AppUtils.getDateDiff(AppUtils.getCurrentDateyymmdd(),obj.added_date!!.split("T").get(0))))
+            }
+            var dt = NoOrderTakenL*/
+            uiThread {
+                try{
+                    if(finalShopL.size>0){
+                        // start 6.0 V 4.1.6 saheli 23-06-2023 mantis 0026414 : performance insight module show shop list & product list alphabetically
+                        var dt: ArrayList<String> = finalShopL.sortedByDescending { it.toUpperCase().trim() }.toCollection(ArrayList()).reversed() as ArrayList<String>
+                        finalShopL = dt
+                        // end 6.0 V 4.1.6 saheli 23-06-2023 mantis 0026414 : performance insight module show shop list & product list alphabetically
+                        tv_frag_own_performance_headerCount_zeroOrder.text = finalShopL.size.toString()
+                        //rv_no_order_taken.adapter = AdapterNoOrderListInShop(mContext, NoOrderTakenL)
+                        rv_no_order_taken.adapter = AdapterNoOrderListInShop1(mContext, finalShopL as ArrayList<String>)
+                        rv_no_order_taken.visibility = View.VISIBLE
+                        cv_frag_own_performance_noOrder_party.visibility = View.VISIBLE
+                    }else{
+                        rv_no_order_taken.visibility = View.GONE
+                        cv_frag_own_performance_noOrder_party.visibility = View.GONE
+                    }
+
+                }catch (ex:Exception){
+                    ex.printStackTrace()
+                }
+            }
+        }
+    }
+
+    private fun noOrderTakenListOfShop() {
+        val currentDt = AppUtils.getCurrentDateyymmdd()
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.MONTH, -3)
+        val threeMonthsAgoDate = calendar.time
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd")
+        val threeMonthsAgoDateformat = dateFormat.format(threeMonthsAgoDate)
+        println("1st Date last three month: $threeMonthsAgoDateformat")
+        var NoOrderTakenList: ArrayList<NoOrderTakenShop>
+
+        getLast3monthOrderList(threeMonthsAgoDateformat,currentDt)
+
+    }
+
+    private fun getLast3monthOrderList(firstDate:String,lastDate:String) {
+        val repository = NewOrderListRepoProvider.provideOrderListRepository()
+        BaseActivity.compositeDisposable.add(
+            repository.getOrderList(Pref.session_token!!,sel_team_userID, "")
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe({ result ->
+                    val response = result as NewOrderListResponseModel
+                    if (response.status == NetworkConstant.SUCCESS) {
+                        order_details_list = response.order_list!!
+                        if (order_details_list != null && order_details_list!!.isNotEmpty()) {
+                            doAsync {
+                              var filterShopIDList = order_details_list.filter { order_details_list ->
+                                order_details_list.order_date_time!!.split("T").get(0) >= firstDate &&  order_details_list.order_date_time!!.split("T").get(0) <= lastDate }
+                                    .map { it.shop_id } as ArrayList<String>
+                                val filterShopIDListWithDate = order_details_list.filter { order_details ->
+                                    val orderDate = order_details.order_date_time?.split("T")?.get(0)
+                                    orderDate != null && orderDate >= firstDate && orderDate <= lastDate
+                                }.map { order_details ->
+                                    val orderDate = order_details.order_date_time?.split("T")?.get(0)
+                                    order_details.shop_id to orderDate
+                                }.toList() as ArrayList<Pair<String?, String?>>
+                               /* var userShopL = shopList.data!!.shop_list!!.map { it.shop_id } as ArrayList<String>
+                                var finalShopL: List<String> = userShopL.minus(filterShopIDList) as ArrayList<String>
+                                var noorderList:ArrayList<NoOrderTakenShop2> = ArrayList()
+                                for(i in 0..finalShopL.size-1) {
+                                    var obj = shopList.data!!.shop_list!!.filter { it.shop_id.equals(finalShopL.get(i)) }.first()
+                                    println("NoorderL"+obj.shop_id)
+                                    noorderList.add(NoOrderTakenShop2(obj.shop_id!!, obj.shop_name!!, obj.owner_contact_no!!,obj.address!!,"",obj.type!!)
+                                    )
+                                }*/
+//                                    var obnlySL = shopList.data!!.shop_list!!.map { it.shop_id } as ArrayList<String>
+//                                var minusShop = (shopList.data!!.shop_list!!.map { it.shop_id } as ArrayList<String>).minus(filterShopIDList)
+//                                println("Total Shop"+(shopList.data!!.shop_list!!.map { it.shop_id }.size as ArrayList<String>))
+//                                println("Filter Shop"+filterShopIDList.size)
+//                                println("minusShop"+minusShop.size)
+                                val userShopL = shopList.data!!.shop_list!!.map { it.shop_id } as ArrayList<String>
+//                                val finalShopL: List<String> = userShopL.minus(filterShopIDListWithDate.map { it.first }) as ArrayList<String>
+
+
+                                val shopListWithOrders = filterShopIDListWithDate.map { it.first }.distinct() as ArrayList<String>
+//                                val shopListWithOrders = filterShopIDListWithDate.map { it.first to it.second }.distinct() as ArrayList<Pair<String?, String?>>
+                                val finalShopL = userShopL.filter { !shopListWithOrders.contains(it) }
+
+
+                                var noorderList: ArrayList<NoOrderTakenShop2> = ArrayList()
+                                for (shopId in finalShopL) {
+                                    val obj = shopList.data!!.shop_list!!.filter { it.shop_id == shopId }.first()
+                                    try{
+                                         orderDate = filterShopIDListWithDate.find { it.first == shopId }?.second.toString()
+                                    }catch(ex:Exception){
+                                        ex.printStackTrace()
+                                    }
+
+                                    println("NoorderL: ${obj.shop_id}")
+                                    noorderList.add(
+                                        NoOrderTakenShop2(
+                                            obj.shop_id!!,
+                                            obj.shop_name!!,
+                                            obj.owner_contact_no!!,
+                                            obj.address!!,
+                                            obj.owner_name!!,
+                                            obj.type!!,
+                                            orderDate
+                                        )
+                                    )
+                                }
+
+
+                                uiThread {
+                                    try{
+                                        println("NoorderLafter"+noorderList.size)
+                                        if(noorderList.size>0){
+                                            // start 6.0 V 4.1.6 saheli 23-06-2023 mantis 0026414 : performance insight module show shop list & product list alphabetically
+                                            var dt: ArrayList<NoOrderTakenShop2> = noorderList.sortedByDescending { it.shop_name.toUpperCase().trim() }.toCollection(ArrayList()).reversed() as ArrayList<NoOrderTakenShop2>
+                                            noorderList = dt
+                                            // end 6.0 V 4.1.6 saheli 23-06-2023 mantis 0026414 : performance insight module show shop list & product list alphabetically
+
+
+                                            tv_frag_own_performance_headerCount.text = noorderList.size.toString()
+//                                            rv_no_order_taken_from_last3months.adapter = AdapterNoOrderTakenShop2(mContext, noorderList)
+
+                                            rv_no_order_taken_from_last3months.adapter = AdapterOrderInactivityShop(mContext, noorderList)
+                                            rv_no_order_taken_from_last3months.visibility = View.VISIBLE
+                                            cv_frag_own_performance.visibility = View.VISIBLE
+                                        }else{
+                                            rv_no_order_taken_from_last3months.visibility = View.GONE
+                                            cv_frag_own_performance.visibility = View.GONE
+                                        }
+
+                                    }catch (ex:Exception){
+
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }, { error ->
+
+                })
+        )
+    }
+
+
+    private fun noVisitMadeListOfShop() {
+        val currentDt = AppUtils.getCurrentDateyymmdd()
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.MONTH, -3)
+        val threeMonthsAgoDate = calendar.time
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd")
+        val threeMonthsAgoDateformat = dateFormat.format(threeMonthsAgoDate)
+        var noVisitDoneLast3Month: ArrayList<NoOrderTakenShop>
+
+        callShopActivityApi(threeMonthsAgoDateformat,currentDt)
+
+    }
+
+    @SuppressLint("SuspiciousIndentation")
+    private fun noCollectionMadeListOfShop() {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.MONTH, -3)
+        var threeMonthsAgoDate = calendar.time
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd")
+        val threeMonthsAgoDateformat = dateFormat.format(threeMonthsAgoDate)
+        var noVisitDoneLast3Month: ArrayList<NoOrderTakenShop>
+
+        var fromD = threeMonthsAgoDateformat.toString()
+        var toD = AppUtils.getCurrentDate()
+
+            doAsync {
+                var a = collection_details_list
+                var filterCollectIDList = collection_details_list.filter { collection_details_list ->
+                    AppUtils.getFormatedDateNew(AppUtils.changeDateFormat1(collection_details_list.date!!).replace("/","-"),"dd-mm-yyyy","yyyy-mm-dd")!! >= fromD &&  AppUtils.getFormatedDateNew(AppUtils.changeDateFormat1(collection_details_list.date!!).replace("/","-"),"dd-mm-yyyy","yyyy-mm-dd")!! <= toD }
+                    .map { it.shop_id } as ArrayList<String>
+                var userShopL = shopList.data!!.shop_list!!.map { it.shop_id } as ArrayList<String>
+                var finalShopL: List<String> = userShopL.minus(filterCollectIDList) as ArrayList<String>
+
+                var finalShopCollL :ArrayList<NoCollActivityInshop> = ArrayList()
+                for(i in 0..finalShopL.size-1) {
+                    var obj = shopList.data!!.shop_list!!.filter { it.shop_id.equals(finalShopL.get(i)) }.first()
+                    try{
+                        finalShopCollL.add(NoCollActivityInshop(obj.shop_id!!, obj.shop_name!!, obj.owner_contact_no!!,obj.address!!,obj.owner_name!!,obj.type!!,obj.last_visit_date!!))
+                        println("visited_tag"+finalShopCollL.size)
+                    }catch (ex:Exception){
+                        ex.printStackTrace()
+                    }
+                }
+
+                uiThread {
+                    if(finalShopCollL.size>0){
+                        // start 6.0 V 4.1.6 saheli 23-06-2023 mantis 0026414 : performance insight module show shop list & product list alphabetically
+                        var dt: ArrayList<NoCollActivityInshop> = finalShopCollL.sortedByDescending { it.shop_name.toUpperCase().trim() }.toCollection(ArrayList()).reversed() as ArrayList<NoCollActivityInshop>
+                        finalShopCollL = dt
+                        // end 6.0 V 4.1.6 saheli 23-06-2023 mantis 0026414 : performance insight module show shop list & product list alphabetically
+                        tv_frag_own_performance_headernotCollection.text = finalShopCollL.size.toString()
+//                        rv_no_coll_taken_from_last3months.adapter = AdapterNoOrderTakenShop(mContext, finalShopCollL)
+                        rv_no_coll_taken_from_last3months.adapter = AdapterCollectionInactivityShop(mContext, finalShopCollL)
+
+                        rv_no_order_taken_from_last3months.visibility = View.VISIBLE
+                        cv_frag_own_performance_noCollection.visibility = View.VISIBLE
+                    }else{
+                        rv_no_order_taken_from_last3months.visibility = View.GONE
+                        cv_frag_own_performance_noCollection.visibility = View.GONE
+                    }
+
+                }
+
+        }
+
+
+
+
+    }
+
+    private fun noProductSellOfShop() {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.MONTH, -3)
+        var threeMonthsAgoDate = calendar.time
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd")
+        val threeMonthsAgoDateformat = dateFormat.format(threeMonthsAgoDate)
+        var noProductSellLast3Month: java.util.ArrayList<NoProductSoldShop>
+
+        var fromD = threeMonthsAgoDateformat
+        var toD = AppUtils.getCurrentDateyymmdd()
+
+
+        var order_product_list: ArrayList<OrderProductListForTeam>? = ArrayList()
+        for(i in 0..order_details_list.size-1){
+            var objL = order_details_list.get(i).product_list
+            for(j in 0..objL!!.size-1){
+                var obj = objL.get(j)
+                order_product_list!!.add(OrderProductListForTeam(order_details_list.get(i).order_id!!,obj.product_name!!))
+            }
+        }
+        var uniqProduct:ArrayList<NoProductSoldShop> = ArrayList()
+        doAsync {
+            var filterOrdIDList = order_details_list.filter { order_details_list ->
+                order_details_list.order_date_time!!.split("T").get(0) >= fromD &&  order_details_list.order_date_time!!.split("T").get(0) <= toD }
+                .map { it.order_id } as ArrayList<String>
+            for(i in 0..filterOrdIDList.size-1){
+                try{
+                    var objL: ArrayList<OrderProductListForTeam> = order_product_list!!.filter { it.order_id.equals(filterOrdIDList.get(i)) }  as ArrayList<OrderProductListForTeam>
+                    for(j in 0..objL.size-1){
+                        uniqProduct.add(NoProductSoldShop(objL.get(j).product_name!!))
+                    }
+                }catch (ex:Exception){
+                    Timber.d("tag_x ex ${ex.message}")
+                    ex.printStackTrace()
+                }
+
+            }
+
+            var uniqProdNameL :ArrayList<String> = ArrayList()
+            for(i in 0..uniqProduct.size-1){
+                uniqProdNameL.add(uniqProduct.get(i).product_name)
+            }
+            uniqProdNameL =   uniqProdNameL.distinctBy { it } as ArrayList<String>
+            var allProductL = AppDatabase.getDBInstance()?.productListDao()?.getNameAll()!! as ArrayList<String>
+            //var finalL = allProductL.minus(uniqProdNameL) as ArrayList<String>
+            allProductL.removeAll(uniqProdNameL)
+            var finaList = allProductL
+
+            uiThread {
+                if(finaList.size>0){
+                    // start 6.0 V 4.1.6 saheli 23-06-2023 mantis 0026414 : performance insight module show shop list & product list alphabetically
+                    var dt: ArrayList<String> = finaList.sortedByDescending { it.toUpperCase().trim() }.toCollection(ArrayList()).reversed() as ArrayList<String>
+                    finaList = dt
+                    // end 6.0 V 4.1.6 saheli 23-06-2023 mantis 0026414 : performance insight module show shop list & product list alphabetically
+//                    Toaster.msgShort(mContext,allProductL.size.toString())
+                    tv_frag_own_performance_headerCountNotproductnotsell.text = finaList.size.toString()
+                    rv_product_nosell_taken_from_last3months.adapter = AdapterProductNotSellShopTeam(mContext, finaList)
+                    rv_product_nosell_taken_from_last3months.visibility = View.VISIBLE
+                    cv_frag_own_performance_notproductSold.visibility = View.VISIBLE
+                }else{
+                    rv_product_nosell_taken_from_last3months.visibility = View.GONE
+                    cv_frag_own_performance_notproductSold.visibility = View.GONE
+                }
+
+            }
+        }
+
+    }
+
+    private fun callShopActivityApi(firstDate:String,lastDate:String) {
+        var shopActivity = ShopActivityRequest()
+        shopActivity.user_id = sel_team_userID
+        shopActivity.session_token = Pref.session_token
+        shopActivity.date_span = ""
+        shopActivity.from_date = firstDate
+        shopActivity.to_date = lastDate
+        val repository = ShopActivityRepositoryProvider.provideShopActivityRepository()
+        BaseActivity.compositeDisposable.add(
+            repository.fetchShopActivitynew(Pref.session_token!!, Pref.user_id!!, "", firstDate, lastDate)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe({ result ->
+                    var shopActityResponse = result as ShopActivityResponse
+                    if (shopActityResponse.status == "200") {
+                        doAsync {
+                            var arrShopIdFromApi : ArrayList<String> = ArrayList()
+                            for(i in 0..shopActityResponse.date_list!!.size-1){
+                                 shopVistedList = shopActityResponse.date_list!!.get(i).shop_list as ArrayList<ShopActivityResponseShopList>
+                                for(j in 0..shopVistedList.size-1){
+                                    if(shopVistedList.get(j).Is_Newshopadd == false){
+                                        arrShopIdFromApi.add(shopVistedList.get(j).shopid.toString())
+                                    }
+                                }
+                            }
+                            var filterVisitedIDList = shopVistedList.map { shopVistedList -> shopVistedList.visited_date!!.split("T").get(0) }
+                            var userShopL = shopList.data!!.shop_list!!.map { it.shop_id } as ArrayList<String>
+                            var finalShopL: List<String> = userShopL.minus(filterVisitedIDList) as ArrayList<String>
+
+                            var arrShopIdFromApiDistinct = arrShopIdFromApi.distinct()
+                            var filterFL = userShopL.filterNot { it in arrShopIdFromApiDistinct }as ArrayList<String>
+                            finalShopL = filterFL
+
+                            finalLl = ArrayList()
+                            for(i in 0..finalShopL.size-1) {
+                                var obj = shopList.data!!.shop_list!!.filter { it.shop_id.equals(finalShopL.get(i)) }.first()
+                                finalLl.add(NoVisitedActivityInshop(obj.shop_id!!, obj.shop_name!!, obj.owner_contact_no!!,obj.address!!,obj.owner_name!!,obj.type!!,obj.last_visit_date!!))
+                                println("visited_tag"+finalLl.size)
+                            }
+                            uiThread {
+                                if(finalLl.size>0){
+                                    // start 6.0 V 4.1.6 saheli 23-06-2023 mantis 0026414 : performance insight module show shop list & product list alphabetically
+//                                    var dt: ArrayList<NoOrderTakenShop> = finalL.sortedByDescending { it.shop_name.toUpperCase().trim() }.toCollection(ArrayList()).reversed() as ArrayList<NoOrderTakenShop>
+                                    var dt: ArrayList<NoVisitedActivityInshop> = finalLl.sortedByDescending { it.shop_name.toUpperCase().trim() }.toCollection(ArrayList()).reversed() as ArrayList<NoVisitedActivityInshop>
+
+                                    finalLl = dt
+                                    // end 6.0 V 4.1.6 saheli 23-06-2023 mantis 0026414 : performance insight module show shop list & product list alphabetically
+                                    tv_frag_own_performance_headernotVisited.text = finalLl.size.toString()
+//                                    rv_no_visited_taken_from_last3months.adapter = AdapterNoOrderTakenShop(mContext, finalL)
+
+                                    rv_no_visited_taken_from_last3months.adapter = AdapterVisitedInactivityShop(mContext, finalLl)
+
+                                    rv_no_visited_taken_from_last3months.visibility = View.VISIBLE
+                                    cv_frag_own_performance_notVisited.visibility = View.VISIBLE
+                                }else{
+                                    rv_no_visited_taken_from_last3months.visibility = View.GONE
+                                    cv_frag_own_performance_notVisited.visibility = View.GONE
+                                }
+
+                            }
+                        }
+                    } else {
+                    }
+                }, { error ->
+                    error.printStackTrace()
+                })
+        )
+    }
+
+    fun iButtonText(text:String){
+        val simpleDialog = Dialog(mContext)
+        simpleDialog.setCancelable(false)
+        simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        simpleDialog.setContentView(R.layout.dialog_info)
+        val dialogHeader = simpleDialog.findViewById(R.id.dialog_cancel_order_header_TV) as AppCustomTextView
+        // val dialog_yes_no_headerTV = simpleDialog.findViewById(R.id.dialog_yes_no_headerTV) as AppCustomTextView
+        // dialog_yes_no_headerTV.text = "Hi "+Pref.user_name!!+"!"
+        dialogHeader.text = text
+        // val dialogYes = simpleDialog.findViewById(R.id.tv_dialog_yes_no_yes) as AppCustomTextView
+        val dialogNo = simpleDialog.findViewById(R.id.cancel_info_icon) as ImageView
+        /*
+                dialogYes.setOnClickListener({ view ->
+                    simpleDialog.cancel()
+                    CustomStatic.NewOrderTotalCartItem = 0
+                 //   super.onBackPressed();
+                    //(mContext as DashboardActivity).loadFragment(FragType.NewOrderScrOrderDetailsFragment, false, NewOrderScrOrderDetailsFragment.shop_id)
+                })
+        */
+        dialogNo.setOnClickListener({ view ->
+            simpleDialog.cancel()
+        })
+        simpleDialog.show()
+    }
 }

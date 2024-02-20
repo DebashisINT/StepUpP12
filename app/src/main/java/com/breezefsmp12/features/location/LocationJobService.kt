@@ -1,5 +1,6 @@
 package com.breezefsmp12.features.location
 
+import android.annotation.SuppressLint
 import android.app.job.JobInfo
 import android.app.job.JobParameters
 import android.app.job.JobScheduler
@@ -19,6 +20,7 @@ import com.breezefsmp12.features.dashboard.presentation.SystemEventReceiver
 import timber.log.Timber
 
 
+@SuppressLint("SpecifyJobSchedulerIdRange")
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 /**
  * Created by riddhi on 7/11/17.
@@ -47,6 +49,7 @@ class LocationJobService : JobService() {
         Timber.d("=============================Start Job " + AppUtils.getCurrentDateTime() + "==============================")
 
         val myIntent = Intent(this, LocationFuzedService::class.java)
+        Timber.d("TAG_CHECK_LOC_SERVICE_STATUS")
 
         if (!TextUtils.isEmpty(updateFence)) {
             val bundle = Bundle()
@@ -87,6 +90,8 @@ class LocationJobService : JobService() {
                     .build()
 
             val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+            Timber.d("TAG_CHECK_LOC_SERVICE_STATUS")
+
             val resultCode = jobScheduler.schedule(jobInfo)
 
             if (resultCode == JobScheduler.RESULT_SUCCESS) {

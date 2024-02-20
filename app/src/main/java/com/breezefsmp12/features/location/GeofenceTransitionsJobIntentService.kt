@@ -72,9 +72,11 @@ class GeofenceTransitionsJobIntentService : JobIntentService() {
         // Get the transition type.
         val geofenceTransition = geofencingEvent!!.geofenceTransition
 
+        println("tag_nearby_noti geofenceTransition"+geofenceTransition)
+
         // Test that the reported transition was of interest.
         if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER || geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT || geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL) {
-
+            println("tag_nearby_noti geofenceTransition if"+geofenceTransition)
             // Get the geofences that were triggered. A single event can trigger multiple geofences.
             val triggeringGeofences = geofencingEvent.triggeringGeofences
 
@@ -87,16 +89,23 @@ class GeofenceTransitionsJobIntentService : JobIntentService() {
                 Timber.d("=====================Geofence=======================")
                 when (geofenceTransition) {
                     Geofence.GEOFENCE_TRANSITION_ENTER -> {
+                        println("tag_nearby_noti onHandleWork if GEOFENCE_TRANSITION_ENTER")
+
                         Timber.d("Geofence: GeofenceTransitionsJobIntentService : ENTER")
                         if (!TextUtils.isEmpty(Pref.user_id) && !Pref.isAutoLogout)
-                            sendNotification(it.requestId)
+
+                        sendNotification(it.requestId)
                     }
                     Geofence.GEOFENCE_TRANSITION_EXIT -> {
+                        println("tag_nearby_noti onHandleWork if GEOFENCE_TRANSITION_EXIT")
+
                         Timber.d("Geofence: GeofenceTransitionsJobIntentService : EXIT")
                         cancelNotification(it.requestId)
                         endShopDuration(it.requestId)
                     }
                     Geofence.GEOFENCE_TRANSITION_DWELL -> {
+                        println("tag_nearby_noti onHandleWork if GEOFENCE_TRANSITION_DWELL")
+
                         Timber.d("Geofence: GeofenceTransitionsJobIntentService : DWELL")
                         if (!TextUtils.isEmpty(Pref.user_id) && !Pref.isAutoLogout)
                             sendNotification(it.requestId)

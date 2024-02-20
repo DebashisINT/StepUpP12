@@ -70,4 +70,43 @@ class RevisionNote {
 // Rev 9.0 AddAttendanceFragment AppV 4.1.3 Suman    20/05/2023 beat flow updation 26163
 
     //  <!-- Rev 1.0 security config Suman 30-05-2023 mantis id 26261  >-->
+
+    // 2.0 AverageShopListAdapter mantis 26346: Suman 15-06-2023 Current Stock visibility updation
+    // 18.0  LoginActivity 0026388	mantis Suman v 4.1.6 20-06-2023
+
+    //Rev 1.0  AdapterOrdProductOptimized Suman 20-06-2023 mantis 0026389
+    //Rev 1.0  AdapterOrdCartOptimized Suman 20-06-2023 mantis 0026389
+    
+    // stcok module optimized 26391
+    //0026370: Daywiseshop/Records ->Is_Newshopadd
+
+    //26349 :New Feature in Performance Insights
+    //0026349: New Feature in Performance Insights
+    //Changes in Performance Insight module.26348
+
+    // 9.0 NearByShopsListFragment AppV 4.0.7 Suman 26-06-2023 0026307 mantis  26437
+
+    // 0026439: Order Edit in cart optimization saheli 26-06-2023
+    //0026422: Profile Photo not updated in the App saheli 26-06-2023
+    //3.0  DistributorwiseorderlistFragment App V 4.1.6 saheli 04-07-2023 0026504: Distributor wise order list click on assign party list app getting crash.
+    //  Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
+
+    //Begin 16.0 DashboardFragment v 4.1.6 Tufan 11/07/2023 mantis 26546 revisit sync time
+
+    // 21.0 LoginActivity v 4.1.6 Suman 13/07/2023 mantis 26555 Usersettings
+
+    // mantis id 26741 Storage permission updation Suman 22-08-2023
+
+    //mantis id 27063 Suman 04-12-2023
+
+    //whatsapp api call off https://theultimate.io/WAApi/send
+
+    //mantis id 27172 begin
+
+    //mantis id 0027192 Suman date 18-01-2024
+
+    //mantis id 0027232 Puja date 06-02-2024
+
+    //negative distance handle Suman 06-02-2024 mantis id 0027225
+
 }

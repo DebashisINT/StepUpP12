@@ -154,32 +154,24 @@
                 android:contentDescription="@null"/>
 
 
-
-           <!-- <FrameLayout
-                android:id="@+id/fl_noti_with_num"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:visibility="gone">
-
-                <androidx.appcompat.widget.AppCompatImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                <ImageView
+                    android:id="@+id/add_scheduler_email_verification"
+                    android:layout_width="@dimen/_27sdp"
+                    android:layout_height="@dimen/_27sdp"
                     android:contentDescription="@null"
-                    app:srcCompat="@drawable/ic_notification_white"
-                    android:visibility="visible"
+                    app:srcCompat="@drawable/two_step_verification"
+                    android:visibility="gone"
                     android:padding="@dimen/_5sdp" />
 
-                <TextView
-                    android:layout_width="@dimen/_15sdp"
-                    android:layout_height="@dimen/_15sdp"
-                    android:text="1+"
-                    android:textSize="@dimen/_11sdp"
-                    android:background="@drawable/xx"
-                    android:gravity="center"
-                    android:textColor="@color/white"
-                    android:layout_gravity="right"/>
+            <ImageView
+                android:id="@+id/add_template"
+                android:layout_width="@dimen/_27sdp"
+                android:layout_height="@dimen/_27sdp"
+                android:contentDescription="@null"
+                app:srcCompat="@drawable/listing_selected_template_white"
+                android:visibility="gone"
+                android:padding="@dimen/_5sdp" />
 
-            </FrameLayout>-->
 
             <FrameLayout
                 android:layout_width="wrap_content"
@@ -308,8 +300,8 @@
 
         <ImageView
             android:id="@+id/iv_sync_icon"
-            android:layout_width="@dimen/_32sdp"
-            android:layout_height="@dimen/_32sdp"
+            android:layout_width="@dimen/_30sdp"
+            android:layout_height="@dimen/_30sdp"
             android:padding="@dimen/_5sdp"
             android:layout_centerVertical="true"
             android:layout_toLeftOf="@id/iv_search_icon"
@@ -376,9 +368,9 @@
                 android:gravity="center"
                 android:paddingTop="@dimen/_3sdp"
                 android:paddingBottom="@dimen/_3sdp"
-                android:paddingRight="@dimen/_15sdp"
+                android:paddingRight="@dimen/_20sdp"
                 android:textColor="@color/white"
-                android:textSize="@dimen/_13sdp" />
+                android:textSize="@dimen/_12sdp" />
 
         </RelativeLayout>
 

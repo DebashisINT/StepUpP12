@@ -121,6 +121,8 @@ class OfflineMemberAdapter(context: Context, val teamList: List<MemberEntity>, v
             }
             //end 1.0  OfflineMemberAdapter AppV 4.1.5 Saheli    06/06/2023  mantis 0026301: Team Details page working
 
+
+            itemView.tv_team_details_all_party.visibility = View.GONE
         }
     }
 

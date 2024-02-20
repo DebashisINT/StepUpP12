@@ -27,12 +27,18 @@ import android.view.WindowManager
 import android.view.animation.TranslateAnimation
 import android.widget.CheckBox
 import android.widget.ImageView
+import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.FileProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.VolleyError
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
 import com.bumptech.glide.Glide
 import com.breezefsmp12.BuildConfig
 import com.breezefsmp12.CustomStatic
@@ -69,6 +75,12 @@ import com.breezefsmp12.features.billing.api.billinglistapi.BillingListRepoProvi
 import com.breezefsmp12.features.billing.model.BillingListResponseModel
 import com.breezefsmp12.features.commondialog.presentation.CommonDialog
 import com.breezefsmp12.features.commondialog.presentation.CommonDialogClickListener
+import com.breezefsmp12.features.contacts.CallHisDtls
+import com.breezefsmp12.features.contacts.ContactMasterRes
+import com.breezefsmp12.features.contacts.SourceMasterRes
+import com.breezefsmp12.features.contacts.StageMasterRes
+import com.breezefsmp12.features.contacts.StatusMasterRes
+import com.breezefsmp12.features.contacts.TypeMasterRes
 import com.breezefsmp12.features.dashboard.presentation.DashboardActivity
 import com.breezefsmp12.features.dashboard.presentation.api.dayStartEnd.DayStartEndRepoProvider
 import com.breezefsmp12.features.dashboard.presentation.api.gteroutelistapi.GetRouteListRepoProvider
@@ -121,6 +133,7 @@ import com.breezefsmp12.features.privacypolicy.PrivacypolicyWebviewFrag
 import com.breezefsmp12.features.quotation.api.QuotationRepoProvider
 import com.breezefsmp12.features.quotation.model.BSListResponseModel
 import com.breezefsmp12.features.quotation.model.QuotationListResponseModel
+import com.breezefsmp12.features.shopdetail.presentation.api.EditShopRepoProvider
 import com.breezefsmp12.features.stock.api.StockRepositoryProvider
 import com.breezefsmp12.features.stock.model.NewStockListResponseModel
 import com.breezefsmp12.features.stockAddCurrentStock.api.ShopAddStockProvider
@@ -150,11 +163,16 @@ import kotlinx.android.synthetic.main.frag_lead.progress_wheel
 import net.alexandroid.gps.GpsStatusDetector
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
+import org.json.JSONException
+import org.json.JSONObject
 import timber.log.Timber
 import java.io.*
 import java.nio.channels.FileChannel
 import java.util.*
 import java.util.concurrent.ExecutionException
+import kotlin.collections.ArrayList
+
+
 
 
 /**Permission NameDISABLE KEYGUARD Status
@@ -181,7 +199,10 @@ import java.util.concurrent.ExecutionException
 // 15.0  LoginActivity AppV 4.1.3 Suman    17/05/2023  26119
 // 16.0  LoginActivity AppV 4.1.3 Suman    19/05/2023  26163
 // 17.0  LoginActivity 0026316	mantis saheli v 4.1.6 09-06-2023
-
+// 18.0  LoginActivity 0026388	mantis Suman v 4.1.6 20-06-2023
+// 19.0  LoginActivity 0026332	mantis Suman v 4.1.6 21-06-2023
+// 20.0 LoginActivity v 4.1.6 Tufan 11/07/2023 mantis 26546 revisit sync time
+// 21.0 LoginActivity v 4.1.6 Suman 13/07/2023 mantis 26555 Usersettings
 class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
 
     override fun onLocationChanged(location: Location) {
@@ -246,6 +267,8 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
 //    private lateinit var tvappCustomAnydesk: AppCustomTextView
 //    private lateinit var tvappCustomSharelog: AppCustomTextView
 
+    private lateinit var rl_main_new :RelativeLayout
+
     private lateinit var mContext: Context
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -254,11 +277,12 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
         mContext = this@LoginActivity
         println("xyz - login oncreate started" + AppUtils.getCurrentDateTime());
 
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
             initPermissionCheck()
         else
             getIMEI()
+
+        Pref.IsLoggedIn = false
 
         locationManager = getSystemService(Service.LOCATION_SERVICE) as LocationManager
         isGPS = locationManager!!.isProviderEnabled(LocationManager.GPS_PROVIDER);
@@ -304,6 +328,7 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
 
     }
 
+    //Begin 18.0  LoginActivity 0026388	mantis Suman v 4.1.6 20-06-2023
     fun fetchCUrrentLoc(){
         println("loc_fetch_tag login begin")
         loadProgress()
@@ -329,6 +354,7 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                 }
             })
     }
+    //End of 18.0  LoginActivity 0026388	mantis Suman v 4.1.6 20-06-2023
 
     fun isWorkerRunning(tag:String):Boolean{
         val workInstance = WorkManager.getInstance(this)
@@ -388,7 +414,8 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                                     AppUtils.maxAccuracy = configResponse.max_accuracy!!
 
                                 if (!TextUtils.isEmpty(configResponse.min_accuracy))
-                                    AppUtils.minAccuracy = configResponse.min_accuracy!!
+                                    //AppUtils.minAccuracy = configResponse.min_accuracy!!
+                                    Pref.minAccuracy = configResponse.min_accuracy!!
 
                                 /*if (!TextUtils.isEmpty(configResponse.idle_time))
                                     AppUtils.idle_time = configResponse.idle_time!!*/
@@ -731,6 +758,43 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                                 if (configResponse.IsUpdateVisitDataInTodayTable != null)
                                     Pref.IsUpdateVisitDataInTodayTable = configResponse.IsUpdateVisitDataInTodayTable!!
 
+                                //Begin 20.0 LoginActivity v 4.1.6 Tufan 11/07/2023 mantis 26546 revisit sync time
+                                if (configResponse.ShopSyncIntervalInMinutes != null)
+                                    Pref.ShopSyncIntervalInMinutes = configResponse.ShopSyncIntervalInMinutes!!
+                                //End 20.0 LoginActivity v 4.1.6 Tufan 11/07/2023 mantis 26546 revisit sync time
+
+                                if (configResponse.IsShowWhatsAppIconforVisit != null)
+                                    Pref.IsShowWhatsAppIconforVisit = configResponse.IsShowWhatsAppIconforVisit!!
+                                if (configResponse.IsAutomatedWhatsAppSendforRevisit != null)
+                                    Pref.IsAutomatedWhatsAppSendforRevisit = configResponse.IsAutomatedWhatsAppSendforRevisit!!
+
+                                if (configResponse.IsAllowBackdatedOrderEntry != null)
+                                    Pref.IsAllowBackdatedOrderEntry = configResponse.IsAllowBackdatedOrderEntry!!
+                                try{
+                                    Pref.Order_Past_Days = configResponse.Order_Past_Days!!.toString()
+                                }catch (ex:Exception){
+                                    Pref.Order_Past_Days = "0"
+                                }
+
+                                //Begin 15.0 Pref v 4.1.6 Tufan 22/08/2023 mantis 26649 Show distributor scheme with Product
+                                if (configResponse.Show_distributor_scheme_with_Product != null)
+                                    Pref.Show_distributor_scheme_with_Product = configResponse.Show_distributor_scheme_with_Product!!
+                                //End 15.0 Pref v 4.1.6 Tufan 22/08/2023 mantis 26649 Show distributor scheme with Product
+
+                                //Begin 16.0 Pref v 4.1.6 Tufan 07/09/2023 mantis 26785 Multi visit Interval in Minutes Against the Same Shop
+                                if (configResponse.MultiVisitIntervalInMinutes != null)
+                                    Pref.MultiVisitIntervalInMinutes = configResponse.MultiVisitIntervalInMinutes!!
+                                //End 16.0 Pref v 4.1.6 Tufan 07/09/2023 mantis 26785 Multi visit Interval in Minutes Against the Same Shop
+
+                                //Begin v 4.1.6 Tufan 21/09/2023 mantis 26812 AND 26813  FSSAI Lic No and GSTINPANMandatoryforSHOPTYPE4 In add shop page edit
+                                if (configResponse.GSTINPANMandatoryforSHOPTYPE4 != null)
+                                    Pref.GSTINPANMandatoryforSHOPTYPE4 = configResponse.GSTINPANMandatoryforSHOPTYPE4!!
+                                if (configResponse.FSSAILicNoEnableInShop != null)
+                                    Pref.FSSAILicNoEnableInShop = configResponse.FSSAILicNoEnableInShop!!
+                                if (configResponse.FSSAILicNoMandatoryInShop4 != null)
+                                    Pref.FSSAILicNoMandatoryInShop4 = configResponse.FSSAILicNoMandatoryInShop4!!
+                                //Edit v 4.1.6 Tufan 21/09/2023 mantis 26812 AND 26813  FSSAI Lic No and GSTINPANMandatoryforSHOPTYPE4 In add shop page edit
+
                                 /*if (configResponse.willShowUpdateDayPlan != null)
                                     Pref.willShowUpdateDayPlan = configResponse.willShowUpdateDayPlan!!
 
@@ -739,6 +803,43 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
 
                                 if (!TextUtils.isEmpty(configResponse.dailyPlanListHeaderText))
                                     Pref.dailyPlanListHeaderText = configResponse.dailyPlanListHeaderText!!*/
+
+                                //Begin Puja 16.11.23 mantis-0026997 //
+
+                                if (configResponse.isLeadContactNumber != null)
+                                    Pref.isLeadContactNumber = configResponse.isLeadContactNumber!!
+
+                                if (configResponse.isModelEnable != null)
+                                    Pref.isModelEnable = configResponse.isModelEnable!!
+
+                                if (configResponse.isPrimaryApplicationEnable != null)
+                                    Pref.isPrimaryApplicationEnable = configResponse.isPrimaryApplicationEnable!!
+
+                                if (configResponse.isSecondaryApplicationEnable != null)
+                                    Pref.isSecondaryApplicationEnable = configResponse.isSecondaryApplicationEnable!!
+
+                                if (configResponse.isBookingAmount != null)
+                                    Pref.isBookingAmount = configResponse.isBookingAmount!!
+
+                                if (configResponse.isLeadTypeEnable != null)
+                                    Pref.isLeadTypeEnable = configResponse.isLeadTypeEnable!!
+
+                                if (configResponse.isStageEnable != null)
+                                    Pref.isStageEnable = configResponse.isStageEnable!!
+
+                                if (configResponse.isFunnelStageEnable != null)
+                                    Pref.isFunnelStageEnable = configResponse.isFunnelStageEnable!!
+                                //End Puja 16.11.23 mantis-0026997 //
+
+                                if (configResponse.IsGPSRouteSync != null)
+                                    Pref.IsGPSRouteSync = configResponse.IsGPSRouteSync!!
+
+                                if (configResponse.IsSyncBellNotificationInApp != null)
+                                    Pref.IsSyncBellNotificationInApp = configResponse.IsSyncBellNotificationInApp!!
+
+                                if (configResponse.IsShowCustomerLocationShare != null)
+                                    Pref.IsShowCustomerLocationShare = configResponse.IsShowCustomerLocationShare!!
+
                             }
                             isApiInitiated = false
                             /*API_Optimization 02-03-2022*/
@@ -752,6 +853,21 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                                 Pref.isShowBeatGroup = false
                                 Pref.IsShowBeatInMenu = false
                             }
+
+                            //Begin Puja 16.11.23 mantics-0026997 //
+
+                            if(Pref.isCustomerFeatureEnable==false){
+                                Pref.isLeadContactNumber = false
+                                Pref.isModelEnable = false
+                                Pref.isPrimaryApplicationEnable = false
+                                Pref.isSecondaryApplicationEnable = false
+                                Pref.isBookingAmount = false
+                                Pref.isLeadTypeEnable = false
+                                Pref.isStageEnable = false
+                                Pref.isFunnelStageEnable = false
+                            }
+
+                            //End Puja 16.11.23 mantics-0026997 //
 
                             isStartOrEndDay()
 
@@ -1086,6 +1202,8 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                                         AppDatabase.getDBInstance()?.productRateDao()?.insertAll(productRateList)
 
 
+
+
                                         /*  productRateList.forEach {
                                               val productRate = ProductRateEntity()
                                               AppDatabase.getDBInstance()?.productRateDao()?.insert(productRate.apply {
@@ -1113,7 +1231,16 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                                 }
                             } else {
                                /* progress_wheel.stopSpinning()*/
-                                checkToCallAreaListApi()
+                                if(AppDatabase.getDBInstance()?.productListDao()?.getAll()!!.isEmpty()){
+                                    checkToCallAreaListApi()
+                                }else{
+                                    AppDatabase.getDBInstance()?.productRateDao()?.deleteAll()
+                                    val rateList: ArrayList<ProductRateEntity> = AppDatabase.getDBInstance()?.productRateDao()?.getAllBlank() as ArrayList<ProductRateEntity>
+                                    AppDatabase.getDBInstance()?.productRateDao()?.insertAll(rateList)
+                                    checkToCallAreaListApi()
+                                }
+
+                                //checkToCallAreaListApi()
                             }
 
                         }, { error ->
@@ -3439,7 +3566,22 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
     }
 
     private fun initPermissionCheck() {
+        //begin mantis id 26741 Storage permission updation Suman 22-08-2023
+        var permissionList = arrayOf<String>( Manifest.permission.CAMERA,Manifest.permission.READ_PHONE_STATE, Manifest.permission.RECORD_AUDIO,)
+        permissionList+=Manifest.permission.READ_CALL_LOG
+        permissionList+=Manifest.permission.READ_CONTACTS
+        permissionList+=Manifest.permission.WRITE_CALL_LOG
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            permissionList += Manifest.permission.READ_MEDIA_IMAGES
+            permissionList += Manifest.permission.READ_MEDIA_AUDIO
+            permissionList += Manifest.permission.READ_MEDIA_VIDEO
+            permissionList += Manifest.permission.POST_NOTIFICATIONS
+        }else{
+            permissionList += Manifest.permission.WRITE_EXTERNAL_STORAGE
+            permissionList += Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+//end mantis id 26741 Storage permission updation Suman 22-08-2023
         permissionUtils = PermissionUtils(this, object : PermissionUtils.OnPermissionListener {
             @TargetApi(Build.VERSION_CODES.M)
             override fun onPermissionGranted() {
@@ -3478,8 +3620,16 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                     System.exit(0)
                 },3000)*/
             }
+// mantis id 26741 Storage permission updation Suman 22-08-2023
+        },permissionList /*arrayOf<String>(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.READ_PHONE_STATE, Manifest.permission.RECORD_AUDIO,
 
-        }, arrayOf<String>(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.READ_PHONE_STATE, Manifest.permission.RECORD_AUDIO))
+            Manifest.permission.READ_MEDIA_IMAGES,
+            Manifest.permission.READ_MEDIA_AUDIO,
+            Manifest.permission.READ_MEDIA_VIDEO
+
+            )*/
+
+        )
     }
 
     fun fileManagePermii() {
@@ -3577,7 +3727,7 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                 getIMEI()
         }*/
         takeActionOnGeofence()
-        checkForFingerPrint()
+        //checkForFingerPrint()
     }
 
     private fun checkForFingerPrint() {
@@ -3591,14 +3741,17 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                 override fun isFingerPrintSupported(status: Boolean) {
                     if (status) {
                         Log.e("LoginActivity", "========Device support fingerprint===========")
+                        println("LoginActivity_finger"+ "========Device support fingerprint===========")
                     } else {
                         Log.e("LoginActivity", "==========Device does not support fingerprint===========")
+                        println("LoginActivity_finger"+ "========Device does not support fingerprint===========")
                         isFingerPrintSupported = false
                     }
                 }
 
                 override fun onSuccess(signal: CancellationSignal?) {
                     Log.e("LoginActivity", "============Fingerprint accepted=============")
+                    println("LoginActivity_finger"+ "========Fingerprint accepted===========")
 
                     if (fingerprintDialog != null && fingerprintDialog?.isVisible!!) {
                         fingerprintDialog?.dismiss()
@@ -3619,7 +3772,7 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
 
                 override fun onError(msg: String) {
                     Log.e("LoginActivity", "Fingerprint error=====> " + msg)
-
+                    println("LoginActivity_finger"+ "=error======")
                     when {
                         msg.equals("Fingerprint operation cancelled.", ignoreCase = true) -> {
                         }
@@ -3636,6 +3789,7 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
             })
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                println("LoginActivity_finger"+ " >M")
                 CheckFingerPrint().FingerprintHandler().doAuth()
             }
         } catch (e: Exception) {
@@ -3669,6 +3823,7 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
     }
 
     private fun initView() {
+        rl_main_new=findViewById(R.id.rl_main_new)
         val login_TV= findViewById<ImageView>(R.id.login_TV)
         login_TV.isEnabled = true
         enableScreen()
@@ -3741,136 +3896,171 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
     override fun onClick(p0: View?) {
         when (p0!!.id) {
             R.id.login_TV -> {
-                println("login_time_analysis ${AppUtils.getCurrentDateTime()}")
-                //file del
-               /*  doAsync {
-                     try{
-                         if(Pref.user_id==null){
-                             val fileUrl = Uri.parse(File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), BuildConfig.APPLICATION_ID+"/Log/Fsmlog.html").path)
-                             val file = File(fileUrl.path)
-                             FileLoggingTree.fileDelete(file)
-                         }
-                     }catch (ex:Exception){
-                         ex.printStackTrace()
-                     }
-                     uiThread {
-                         Timber.plant(Timber.DebugTree())
-                         Timber.plant(FileLoggingTree())
-                     }
-                 }*/
-                fetchCUrrentLoc()
 
-                Handler().postDelayed(Runnable {
-                    loadNotProgress()
-                    Pref.selectedVisitStationID=""
-                    Pref.selectedVisitStationName=""
-
-                    Timber.d("Login btn clicked ${AppUtils.getCurrentDateTime()}")
-                    val stat = StatFs(Environment.getExternalStorageDirectory().path)
-                    val bytesAvailable: Long
-                    bytesAvailable = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                        stat.blockSizeLong * stat.availableBlocksLong
-                    } else {
-                        stat.blockSize.toLong() * stat.availableBlocks.toLong()
-                    }
-                    val megAvailable = bytesAvailable / (1024 * 1024)
-                    println("storage " + megAvailable.toString());
-//                XLog.d("phone storage : FREE SPACE AVAILABLE : " + megAvailable.toString() + " Time :" + AppUtils.getCurrentDateTime())
-                    Timber.d("phone storage : FREE SPACE AVAILABLE : " + megAvailable.toString() + " Time :" + AppUtils.getCurrentDateTime())
-
-                    if (megAvailable < 5000 && false) {
-                        val simpleDialog = Dialog(this@LoginActivity)
+                val packageName = packageName
+                val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+                if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                    CommonDialog.getInstance(getString(R.string.app_name), "You must select the option 'Allow' to use this app. " ,
+                        "Cancel", "Ok", false, object : CommonDialogClickListener {
+                            override fun onLeftClick() {
+                                finish()
+                            }
+                            override fun onRightClick(editableData: String) {
+                                val intent = Intent()
+                                intent.action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+                                intent.data = Uri.parse("package:$packageName")
+                                startActivityForResult(intent, 998)
+                            }
+                        }).show(supportFragmentManager, "")
+                } else{
+                    if(Settings.Secure.getInt(this.getContentResolver(), Settings.Secure.ADB_ENABLED, 0) == 1 && false) {
+                        val simpleDialog = Dialog(mContext)
                         simpleDialog.setCancelable(false)
                         simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-                        simpleDialog.setContentView(R.layout.dialog_message)
-                        val dialogHeader = simpleDialog.findViewById(R.id.dialog_message_header_TV) as AppCustomTextView
-                        val dialog_yes_no_headerTV = simpleDialog.findViewById(R.id.dialog_message_headerTV) as AppCustomTextView
-                        if (Pref.user_name != null) {
-                            dialog_yes_no_headerTV.text = "Hi " + Pref.user_name!! + "!"
-                        } else {
-                            dialog_yes_no_headerTV.text = "Hi User" + "!"
-                        }
-                        //dialogHeader.text = "You have only "+megAvailable.toString()+ " MB available to store data. It is not sufficient\n" +
-                        //"to proceed. Please clear memory and Retry Login again. Thanks."
-
-                        dialogHeader.text = "Please note that memory available is less than 5 GB. App may not function properly. Please make available memory greater than 5 GB."
-
-                        val dialogYes = simpleDialog.findViewById(R.id.tv_message_ok) as AppCustomTextView
-                        dialogYes.setOnClickListener({ view ->
+                        simpleDialog.setContentView(R.layout.dialog_debugger)
+                        val okBtn = simpleDialog.findViewById(R.id.tv_dialog_ok) as AppCustomTextView
+                        val tvHeader = simpleDialog.findViewById(R.id.dialog_yes_no_headerTV) as AppCustomTextView
+                        tvHeader.text = getString(R.string.app_name)
+                        okBtn.setOnClickListener({ view ->
                             simpleDialog.cancel()
-                            login_TV.isEnabled = false
-                            disableScreen()
-                            println("xyzy - login called" + AppUtils.getCurrentDateTime());
-                            //Crashlytics.getInstance().crash()
-                            if (TextUtils.isEmpty(username_EDT.text.toString().trim())) {
-                                showSnackMessage(getString(R.string.error_enter_username))
-                                login_TV.isEnabled = true
-                                enableScreen()
-                            } else if (TextUtils.isEmpty(password_EDT.text.toString().trim())) {
-                                showSnackMessage(getString(R.string.error_enter_pwd))
-                                login_TV.isEnabled = true
-                                enableScreen()
-                            } else {
-                                AppUtils.hideSoftKeyboard(this@LoginActivity)
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                    if (Settings.canDrawOverlays(this@LoginActivity)) {
-                                        initiateLogin()
-                                    } else {
-                                        //Permission is not available. Display error text.
-                                        //getOverlayPermission()
-
-                                        // overlay testing
-                                        initiateLogin()
-                                    }
-                                } else {
-                                    initiateLogin()
-                                }
-
-
-                            }
-                            /*gotoHomeActivity()
-                            isLoginLoaded = true*/
                         })
                         simpleDialog.show()
                     }
                     else {
-                        login_TV.isEnabled = false
-                        disableScreen()
-                        println("xyzy - login called" + AppUtils.getCurrentDateTime());
-                        //Crashlytics.getInstance().crash()
-                        if (TextUtils.isEmpty(username_EDT.text.toString().trim())) {
-                            showSnackMessage(getString(R.string.error_enter_username))
-                            login_TV.isEnabled = true
-                            enableScreen()
-                        } else if (TextUtils.isEmpty(password_EDT.text.toString().trim())) {
-                            showSnackMessage(getString(R.string.error_enter_pwd))
-                            login_TV.isEnabled = true
-                            enableScreen()
-                        } else {
+                        println("login_time_analysis ${AppUtils.getCurrentDateTime()}")
+                        //file del
+                        /*  doAsync {
+                              try{
+                                  if(Pref.user_id==null){
+                                      val fileUrl = Uri.parse(File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), BuildConfig.APPLICATION_ID+"/Log/Fsmlog.html").path)
+                                      val file = File(fileUrl.path)
+                                      FileLoggingTree.fileDelete(file)
+                                  }
+                              }catch (ex:Exception){
+                                  ex.printStackTrace()
+                              }
+                              uiThread {
+                                  Timber.plant(Timber.DebugTree())
+                                  Timber.plant(FileLoggingTree())
+                              }
+                          }*/
+                        //Begin 18.0  LoginActivity 0026388	mantis Suman v 4.1.6 20-06-2023
+                        fetchCUrrentLoc()
+                        //End of 18.0  LoginActivity 0026388	mantis Suman v 4.1.6 20-06-2023
+
+                        Handler().postDelayed(Runnable {
+                            loadNotProgress()
                             AppUtils.hideSoftKeyboard(this@LoginActivity)
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                if (Settings.canDrawOverlays(this@LoginActivity)) {
-                                    initiateLogin()
-                                } else {
-                                    //Permission is not available. Display error text.
-                                    //getOverlayPermission()
+                            rl_main_new.requestFocus()
 
-                                    // overlay testing
-                                    initiateLogin()
-                                }
+                            Pref.selectedVisitStationID=""
+                            Pref.selectedVisitStationName=""
+
+                            Timber.d("Login btn clicked ${AppUtils.getCurrentDateTime()}")
+                            val stat = StatFs(Environment.getExternalStorageDirectory().path)
+                            val bytesAvailable: Long
+                            bytesAvailable = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                                stat.blockSizeLong * stat.availableBlocksLong
                             } else {
-                                initiateLogin()
+                                stat.blockSize.toLong() * stat.availableBlocks.toLong()
                             }
+                            val megAvailable = bytesAvailable / (1024 * 1024)
+                            println("storage " + megAvailable.toString());
+//                XLog.d("phone storage : FREE SPACE AVAILABLE : " + megAvailable.toString() + " Time :" + AppUtils.getCurrentDateTime())
+                            Timber.d("phone storage : FREE SPACE AVAILABLE : " + megAvailable.toString() + " Time :" + AppUtils.getCurrentDateTime())
+
+                            if (megAvailable < 5000 && false) {
+                                val simpleDialog = Dialog(this@LoginActivity)
+                                simpleDialog.setCancelable(false)
+                                simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                                simpleDialog.setContentView(R.layout.dialog_message)
+                                val dialogHeader = simpleDialog.findViewById(R.id.dialog_message_header_TV) as AppCustomTextView
+                                val dialog_yes_no_headerTV = simpleDialog.findViewById(R.id.dialog_message_headerTV) as AppCustomTextView
+                                if (Pref.user_name != null) {
+                                    dialog_yes_no_headerTV.text = "Hi " + Pref.user_name!! + "!"
+                                } else {
+                                    dialog_yes_no_headerTV.text = "Hi User" + "!"
+                                }
+                                //dialogHeader.text = "You have only "+megAvailable.toString()+ " MB available to store data. It is not sufficient\n" +
+                                //"to proceed. Please clear memory and Retry Login again. Thanks."
+
+                                dialogHeader.text = "Please note that memory available is less than 5 GB. App may not function properly. Please make available memory greater than 5 GB."
+
+                                val dialogYes = simpleDialog.findViewById(R.id.tv_message_ok) as AppCustomTextView
+                                dialogYes.setOnClickListener({ view ->
+                                    simpleDialog.cancel()
+                                    login_TV.isEnabled = false
+                                    disableScreen()
+                                    println("xyzy - login called" + AppUtils.getCurrentDateTime());
+                                    //Crashlytics.getInstance().crash()
+                                    if (TextUtils.isEmpty(username_EDT.text.toString().trim())) {
+                                        showSnackMessage(getString(R.string.error_enter_username))
+                                        login_TV.isEnabled = true
+                                        enableScreen()
+                                    } else if (TextUtils.isEmpty(password_EDT.text.toString().trim())) {
+                                        showSnackMessage(getString(R.string.error_enter_pwd))
+                                        login_TV.isEnabled = true
+                                        enableScreen()
+                                    } else {
+                                        AppUtils.hideSoftKeyboard(this@LoginActivity)
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                            if (Settings.canDrawOverlays(this@LoginActivity)) {
+                                                initiateLogin()
+                                            } else {
+                                                //Permission is not available. Display error text.
+                                                //getOverlayPermission()
+
+                                                // overlay testing
+                                                initiateLogin()
+                                            }
+                                        } else {
+                                            initiateLogin()
+                                        }
 
 
-                        }
-                        /*gotoHomeActivity()
-                        isLoginLoaded = true*/
+                                    }
+                                    /*gotoHomeActivity()
+                                    isLoginLoaded = true*/
+                                })
+                                simpleDialog.show()
+                            }
+                            else {
+                                login_TV.isEnabled = false
+                                disableScreen()
+                                println("xyzy - login called" + AppUtils.getCurrentDateTime());
+                                //Crashlytics.getInstance().crash()
+                                if (TextUtils.isEmpty(username_EDT.text.toString().trim())) {
+                                    showSnackMessage(getString(R.string.error_enter_username))
+                                    login_TV.isEnabled = true
+                                    enableScreen()
+                                } else if (TextUtils.isEmpty(password_EDT.text.toString().trim())) {
+                                    showSnackMessage(getString(R.string.error_enter_pwd))
+                                    login_TV.isEnabled = true
+                                    enableScreen()
+                                } else {
+                                    AppUtils.hideSoftKeyboard(this@LoginActivity)
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                        if (Settings.canDrawOverlays(this@LoginActivity)) {
+                                            initiateLogin()
+                                        } else {
+                                            //Permission is not available. Display error text.
+                                            //getOverlayPermission()
+
+                                            // overlay testing
+                                            initiateLogin()
+                                        }
+                                    } else {
+                                        initiateLogin()
+                                    }
+
+
+                                }
+                                /*gotoHomeActivity()
+                                isLoginLoaded = true*/
+                            }
+                        }, 2200)
                     }
-                }, 2200)
-
-
-
+                }
             }
             R.id.forgot_password_TV -> {
                 val pop = ForgotPasswordDialog()
@@ -4046,9 +4236,9 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
         try {
             val shareIntent = Intent(Intent.ACTION_SEND)
 //        val phototUri = Uri.parse(localAbsoluteFilePath)
-            //val fileUrl = Uri.parse(File(Environment.getExternalStorageDirectory(), "xdemologsample/log").path);
+            //val fileUrl = Uri.parse(File(Environment.getExternalStorageDirectory(), "xbreezefsmp12logsample/log").path);
             //27-09-2021
-//            val fileUrl = Uri.parse(File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "xdemologsample/log").path);
+//            val fileUrl = Uri.parse(File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "xbreezefsmp12logsample/log").path);
             var currentDBPath="/data/user/0/com.breezefsmp12/files/Fsmlog.html"
             val fileUrl = Uri.parse(File(currentDBPath, "").path);
 
@@ -4098,6 +4288,12 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
             println("xyz - initiateLogin end" + AppUtils.getCurrentDateTime());
             Handler(Looper.getMainLooper()).postDelayed({
                 callNewSettingsApi()
+                // code by puja on 11/6/2023
+                try {
+                    //callNewSettingsApiModified(username_EDT.text.toString().trim(), password_EDT.text.toString())
+                } catch (e: java.lang.Exception) {
+                    e.printStackTrace()
+                }
             }, 400)
         } else {
             //showSnackMessage(getString(R.string.no_internet))
@@ -4181,17 +4377,32 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                                 } else
                                     prapareLogin(this@LoginActivity)
 
-                            } else {
+                            }
+                            else {
                                /* progress_wheel.stopSpinning()*/
+                                println("tag_edit else")
                                 loadNotProgress()// mantis 0025667
-                                openDialogPopup(newSettings.message!!)
                                 login_TV.isEnabled = true
+
+                            //Begin 19.0  LoginActivity 0026332	mantis Suman v 4.1.6 21-06-2023
+                                username_EDT.isEnabled = true
+                                password_EDT.isEnabled = true
+
+                                username_EDT.isFocusable = true
+                                username_EDT.isCursorVisible = true
+
+                                password_EDT.isFocusable = true
+                                password_EDT.isCursorVisible = true
+                            //ENd of 19.0  LoginActivity 0026332	mantis Suman v 4.1.6 21-06-2023
+
                                 enableScreen()
+                                openDialogPopup(newSettings.message!!)
                             }
                             isApiInitiated = false
 
                         }, { error ->
 //                            XLog.d(" Login callNewSettingsApi : error : " +error.message.toString())
+                            println("tag_edit err")
                             Timber.d(" Login callNewSettingsApi : error : " +error.message.toString())
                             isApiInitiated = false
                             error.printStackTrace()
@@ -4200,6 +4411,18 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                             login_TV.isEnabled = true
                             username_EDT.isEnabled = true
                             password_EDT.isEnabled = true
+
+                            //Begin 19.0  LoginActivity 0026332	mantis Suman v 4.1.6 21-06-2023
+                            username_EDT.isEnabled = true
+                            password_EDT.isEnabled = true
+
+                            username_EDT.isFocusable = true
+                            username_EDT.isCursorVisible = true
+
+                            password_EDT.isFocusable = true
+                            password_EDT.isCursorVisible = true
+                            //ENd of 19.0  LoginActivity 0026332	mantis Suman v 4.1.6 21-06-2023
+
                             enableScreen()
                             // 17.0  LoginActivity start 0026316	mantis saheli v 4.1.6 09-06-2023
 //                            AppUtils.deleteCache(mContext)
@@ -4207,6 +4430,147 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                             showSnackMessage(getString(R.string.something_went_wrong_new))
                         })
         )
+    }
+
+    private fun callNewSettingsApiModified(userName: String, password: String) {
+
+        val queue = Volley.newRequestQueue(this)
+
+        loadProgress()
+
+        val request: StringRequest =
+            object : StringRequest(Request.Method.POST, "http://3.7.30.86:8072/API/Configuration/LoginSettings", object : Response.Listener<String?> {
+                override fun onResponse(response: String?) {
+
+                    // Toast.makeText(this@LoginActivity, "Data Updated..", Toast.LENGTH_SHORT).show()
+                    try {
+
+                        println("xyz - callNewModifiedSettingsApi started" + response);
+                        val respObj = JSONObject(response)
+
+                        val newSettings = NewSettingsResponseModel()
+                        newSettings.status = respObj.getString("status")
+                        newSettings.message = respObj.getString("message")
+                        newSettings.isAddAttendence = respObj.getBoolean("isAddAttendence")
+                        newSettings.isFingerPrintMandatoryForAttendance = respObj.getBoolean("isFingerPrintMandatoryForAttendance")
+                        newSettings.isFingerPrintMandatoryForVisit = respObj.getBoolean("isFingerPrintMandatoryForVisit")
+                        newSettings.isSelfieMandatoryForAttendance = respObj.getBoolean("isSelfieMandatoryForAttendance")
+                        println("abc - callNewModifiedSettingsApi started-" + respObj);
+
+                        if (newSettings.status == NetworkConstant.SUCCESS) {
+                            // progress_wheel.stopSpinning()
+                            if (newSettings.isFingerPrintMandatoryForAttendance != null)
+                                Pref.isFingerPrintMandatoryForAttendance = newSettings.isFingerPrintMandatoryForAttendance!!
+
+                            if (newSettings.isFingerPrintMandatoryForVisit != null)
+                                Pref.isFingerPrintMandatoryForVisit = newSettings.isFingerPrintMandatoryForVisit!!
+
+                            if (newSettings.isSelfieMandatoryForAttendance != null)
+                                Pref.isSelfieMandatoryForAttendance = newSettings.isSelfieMandatoryForAttendance!!
+
+                            if (newSettings.isAddAttendence!!) {
+                                if (Pref.isFingerPrintMandatoryForAttendance) {
+                                    if (isFingerPrintSupported) {
+                                        checkForFingerPrint()
+
+                                        fingerprintDialog = FingerprintDialog()
+                                        fingerprintDialog?.show(supportFragmentManager, "")
+                                    } else {
+                                        if (Pref.isSelfieMandatoryForAttendance){
+                                            if(Pref.IsLoginSelfieRequired){
+                                                showSelfieDialog()
+                                            }else{
+                                                prapareLogin(this@LoginActivity)
+                                            }
+                                        }
+                                        else{
+                                            prapareLogin(this@LoginActivity)
+                                        }
+                                    }
+                                }
+                                else if (Pref.isSelfieMandatoryForAttendance){
+                                    if(Pref.IsLoginSelfieRequired){
+                                        showSelfieDialog()
+                                    }else{
+                                        prapareLogin(this@LoginActivity)
+                                    }
+                                }
+                                else {
+                                    prapareLogin(this@LoginActivity)
+                                }
+                            } else
+                                prapareLogin(this@LoginActivity)
+
+                        }
+                        else {
+                            // progress_wheel.stopSpinning()
+                            println("tag_edit else")
+                            loadNotProgress()// mantis 0025667
+                            login_TV.isEnabled = true
+
+                            //Begin 19.0  LoginActivity 0026332	mantis Suman v 4.1.6 21-06-2023
+                            username_EDT.isEnabled = true
+                            password_EDT.isEnabled = true
+
+                            username_EDT.isFocusable = true
+                            username_EDT.isCursorVisible = true
+
+                            password_EDT.isFocusable = true
+                            password_EDT.isCursorVisible = true
+                            //ENd of 19.0  LoginActivity 0026332	mantis Suman v 4.1.6 21-06-2023
+
+                            enableScreen()
+                            openDialogPopup(newSettings.message!!)
+                        }
+                        isApiInitiated = false
+
+                    } catch (e: JSONException) {
+                        e.printStackTrace()
+                    }
+                }
+            }, object : Response.ErrorListener {
+                override fun onErrorResponse(error: VolleyError?) {
+
+                    println("tag_edit err")
+                    Timber.d(" Login callNewSettingsApi : error : " +error!!.message.toString())
+                    isApiInitiated = false
+                    error!!.printStackTrace()
+                    loadNotProgress()// mantis 0025667
+                    //  progress_wheel.stopSpinning()
+                    login_TV.isEnabled = true
+                    username_EDT.isEnabled = true
+                    password_EDT.isEnabled = true
+
+                    //Begin 19.0  LoginActivity 0026332	mantis Suman v 4.1.6 21-06-2023
+                    username_EDT.isEnabled = true
+                    password_EDT.isEnabled = true
+
+                    username_EDT.isFocusable = true
+                    username_EDT.isCursorVisible = true
+
+                    password_EDT.isFocusable = true
+                    password_EDT.isCursorVisible = true
+                    //ENd of 19.0  LoginActivity 0026332	mantis Suman v 4.1.6 21-06-2023
+
+                    enableScreen()
+                    // 17.0  LoginActivity start 0026316	mantis saheli v 4.1.6 09-06-2023
+//                            AppUtils.deleteCache(mContext)
+                    // 17.0  LoginActivity end 0026316	mantis saheli v 4.1.6 09-06-2023
+                    showSnackMessage(getString(R.string.something_went_wrong_new))
+                }
+            }) {
+                override fun getParams(): MutableMap<String, String>? {
+
+                    val params: MutableMap<String, String> = HashMap()
+
+                    params["user_name"] = userName
+                    params["password"] = password
+
+                    return params
+                }
+            }
+
+        queue.add(request)
     }
 
     private fun showSelfieDialog() {
@@ -4221,6 +4585,20 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
     }
 
     private fun initCameraPermissionCheck() {
+
+        //begin mantis id 26741 Storage permission updation Suman 22-08-2023
+        var permissionList = arrayOf<String>( Manifest.permission.CAMERA)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            permissionList += Manifest.permission.READ_MEDIA_IMAGES
+            permissionList += Manifest.permission.READ_MEDIA_AUDIO
+            permissionList += Manifest.permission.READ_MEDIA_VIDEO
+        }else{
+            permissionList += Manifest.permission.WRITE_EXTERNAL_STORAGE
+            permissionList += Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+//end mantis id 26741 Storage permission updation Suman 22-08-2023
+
         permissionUtils = PermissionUtils(this, object : PermissionUtils.OnPermissionListener {
             override fun onPermissionGranted() {
                 captureFrontImage()
@@ -4230,7 +4608,7 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                 showSnackMessage(getString(R.string.accept_permission))
             }
 
-        }, arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+        },permissionList) //arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
     }
 
     private fun captureFrontImage() {
@@ -4389,6 +4767,9 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
             Pref.pwd = ""
         }
 
+        Pref.logId = username
+        Pref.loginPassword = password
+
         var mLocation = ""
 
         if (Pref.latitude != "0.0" && Pref.longitude != "0.0") {
@@ -4439,7 +4820,7 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
         Timber.d("LoginApiRequest : " + "\n, IMEI :" + Pref.imei + ", Time :" + AppUtils.getCurrentDateTime() + ", Version :" + AppUtils.getVersionName(this) +
                 ", username : " + username + ", password : " + password + ", lat : " + Pref.latitude + ", long : " + Pref.longitude + ", location : " + location +
                 ", device token : " + Pref.deviceToken)
-
+        Pref.UserLoginContactID = username
         val repository = LoginRepositoryProvider.provideLoginRepository()
         /*progress_wheel.spin()*/
         BaseActivity.compositeDisposable.add(
@@ -4596,7 +4977,8 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                             }
                             isApiInitiated = false
 
-                        }, { error ->
+                        },
+                            { error ->
                             login_TV.isEnabled = true
                             enableScreen()
                             isApiInitiated = false
@@ -4612,7 +4994,7 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
 
 
     private fun doAfterLoginFunctionality(loginResponse: LoginResponse) {
-        println("xyz - doLogin end" + AppUtils.getCurrentDateTime());
+        println("xyz - doLogin end" + AppUtils.getCurrentDateTime())
         println("xyz - doAfterLoginFunctionality started" + AppUtils.getCurrentDateTime());
         // setEveningAlarm(this, 15, 9)
 
@@ -4853,6 +5235,7 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                                                     //showSnackMessage(resources.getString(R.string.alert_imei_unavailable))
                                                     Pref.user_id = ""
                                                     showSnackMessage("You already marked Day End. You will be able to login tomorrow! Thanks.")
+                                                    loadNotProgress()
                                                     login_TV.isEnabled = true
                                                     enableScreen()
                                                 } else {
@@ -6539,8 +6922,32 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                                                     Pref.IsMenuShowAIMarketAssistant = response.getconfigure?.get(i)?.Value == "1"
                                                 }
                                             }
+                                            //Begin 21.0 LoginActivity v 4.1.6 Suman 13/07/2023 mantis 26555 Usersettings
+                                            else if (response.getconfigure?.get(i)?.Key.equals("IsUsbDebuggingRestricted", ignoreCase = true)) {
+                                                Pref.IsUsbDebuggingRestricted = response.getconfigure!![i].Value == "1"
+                                                if (!TextUtils.isEmpty(response.getconfigure?.get(i)?.Value)) {
+                                                    Pref.IsUsbDebuggingRestricted = response.getconfigure?.get(i)?.Value == "1"
+                                                }
+                                            }
+                                            //End 21.0 LoginActivity v 4.1.6 Suman 13/07/2023 mantis 26555 Usersettings
 
-
+                                            else if (response.getconfigure?.get(i)?.Key.equals("IsDisabledUpdateAddress", ignoreCase = true)) {
+                                                Pref.IsDisabledUpdateAddress = response.getconfigure!![i].Value == "1"
+                                                if (!TextUtils.isEmpty(response.getconfigure?.get(i)?.Value)) {
+                                                    Pref.IsDisabledUpdateAddress = response.getconfigure?.get(i)?.Value == "1"
+                                                }
+                                            }
+                                            else if (response.getconfigure?.get(i)?.Key.equals("IsShowMenuCRMContacts", ignoreCase = true)) {
+                                                Pref.IsShowMenuCRMContacts = response.getconfigure!![i].Value == "1"
+                                                if (!TextUtils.isEmpty(response.getconfigure?.get(i)?.Value)) {
+                                                    Pref.IsShowMenuCRMContacts = response.getconfigure?.get(i)?.Value == "1"
+                                                }
+                                            }else if (response.getconfigure?.get(i)?.Key.equals("IsCallLogHistoryActivated", ignoreCase = true)) {
+                                                Pref.IsCallLogHistoryActivated = response.getconfigure!![i].Value == "1"
+                                                if (!TextUtils.isEmpty(response.getconfigure?.get(i)?.Value)) {
+                                                    Pref.IsCallLogHistoryActivated = response.getconfigure?.get(i)?.Value == "1"
+                                                }
+                                            }
 
                                             /*else if (response.getconfigure?.get(i)?.Key.equals("isFingerPrintMandatoryForAttendance", ignoreCase = true)) {
                                                 if (!TextUtilsDash.isEmpty(response.getconfigure?.get(i)?.Value)) {
@@ -6665,8 +7072,15 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
             shopObj.shop_id = shop_list[i].shop_id
             shopObj.shopName = shop_list[i].shop_name
             shopObj.shopImageLocalPath = shop_list[i].Shop_Image
-            shopObj.shopLat = shop_list[i].shop_lat!!.toDouble()
-            shopObj.shopLong = shop_list[i].shop_long!!.toDouble()
+            try {
+                shopObj.shopLat = shop_list[i].shop_lat!!.toDouble()
+                shopObj.shopLong = shop_list[i].shop_long!!.toDouble()
+            }catch (ex:Exception){
+                ex.printStackTrace()
+                shopObj.shopLat = 0.0
+                shopObj.shopLong = 0.0
+            }
+
             shopObj.duration = ""
             shopObj.endTimeStamp = ""
             shopObj.timeStamp = ""
@@ -6682,7 +7096,11 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
             shopObj.ownerContactNumber = shop_list[i].owner_contact_no
             shopObj.pinCode = shop_list[i].pin_code
             shopObj.isUploaded = true
-            shopObj.ownerName = shop_list[i].owner_name
+            if(shop_list[i].owner_name==null){
+                shopObj.ownerName = shop_list[i].shop_name
+            }else{
+                shopObj.ownerName = shop_list[i].owner_name
+            }
             shopObj.user_id = Pref.user_id
             shopObj.orderValue = 0
             shopObj.type = shop_list[i].type
@@ -6847,10 +7265,46 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
             shopObj.isShopDuplicate=shop_list[i].isShopDuplicate
 
             shopObj.purpose=shop_list[i].purpose
+            //start AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+            try {
+                shopObj.FSSAILicNo = shop_list[i].FSSAILicNo
+            }catch (ex:Exception){
+                ex.printStackTrace()
+                shopObj.FSSAILicNo = ""
+            }
+//end AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+
+
 
             /*GSTIN & PAN NUMBER*/
             shopObj.gstN_Number=shop_list[i].GSTN_Number
             shopObj.shopOwner_PAN=shop_list[i].ShopOwner_PAN
+            try{
+                shopObj.isUpdateAddressFromShopMaster = shop_list[i].isUpdateAddressFromShopMaster
+            }catch (ex:Exception){
+                ex.printStackTrace()
+                shopObj.isUpdateAddressFromShopMaster = false
+            }
+
+            //crm details
+            shopObj.companyName_id = if(shop_list[i].crm_companyID.isNullOrEmpty()) "" else shop_list[i].crm_companyID
+            shopObj.companyName = if(shop_list[i].crm_companyName.isNullOrEmpty()) "" else shop_list[i].crm_companyName
+            shopObj.jobTitle = if(shop_list[i].crm_jobTitle.isNullOrEmpty()) "" else shop_list[i].crm_jobTitle
+            shopObj.crm_type_ID = if(shop_list[i].crm_typeID.isNullOrEmpty()) "" else shop_list[i].crm_typeID
+            shopObj.crm_type = if(shop_list[i].crm_type.isNullOrEmpty()) "" else shop_list[i].crm_type
+            shopObj.crm_status_ID = if(shop_list[i].crm_statusID.isNullOrEmpty()) "" else shop_list[i].crm_statusID
+            shopObj.crm_status = if(shop_list[i].crm_status.isNullOrEmpty()) "" else shop_list[i].crm_status
+            shopObj.crm_source_ID = if(shop_list[i].crm_sourceID.isNullOrEmpty()) "" else shop_list[i].crm_sourceID
+            shopObj.crm_source = if(shop_list[i].crm_source.isNullOrEmpty()) "" else shop_list[i].crm_source
+            shopObj.crm_reference = if(shop_list[i].crm_reference.isNullOrEmpty()) "" else shop_list[i].crm_reference
+            shopObj.crm_reference_ID = if(shop_list[i].crm_referenceID.isNullOrEmpty()) "" else shop_list[i].crm_referenceID
+            shopObj.crm_reference_ID_type = if(shop_list[i].crm_referenceID_type.isNullOrEmpty()) "" else shop_list[i].crm_referenceID_type
+            shopObj.crm_stage_ID = if(shop_list[i].crm_stage_ID.isNullOrEmpty()) "" else shop_list[i].crm_stage_ID
+            shopObj.crm_stage = if(shop_list[i].crm_stage.isNullOrEmpty()) "" else shop_list[i].crm_stage
+            shopObj.crm_assignTo = if(shop_list[i].assign_to.isNullOrEmpty()) "" else shop_list[i].assign_to
+            shopObj.crm_saved_from = if(shop_list[i].saved_from_status.isNullOrEmpty()) "" else shop_list[i].saved_from_status
+            shopObj.crm_firstName = if(shop_list[i].shop_firstName.isNullOrEmpty()) "" else shop_list[i].shop_firstName
+            shopObj.crm_lastName = if(shop_list[i].shop_lastName.isNullOrEmpty()) "" else shop_list[i].shop_lastName
 
 
             list.add(shopObj)
@@ -7061,6 +7515,16 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                 shopObj.isShopDuplicate=shop_list[i].isShopDuplicate
 
                 shopObj.purpose=shop_list[i].purpose
+                //start AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+                try {
+                    shopObj.FSSAILicNo = shop_list[i].FSSAILicNo
+                }catch (ex:Exception){
+                    ex.printStackTrace()
+                    shopObj.FSSAILicNo = ""
+                }
+//end AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+
+
                 shopObj.isOwnshop = false
 
                 list.add(shopObj)
@@ -7332,12 +7796,236 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
 
     }
 
+    private fun fetchWhatsData(){
+        var isDataP = AppDatabase.getDBInstance()?.visitRevisitWhatsappStatusDao()!!.getAll()
+        if(isDataP?.size!=0){
+            checkCRMAvaiable()
+        }else if(Pref.IsShowWhatsAppIconforVisit || Pref.IsAutomatedWhatsAppSendforRevisit){
+            val repository = EditShopRepoProvider.provideEditShopWithoutImageRepository()
+            BaseActivity.compositeDisposable.add(
+                repository.whatsAppStatusFetch(Pref.user_id!!.toString())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe({ result ->
+                        val resp = result as WhatsappApiFetchData
+                        if(resp.status.equals("200")){
+
+                            var list = resp.shop_whatsapp_api_list
+                            list.forEach {
+                                it.whatsappSentMsg = if(it.whatsappSentMsg == null) "" else it.whatsappSentMsg
+                                it.date = AppUtils.getFormatedDateNew(it.date!!.toString(),"dd-mm-yyyy","yyyy-mm-dd")!!
+                            }
+
+                            AppDatabase.getDBInstance()?.visitRevisitWhatsappStatusDao()!!.insertAll(resp.shop_whatsapp_api_list)
+                            AppDatabase.getDBInstance()?.visitRevisitWhatsappStatusDao()!!.updateWhatsStatusUpload()
+                            Handler().postDelayed(Runnable {
+                                checkCRMAvaiable()
+                            }, 1000)
+                        }else{
+                            checkCRMAvaiable()
+                        }
+                    }, { error ->
+                        error.printStackTrace()
+                        checkCRMAvaiable()
+                    })
+            )
+        }else {
+            checkCRMAvaiable()
+        }
+    }
+
+    fun checkCRMAvaiable(){
+        if(Pref.IsShowMenuCRMContacts){
+            callCRMCompanyMasterApi()
+        }else{
+            callCallListHisAPI()
+        }
+    }
+
+    fun callCRMCompanyMasterApi(){
+        if((AppDatabase.getDBInstance()?.companyMasterDao()?.getAll() as ArrayList<CompanyMasterEntity>).size>0){
+            callCRMTypeMasterAPI()
+        }else{
+            val repository = EditShopRepoProvider.provideEditShopWithoutImageRepository()
+            BaseActivity.compositeDisposable.add(
+                repository.callCompanyMaster(Pref.session_token.toString())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe({ result ->
+                        val resp = result as ContactMasterRes
+                        if(resp.status == NetworkConstant.SUCCESS){
+                            AppDatabase.getDBInstance()?.companyMasterDao()?.insertAll(resp.company_list)
+                            callCRMTypeMasterAPI()
+                        }else{
+                            callCRMTypeMasterAPI()
+                        }
+                    }, { error ->
+                        error.printStackTrace()
+                        callCRMTypeMasterAPI()
+                    })
+            )
+        }
+    }
+
+    fun callCRMTypeMasterAPI(){
+        if((AppDatabase.getDBInstance()?.typeMasterDao()?.getAll() as ArrayList<TypeMasterEntity>).size>0){
+            callCRMStatusMasterAPI()
+        }else{
+            val repository = EditShopRepoProvider.provideEditShopWithoutImageRepository()
+            BaseActivity.compositeDisposable.add(
+                repository.callTypeMaster(Pref.session_token.toString())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe({ result ->
+                        val resp = result as TypeMasterRes
+                        if(resp.status == NetworkConstant.SUCCESS){
+
+                            AppDatabase.getDBInstance()?.typeMasterDao()?.insertAll(resp.type_list)
+                            callCRMStatusMasterAPI()
+
+                        }else{
+                            callCRMStatusMasterAPI()
+                        }
+                    }, { error ->
+                        error.printStackTrace()
+                        callCRMStatusMasterAPI()
+                    })
+            )
+        }
+
+    }
+
+    fun callCRMStatusMasterAPI(){
+        if((AppDatabase.getDBInstance()?.statusMasterDao()?.getAll() as ArrayList<StatusMasterEntity>).size>0){
+            callCRMSourceMasterAPI()
+        }else{
+            val repository = EditShopRepoProvider.provideEditShopWithoutImageRepository()
+            BaseActivity.compositeDisposable.add(
+                repository.callStatusMaster(Pref.session_token.toString())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe({ result ->
+                        val resp = result as StatusMasterRes
+                        if(resp.status == NetworkConstant.SUCCESS){
+
+                            AppDatabase.getDBInstance()?.statusMasterDao()?.insertAll(resp.status_list)
+                            callCRMSourceMasterAPI()
+
+                        }else{
+                            callCRMSourceMasterAPI()
+                        }
+                    }, { error ->
+                        error.printStackTrace()
+                        callCRMSourceMasterAPI()
+                    })
+            )
+        }
+
+    }
+
+    fun callCRMSourceMasterAPI(){
+        if((AppDatabase.getDBInstance()?.sourceMasterDao()?.getAll() as ArrayList<SourceMasterEntity>).size>0){
+            callCRMStageMasterAPI()
+        }else{
+            val repository = EditShopRepoProvider.provideEditShopWithoutImageRepository()
+            BaseActivity.compositeDisposable.add(
+                repository.callSourceMaster(Pref.session_token.toString())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe({ result ->
+                        val resp = result as SourceMasterRes
+                        if(resp.status == NetworkConstant.SUCCESS){
+                            AppDatabase.getDBInstance()?.sourceMasterDao()?.insertAll(resp.source_list)
+                            callCRMStageMasterAPI()
+                        }else{
+                            callCRMStageMasterAPI()
+                        }
+                    }, { error ->
+                        error.printStackTrace()
+                        callCRMStageMasterAPI()
+                    })
+            )
+        }
+
+    }
+
+    fun callCRMStageMasterAPI(){
+        if((AppDatabase.getDBInstance()?.stageMasterDao()?.getAll() as ArrayList<StageMasterRes>).size>0){
+            callCallListHisAPI()
+        }else{
+            val repository = EditShopRepoProvider.provideEditShopWithoutImageRepository()
+            BaseActivity.compositeDisposable.add(
+                repository.callStageMaster(Pref.session_token.toString())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe({ result ->
+                        val resp = result as StageMasterRes
+                        if(resp.status == NetworkConstant.SUCCESS){
+                            AppDatabase.getDBInstance()?.stageMasterDao()?.insertAll(resp.stage_list)
+                           // gotoHomeActivity()
+                            callCallListHisAPI()
+                        }else{
+                          //  gotoHomeActivity()
+                            callCallListHisAPI()
+                        }
+                    }, { error ->
+                        error.printStackTrace()
+                       // gotoHomeActivity()
+                        callCallListHisAPI()
+                    })
+            )
+        }
+    }
+
+    fun callCallListHisAPI(){
+        if((AppDatabase.getDBInstance()?.callhisDao()?.getAllData() as ArrayList<CallHisEntity>).size>0){
+            gotoHomeActivity()
+        }else{
+            val repository = EditShopRepoProvider.provideEditShopWithoutImageRepository()
+            BaseActivity.compositeDisposable.add(
+                repository.callCallListHisAPI(Pref.user_id.toString())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe({ result ->
+                        val resp = result as CallHisDtls
+                        if(resp.status == NetworkConstant.SUCCESS){
+                            doAsync {
+                                AppDatabase.getDBInstance()?.callhisDao()?.insertAll(resp.call_his_list)
+                                uiThread {
+                                    gotoHomeActivity()
+                                }
+                            }
+                        }else{
+                            gotoHomeActivity()
+                        }
+                    }, { error ->
+                        error.printStackTrace()
+                        gotoHomeActivity()
+                    })
+            )
+        }
+    }
 
     private fun gotoHomeActivity() {
+       /* Pref.IsShowEmployeePerformanceGlobal = true
+        Pref.IsShowEmployeePerformance = true
+        Pref.IsMenuShowAIMarketAssistant= true*/
+
         login_TV.isEnabled = true
         enableScreen()
 // 7.0 LoginActivity AppV 4.0.6 Suman    03/02/2023  Insert login address into location_db
         doAsync {
+            //test code begin
+          /*  for(i in 0..1){
+                var obj = ScheduleTemplateEntity()
+                obj.template_id = i+1
+                obj.template_name = "Template ${i+1}"
+                AppDatabase.getDBInstance()!!.scheduleTemplateDao().insert(obj)
+            }*/
+
+            //test code end
+
+
             //login loc insert
             Timber.d("insertion login tag begin ${AppUtils.getCurrentDateTime()} ${Pref.latitude} ${Pref.longitude}")
             var locationObj: UserLocationDataEntity = UserLocationDataEntity()
@@ -7366,6 +8054,9 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
             locationObj.minutes = loginminutesStr //LocationWizard.getMinute()
             locationObj.hour = loginhourStr //LocationWizard.getHour()
             AppDatabase.getDBInstance()!!.userLocationDataDao().insertAll(locationObj)
+            /*if(Pref.IsRouteStartFromAttendance == false){
+                AppDatabase.getDBInstance()!!.userLocationDataDao().insertAll(locationObj)
+            }*/
 
             Timber.d("insertion login tag ends ${AppUtils.getCurrentDateTime()}")
 
@@ -7397,7 +8088,8 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
             Timber.d("loc_check checkLocationFetch")
             fetchActivityList()
         }else{
-            gotoHomeActivity()
+            //gotoHomeActivity()
+            fetchWhatsData()
         }
 
     }
@@ -7415,7 +8107,8 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
             callFetchLocationApi(fetchLocReq)
     } else{
             Timber.d("loc_check else callFetchLocationApi")
-            gotoHomeActivity()
+            //gotoHomeActivity()
+            fetchWhatsData()
         }
     }
 
@@ -7431,18 +8124,21 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                         Timber.d("loc_check success")
                         convertToModelAndSave(shopList.location_details, shopList.visit_distance)
                     }else {
-                        gotoHomeActivity()
+                        //gotoHomeActivity()
+                        fetchWhatsData()
                     }
                 }, { error ->
                     error.printStackTrace()
-                    gotoHomeActivity()
+                    //gotoHomeActivity()
+                    fetchWhatsData()
                 })
         )
     }
 
     private fun convertToModelAndSave(location_details: List<LocationData>?, visitDistance: String) {
     if (location_details!!.isEmpty()){
-        gotoHomeActivity()
+        //gotoHomeActivity()
+        fetchWhatsData()
     }
     else{
         //Begin 15.0  LoginActivity AppV 4.1.3 Suman    11/05/2023  26099
@@ -7522,7 +8218,8 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
             }
 
             uiThread {
-                gotoHomeActivity()
+                //gotoHomeActivity()
+                fetchWhatsData()
             }
         }
         //End of 15.0  LoginActivity AppV 4.1.3 Suman    11/05/2023  26099
@@ -8838,9 +9535,14 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
             .into(iv_loader_spin)
     }
     private fun loadNotProgress(){
-        enableScreen()
-        iv_background_color_set.visibility = View.GONE
-        iv_loader_spin.visibility = View.GONE
+
+        try {
+            enableScreen()
+            iv_background_color_set.visibility = View.GONE
+            iv_loader_spin.visibility = View.GONE
+        }catch (ex : Exception){
+            Timber.d("loadNotProgress error = ${ex.message}")
+        }
     }
     
 

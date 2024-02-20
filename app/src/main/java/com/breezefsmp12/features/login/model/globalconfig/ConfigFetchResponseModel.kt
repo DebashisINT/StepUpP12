@@ -159,5 +159,37 @@ class ConfigFetchResponseModel : BaseResponse() {
     var IsUpdateVisitDataInTodayTable:Boolean?=null
 
 
+    var IsShowWhatsAppIconforVisit:Boolean?=null
+    var IsAutomatedWhatsAppSendforRevisit:Boolean?=null
 
+    var ShopSyncIntervalInMinutes:String? = ""
+
+    var IsAllowBackdatedOrderEntry:Boolean?=null
+    var Order_Past_Days:Int?=null
+
+    var Show_distributor_scheme_with_Product:Boolean?=null
+
+    var MultiVisitIntervalInMinutes:String? = ""
+
+    var GSTINPANMandatoryforSHOPTYPE4:Boolean?=null
+    var FSSAILicNoEnableInShop:Boolean?=null
+    var FSSAILicNoMandatoryInShop4:Boolean?=null
+
+
+    // Begin puja 16.11.23 mantis-0026997 //
+
+    var isLeadContactNumber:Boolean?=false
+    var isModelEnable:Boolean?=false
+    var isPrimaryApplicationEnable:Boolean?=false
+    var isSecondaryApplicationEnable:Boolean?=false
+    var isBookingAmount:Boolean?=false
+    var isLeadTypeEnable:Boolean?=false
+    var isStageEnable:Boolean?=false
+    var isFunnelStageEnable:Boolean?=false
+    var IsGPSRouteSync:Boolean?=null
+    var IsSyncBellNotificationInApp:Boolean?=null
+    var IsShowCustomerLocationShare:Boolean?=true
+
+    //End puja 16.11.23 mantis-0026997 //
+    
 }

@@ -39,7 +39,13 @@ import androidx.core.widget.NestedScrollView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import cafe.adriel.androidaudiorecorder.AndroidAudioRecorder
+import com.android.volley.AuthFailureError
+import com.android.volley.DefaultRetryPolicy
+import com.android.volley.Response
+import com.android.volley.VolleyError
+import com.android.volley.toolbox.JsonObjectRequest
 import com.breezefsmp12.CustomStatic
+import com.breezefsmp12.MySingleton
 import com.breezefsmp12.R
 import com.breezefsmp12.app.AppDatabase
 import com.breezefsmp12.app.NetworkConstant
@@ -84,8 +90,10 @@ import com.breezefsmp12.features.login.model.productlistmodel.ModelListResponse
 import com.breezefsmp12.features.login.presentation.LoginActivity
 import com.breezefsmp12.features.nearbyshops.api.ShopListRepositoryProvider
 import com.breezefsmp12.features.nearbyshops.model.*
+import com.breezefsmp12.features.photoReg.PhotoRegAadhaarFragment
 import com.breezefsmp12.features.shopdetail.presentation.api.EditShopRepoProvider
 import com.breezefsmp12.features.viewAllOrder.interf.QaOnCLick
+import com.breezefsmp12.features.viewAllOrder.orderOptimized.CustomProductRate
 import com.breezefsmp12.widgets.AppCustomEditText
 import com.breezefsmp12.widgets.AppCustomTextView
 
@@ -98,6 +106,8 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_add_shop.*
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
+import org.json.JSONArray
+import org.json.JSONObject
 import timber.log.Timber
 import java.io.File
 import java.util.*
@@ -145,6 +155,7 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
     private lateinit var tv_assign_to_dd: AppCustomTextView
 
     private lateinit var GSTINNumberRL: RelativeLayout
+    private lateinit var FSSAILicNumberRL: RelativeLayout
     private lateinit var PANNumberRL: RelativeLayout
 
     private var shopLongitude: Double = 0.0
@@ -241,6 +252,7 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
     private lateinit var til_remarks: TextInputLayout
     private lateinit var add_shop_ll: LinearLayout
     private lateinit var tv_name_asterisk_mark: AppCustomTextView
+    private lateinit var tv_FSSAILic_asterisk_mark: AppCustomTextView
     private lateinit var ll_extra_info: LinearLayout
     private lateinit var director_name_EDT: AppCustomEditText
     private lateinit var family_mem_dob_EDT: AppCustomEditText
@@ -275,6 +287,15 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
     private lateinit var tv_addContact5: TextView
     private lateinit var tv_addContact6: TextView
     private lateinit var ll_addExtraContactRoot: LinearLayout
+    //Begin Puja 16.11.23 mantis-0026997 //
+    private lateinit var rl_frag_addshop_model_view: RelativeLayout
+    private lateinit var rl_frag_addshop_priapp_view: RelativeLayout
+    private lateinit var rl_frag_addshop_secondapp_view: RelativeLayout
+    private lateinit var rl_booking_amount: RelativeLayout
+    private lateinit var rl_frag_addshop_leadtyp_view: RelativeLayout
+    private lateinit var rl_frag_addshop_stage_view: RelativeLayout
+    private lateinit var rl_frag_addshop_funnelstage_view: RelativeLayout
+    //End Puja 16.11.23 mantis-0026997 //
 
     private var fingerprintDialog: FingerprintDialog? = null
     private var areaId = ""
@@ -463,8 +484,11 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
                 (mContext as DashboardActivity).showSnackMessage("Location is not valid")
             }
         }
+        fetchCUrrentLoc()
+        Handler().postDelayed(Runnable {
+            normalGetLocFlow()
+        }, 600)
 
-        normalGetLocFlow()
 
         /*if (mLongitude == "" && mLatitude == "") {
             if (dialog == null) {
@@ -481,7 +505,32 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
         return view
     }
 
+    fun fetchCUrrentLoc(){
+        try {
+            SingleShotLocationProvider.requestSingleUpdate(mContext,
+                object : SingleShotLocationProvider.LocationCallback {
+                    override fun onStatusChanged(status: String) {
+                    }
+
+                    override fun onProviderEnabled(status: String) {
+                    }
+
+                    override fun onProviderDisabled(status: String) {
+                    }
+
+                    override fun onNewLocationAvailable(location: Location) {
+                        mLatitude = location.latitude.toString()
+                        mLongitude = location.longitude.toString()
+                        println("add_shop_loc single tone $mLatitude $mLongitude")
+                    }
+                })
+        }catch (ex:Exception){
+            ex.printStackTrace()
+        }
+    }
+
     private fun normalGetLocFlow() {
+        println("add_shop_loc normalGetLocFlow $mLatitude $mLongitude")
         if (mLongitude == "" && mLatitude == "") {
             //getShopLatLong()
             /*if (dialog == null) {
@@ -510,7 +559,14 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
 
         } else {
             Timber.d("=====Get location from map (Add Shop)======")
+           /* println("addshopfullAdd"+fullAdd)
             actualAddress = fullAdd
+            shopAddress.setText(fullAdd)
+            shopPin.setText(pinCode)*/
+
+            fullAdd = LocationWizard.getNewLocationName(mContext, Pref.current_latitude.toDouble(), Pref.current_longitude.toDouble())
+            actualAddress = fullAdd
+            pinCode = LocationWizard.getPostalCode(mContext, Pref.current_latitude.toDouble(), Pref.current_longitude.toDouble())
             shopAddress.setText(fullAdd)
             shopPin.setText(pinCode)
         }
@@ -590,6 +646,7 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
             address = "Unknown"
 
         actualAddress = address
+        println("addshopaddress"+address)
         shopAddress.setText(address)
         shopPin.setText(LocationWizard.getPostalCode(mContext, location.latitude, location.longitude))
     }
@@ -600,6 +657,7 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
         iv_frag_add_shop_mic.setOnClickListener(this)  // 5.0 AddShopFragment AppV 4.0.7  add feedback voice added mantis 0025684
         PANNumberRL = view.findViewById(R.id.PANNumberRL)
         GSTINNumberRL = view.findViewById(R.id.GSTINNumberRL)
+        FSSAILicNumberRL = view.findViewById(R.id.FSSAILicNumberRL)
         assign_to_tv = view.findViewById(R.id.assign_to_tv)
         captureShopImage = view.findViewById(R.id.capture_shop_image_IV)
         shopImage = view.findViewById(R.id.shop_image_RL)
@@ -674,6 +732,7 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
         key_person_no_EDT = view.findViewById(R.id.key_person_no_EDT)
         scroll_bar = view.findViewById(R.id.scroll_bar)
         tv_name_asterisk_mark = view.findViewById(R.id.tv_name_asterisk_mark)
+        tv_FSSAILic_asterisk_mark = view.findViewById(R.id.tv_FSSAILic_asterisk_mark)
         ll_doc_extra_info = view.findViewById(R.id.ll_doc_extra_info)
         et_specalization = view.findViewById(R.id.et_specalization)
         et_patient_count = view.findViewById(R.id.et_patient_count)
@@ -770,6 +829,16 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
         tv_addContact6.setOnClickListener(this)
         ll_addExtraContactRoot = view.findViewById(R.id.ll_frag_add_shop_more_contact_root)
 
+        //Begin Puja 16.11.23 mantis-0026997 //
+        rl_frag_addshop_model_view = view.findViewById(R.id.rl_frag_addshop_model_view)
+        rl_frag_addshop_priapp_view = view.findViewById(R.id.rl_frag_addshop_priapp_view)
+        rl_frag_addshop_secondapp_view = view.findViewById(R.id.rl_frag_addshop_secondapp_view)
+        rl_booking_amount = view.findViewById(R.id.rl_booking_amount)
+        rl_frag_addshop_leadtyp_view = view.findViewById(R.id.rl_frag_addshop_leadtyp_view)
+        rl_frag_addshop_stage_view = view.findViewById(R.id.rl_frag_addshop_stage_view)
+        rl_frag_addshop_funnelstage_view = view.findViewById(R.id.rl_frag_addshop_funnelstage_view)
+        //End Puja 16.11.23 mantis-0026997 //
+
         if(Pref.IsMultipleContactEnableforShop){
             ll_addExtraContactRoot.visibility = View.VISIBLE
         }else{
@@ -861,8 +930,12 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
             PANNumberRL.visibility = View.GONE
             GSTINNumberRL.visibility = View.GONE
         }
-
-
+        if(Pref.FSSAILicNoEnableInShop) {
+            FSSAILicNumberRL.visibility = View.VISIBLE
+        }
+        else {
+            FSSAILicNumberRL.visibility = View.GONE
+        }
 
         val typeList = AppDatabase.getDBInstance()?.shopTypeDao()?.getAll()
         if (typeList != null && typeList.isNotEmpty()) {
@@ -879,7 +952,8 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
 
         if (Pref.isCustomerFeatureEnable) {
             ll_customer_view.visibility = View.VISIBLE
-            rl_owner_name_main.visibility = View.GONE
+          //  rl_owner_name_main.visibility = View.GONE
+            rl_owner_name_main.visibility = View.VISIBLE
             til_no.hint = Pref.contactNumberText + " Number"
             til_mail.hint = Pref.emailText
 //            til_name.hint = Pref.contactNumberText + " Number"
@@ -894,6 +968,59 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
             rl_select_retailer.visibility = View.GONE
             rl_select_dealer.visibility = View.GONE
             assign_to_shop_rl.visibility = View.GONE
+
+            //Begin Puja 16.11.23 mantis-0026997 //
+
+            if (Pref.isLeadContactNumber){
+                rl_contact_lead.visibility =View.VISIBLE
+            }
+            else {
+                rl_contact_lead.visibility =View.GONE
+            }
+            if (Pref.isModelEnable){
+                rl_frag_addshop_model_view.visibility =View.VISIBLE
+            }
+            else {
+                rl_frag_addshop_model_view.visibility =View.GONE
+            }
+            if (Pref.isPrimaryApplicationEnable){
+                rl_frag_addshop_priapp_view.visibility =View.VISIBLE
+            }
+            else {
+                rl_frag_addshop_priapp_view.visibility =View.GONE
+            }
+            if (Pref.isSecondaryApplicationEnable){
+                rl_frag_addshop_secondapp_view.visibility =View.VISIBLE
+            }
+            else {
+                rl_frag_addshop_secondapp_view.visibility =View.GONE
+            }
+            if (Pref.isBookingAmount){
+                rl_booking_amount.visibility =View.VISIBLE
+            }
+            else {
+                rl_booking_amount.visibility =View.GONE
+            }
+            if (Pref.isLeadTypeEnable){
+                rl_frag_addshop_leadtyp_view.visibility =View.VISIBLE
+            }
+            else {
+                rl_frag_addshop_leadtyp_view.visibility =View.GONE
+            }
+            if (Pref.isStageEnable){
+                rl_frag_addshop_stage_view.visibility =View.VISIBLE
+            }
+            else {
+                rl_frag_addshop_stage_view.visibility =View.GONE
+            }
+            if (Pref.isFunnelStageEnable){
+                rl_frag_addshop_funnelstage_view.visibility =View.VISIBLE
+            }
+            else {
+                rl_frag_addshop_funnelstage_view.visibility =View.GONE
+            }
+
+            //End Puja 16.11.23 mantis-0026997 //
         }
         else {
             ll_customer_view.visibility = View.GONE
@@ -1521,6 +1648,17 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
                 tv_feedback_asterisk_mark.visibility = View.GONE
             }
 
+            //Begin Puja 16.11.23 mantis-0026997 //
+            rl_contact_lead.visibility = View.GONE
+            rl_frag_addshop_model_view.visibility = View.GONE
+            rl_frag_addshop_priapp_view.visibility = View.GONE
+            rl_frag_addshop_secondapp_view.visibility = View.GONE
+            rl_booking_amount.visibility = View.GONE
+            rl_frag_addshop_leadtyp_view.visibility = View.GONE
+            rl_frag_addshop_stage_view.visibility = View.GONE
+            rl_frag_addshop_funnelstage_view.visibility = View.GONE
+            //End Puja 16.11.23 mantis-0026997 //
+
         }
 
         /*if (Pref.isReplaceShopText)
@@ -1971,14 +2109,16 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
                             }
                             //showShopVerificationDialog(addShop.shop_id!!)
 
-                        } else if (addShopResult.status == NetworkConstant.SESSION_MISMATCH) {
+                        }
+                        else if (addShopResult.status == NetworkConstant.SESSION_MISMATCH) {
                             Timber.d("AddShop : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
                             progress_wheel.stopSpinning()
                             (mContext as DashboardActivity).clearData()
                             startActivity(Intent(mContext as DashboardActivity, LoginActivity::class.java))
                             (mContext as DashboardActivity).overridePendingTransition(0, 0)
                             (mContext as DashboardActivity).finish()
-                        } else if (addShopResult.status == NetworkConstant.DUPLICATE_SHOP_ID) {
+                        }
+                        else if (addShopResult.status == NetworkConstant.DUPLICATE_SHOP_ID) {
                             Timber.d("DuplicateShop : " + ", SHOP: " + addShop.shop_name)
                             progress_wheel.stopSpinning()
                             (mContext as DashboardActivity).showSnackMessage(addShopResult.message!!)
@@ -1988,7 +2128,8 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
                             }
                             (mContext as DashboardActivity).onBackPressed()
                             (mContext as DashboardActivity).loadFragment(FragType.ShopDetailFragment, true, addShop.shop_id!!)
-                        } else {
+                        }
+                        else {
                             progress_wheel.stopSpinning()
                             Timber.d("AddShop : " + ", SHOP: " + addShop.shop_name + ", RESPONSE:" + result.message)
                             (mContext as DashboardActivity).showSnackMessage(getString(R.string.shop_added_successfully))
@@ -2962,6 +3103,22 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
             userlocation.meeting = AppDatabase.getDBInstance()!!.addMeetingDao().getMeetingDateWise(AppUtils.getCurrentDateForShopActi()).size.toString()
             userlocation.network_status = if (AppUtils.isOnline(mContext)) "Online" else "Offline"
             userlocation.battery_percentage = AppUtils.getBatteryPercentage(mContext).toString()
+
+            //negative distance handle Suman 06-02-2024 mantis id 0027225 begin
+            try{
+                var distReftify = userlocation.distance.toDouble()
+                if(distReftify<0){
+                    var locL = AppDatabase.getDBInstance()!!.userLocationDataDao().getLocationUpdateForADay(AppUtils.getCurrentDateForShopActi()) as ArrayList<UserLocationDataEntity>
+                    var lastLoc = locL.get(locL.size-1)
+                    var d = LocationWizard.getDistance(userlocation.latitude.toDouble(),userlocation.longitude.toDouble(), lastLoc.latitude.toDouble()   ,lastLoc.longitude.toDouble())
+                    userlocation.distance = d.toString()
+                }
+            }catch (ex:Exception){
+                ex.printStackTrace()
+                userlocation.distance = "0.0"
+            }
+            //negative distance handle Suman 06-02-2024 mantis id 0027225 end
+
             AppDatabase.getDBInstance()!!.userLocationDataDao().insertAll(userlocation)
 
             Timber.e("=====New shop visit data added=======")
@@ -5544,6 +5701,20 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
 
     private var permissionUtils: PermissionUtils? = null
     private fun initPermissionCheck() {
+
+        //begin mantis id 26741 Storage permission updation Suman 22-08-2023
+        var permissionList = arrayOf<String>( Manifest.permission.CAMERA)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            permissionList += Manifest.permission.READ_MEDIA_IMAGES
+            permissionList += Manifest.permission.READ_MEDIA_AUDIO
+            permissionList += Manifest.permission.READ_MEDIA_VIDEO
+        }else{
+            permissionList += Manifest.permission.WRITE_EXTERNAL_STORAGE
+            permissionList += Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+//end mantis id 26741 Storage permission updation Suman 22-08-2023
+
         permissionUtils = PermissionUtils(mContext as Activity, object : PermissionUtils.OnPermissionListener {
             override fun onPermissionGranted() {
                 if (isDocDegree == 1)
@@ -5555,11 +5726,25 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
             override fun onPermissionNotGranted() {
                 (mContext as DashboardActivity).showSnackMessage(getString(R.string.accept_permission))
             }
+            // mantis id 26741 Storage permission updation Suman 22-08-2023
+        },permissionList)// arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
 
-        }, arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
     }
 
     private fun initPermissionCheckOne() {
+        //begin mantis id 26741 Storage permission updation Suman 22-08-2023
+        var permissionList = arrayOf<String>( Manifest.permission.CAMERA)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            permissionList += Manifest.permission.READ_MEDIA_IMAGES
+            permissionList += Manifest.permission.READ_MEDIA_AUDIO
+            permissionList += Manifest.permission.READ_MEDIA_VIDEO
+        }else{
+            permissionList += Manifest.permission.WRITE_EXTERNAL_STORAGE
+            permissionList += Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+//end mantis id 26741 Storage permission updation Suman 22-08-2023
+
         permissionUtils = PermissionUtils(mContext as Activity, object : PermissionUtils.OnPermissionListener {
             override fun onPermissionGranted() {
                 showPictureDialog()
@@ -5568,8 +5753,8 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
             override fun onPermissionNotGranted() {
                 (mContext as DashboardActivity).showSnackMessage(getString(R.string.accept_permission))
             }
-
-        }, arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+// mantis id 26741 Storage permission updation Suman 22-08-2023
+        },permissionList)// arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
     }
 
     fun onRequestPermission(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -5837,6 +6022,8 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
             (mContext as DashboardActivity).startActivityForResult(intent, PermissionHelper.REQUEST_CODE_CAMERA)*/
 
 
+        }else{
+            var permission = false
         }
     }
 
@@ -5892,6 +6079,7 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
             }, 100)
             return
         }
+
 
 
         shopLatitude = shopLat
@@ -5999,6 +6187,7 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
             assignedToShopId = ""
         }
 
+
         shopDataModel.amount = amount
         shopDataModel.entity_id = entityId
         shopDataModel.assigned_to_shop_id = assignedToShopId
@@ -6013,7 +6202,7 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
 
 //        shopDataModel = AddShopDBModelEntity()
         if (!(shopName.text!!.isBlank()))
-            shopDataModel.shopName = shopName.text.toString()
+            shopDataModel.shopName = shopName.text.toString().trim()
         else {
             shopName.error = getString(R.string.field_cannot_be_blank)
             /*9-12-2021*/
@@ -6074,7 +6263,15 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
                 }
                 shopDataModel.ownerName = ""
             }
-        }
+        }else{//test code begin
+            if (!(ownerName.text!!.trim().isBlank())){
+            shopDataModel.ownerName = ownerName.text.toString()
+            }else{
+                BaseActivity.isApiInitiated = false
+                (mContext as DashboardActivity).showSnackMessage(getString(R.string.contactname_error))
+                return
+            }
+        }//test code end
 
 
         if(Pref.IsnewleadtypeforRuby && addShopData.type.equals("16")){
@@ -6113,7 +6310,8 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
 
         if (AppUtils.isValidateMobile(ownerNumber.text.toString())) {
             shopDataModel.ownerContactNumber = ownerNumber.text.toString()
-        } else {
+        }
+        else {
             (mContext as DashboardActivity).showSnackMessage(getString(R.string.numbervalid_error))
             BaseActivity.isApiInitiated = false
             return
@@ -6173,16 +6371,38 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
             return
         }
 
-        if (Pref.isCustomerFeatureEnable && TextUtils.isEmpty(modelId)) {
+        if (Pref.isCustomerFeatureEnable && TextUtils.isEmpty(modelId) && Pref.isModelEnable) {
             BaseActivity.isApiInitiated = false
             (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_select_model))
             return
         }
 
-        if (Pref.isCustomerFeatureEnable && TextUtils.isEmpty(stageId)) {
+        if (Pref.isCustomerFeatureEnable && TextUtils.isEmpty(stageId) && Pref.isStageEnable) {
             BaseActivity.isApiInitiated = false
             (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_select_stage))
             return
+        }
+
+
+        if(Pref.GSTINPANMandatoryforSHOPTYPE4 && addShopData.type == "4"){
+            if(GSTINnumber_EDT.text!!.trim().isBlank()){
+                Toaster.msgShort(mContext,"Please provide GSTIN number")
+                BaseActivity.isApiInitiated = false
+                return
+            }
+            if(PANnumber_EDT.text!!.trim().isBlank()){
+                Toaster.msgShort(mContext,"Please provide PAN number")
+                BaseActivity.isApiInitiated = false
+                return
+            }
+        }
+
+        if(Pref.FSSAILicNoMandatoryInShop4 && addShopData.type == "4"){
+            if(FSSAILic_EDT.text!!.trim().isBlank()){
+                Toaster.msgShort(mContext,"Please provide FSSAI Lic number")
+                BaseActivity.isApiInitiated = false
+                return
+            }
         }
 
         shopDataModel.landline_number = landLineNumberRL_EDT.text.toString().trim()
@@ -6191,167 +6411,183 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
         shopDataModel.alternateNoForCustomer = alternate_number_EDT.text.toString().trim()
         shopDataModel.whatsappNoForCustomer = whatsapp_number_EDT.text.toString().trim()
 
-
-        shopDataModel.doc_degree = ""
-        if (ll_doc_extra_info.visibility == View.VISIBLE) {
-            if (TextUtils.isEmpty(attachment_EDT.text.toString().trim())) {
+        if(checkNearbyDuplicacy(shopLat,shopLong)){
+            val simpleDialog = Dialog(mContext)
+            simpleDialog.setCancelable(false)
+            simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            simpleDialog.setContentView(R.layout.dialog_ok)
+            val dialogHeader = simpleDialog.findViewById(R.id.dialog_yes_header_TV) as AppCustomTextView
+            dialogHeader.text = "You are creating a ${Pref.shopText} with Duplicate Name under same ${Pref.ddText} and in the same location. Please make unique ${Pref.shopText}."
+            val dialogYes = simpleDialog.findViewById(R.id.tv_dialog_yes) as AppCustomTextView
+            dialogYes.setOnClickListener({ view ->
+                simpleDialog.cancel()
                 BaseActivity.isApiInitiated = false
-                attachment_EDT.error = getString(R.string.field_cannot_be_blank)
-                (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_capture_doc_pic))
-                return
-            } else
-                shopDataModel.doc_degree = degreeImgLink
+            })
+            simpleDialog.show()
+        }
+        else{
+            shopDataModel.doc_degree = ""
+            if (ll_doc_extra_info.visibility == View.VISIBLE) {
+                if (TextUtils.isEmpty(attachment_EDT.text.toString().trim())) {
+                    BaseActivity.isApiInitiated = false
+                    attachment_EDT.error = getString(R.string.field_cannot_be_blank)
+                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_capture_doc_pic))
+                    return
+                } else
+                    shopDataModel.doc_degree = degreeImgLink
 
-            if (TextUtils.isEmpty(et_specalization.text.toString().trim())) {
-                BaseActivity.isApiInitiated = false
-                et_specalization.error = getString(R.string.field_cannot_be_blank)
-                (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_speciallization))
-                return
-            } else
-                shopDataModel.specialization = et_specalization.text.toString().trim()
+                if (TextUtils.isEmpty(et_specalization.text.toString().trim())) {
+                    BaseActivity.isApiInitiated = false
+                    et_specalization.error = getString(R.string.field_cannot_be_blank)
+                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_speciallization))
+                    return
+                } else
+                    shopDataModel.specialization = et_specalization.text.toString().trim()
 
-            if (TextUtils.isEmpty(et_patient_count.text.toString().trim())) {
-                BaseActivity.isApiInitiated = false
-                et_patient_count.error = getString(R.string.field_cannot_be_blank)
-                (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_patient_count))
-                return
-            } else
-                shopDataModel.patient_count = et_patient_count.text.toString().trim()
+                if (TextUtils.isEmpty(et_patient_count.text.toString().trim())) {
+                    BaseActivity.isApiInitiated = false
+                    et_patient_count.error = getString(R.string.field_cannot_be_blank)
+                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_patient_count))
+                    return
+                } else
+                    shopDataModel.patient_count = et_patient_count.text.toString().trim()
 
-            if (TextUtils.isEmpty(et_category.text.toString().trim())) {
-                BaseActivity.isApiInitiated = false
-                et_category.error = getString(R.string.field_cannot_be_blank)
-                (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_cateogory))
-                return
-            } else
-                shopDataModel.category = et_category.text.toString().trim()
+                if (TextUtils.isEmpty(et_category.text.toString().trim())) {
+                    BaseActivity.isApiInitiated = false
+                    et_category.error = getString(R.string.field_cannot_be_blank)
+                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_cateogory))
+                    return
+                } else
+                    shopDataModel.category = et_category.text.toString().trim()
 
 
-            if (TextUtils.isEmpty(doc_family_mem_dob_EDT.text.toString())) {
-                doc_family_mem_dob_EDT.error = getString(R.string.field_cannot_be_blank)
-                (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_family_member_dob))
-                BaseActivity.isApiInitiated = false
+                if (TextUtils.isEmpty(doc_family_mem_dob_EDT.text.toString())) {
+                    doc_family_mem_dob_EDT.error = getString(R.string.field_cannot_be_blank)
+                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_family_member_dob))
+                    BaseActivity.isApiInitiated = false
+                    return
+                }
+
+                if (TextUtils.isEmpty(doc_address_EDT.text.toString().trim())) {
+                    BaseActivity.isApiInitiated = false
+                    doc_address_EDT.error = getString(R.string.field_cannot_be_blank)
+                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_location))
+                    return
+                } else
+                    shopDataModel.doc_address = doc_address_EDT.text.toString().trim()
+
+                if (TextUtils.isEmpty(doc_pin_code_EDT.text.toString().trim())) {
+                    BaseActivity.isApiInitiated = false
+                    doc_pin_code_EDT.error = getString(R.string.field_cannot_be_blank)
+                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_pincode))
+                    return
+                } else
+                    shopDataModel.doc_pincode = doc_pin_code_EDT.text.toString().trim()
+
+                if (!iv_yes.isSelected && !iv_no.isSelected) {
+                    BaseActivity.isApiInitiated = false
+                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_select_chamber))
+                    return
+                } else if (iv_yes.isSelected)
+                    shopDataModel.chamber_status = 1
+                else if (iv_no.isSelected)
+                    shopDataModel.chamber_status = 0
+
+                if (et_remarks.visibility == View.VISIBLE && TextUtils.isEmpty(et_remarks.text.toString().trim())) {
+                    BaseActivity.isApiInitiated = false
+                    et_remarks.error = getString(R.string.field_cannot_be_blank)
+                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_remarks))
+                    return
+                } else if (!TextUtils.isEmpty(et_remarks.text.toString().trim()))
+                    shopDataModel.remarks = et_remarks.text.toString().trim()
+
+                if (TextUtils.isEmpty(chemist_name_EDT.text.toString().trim())) {
+                    BaseActivity.isApiInitiated = false
+                    chemist_name_EDT.error = getString(R.string.field_cannot_be_blank)
+                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_chemist_name))
+                    return
+                } else
+                    shopDataModel.chemist_name = chemist_name_EDT.text.toString().trim()
+
+                if (TextUtils.isEmpty(chemist_address_EDT.text.toString().trim())) {
+                    BaseActivity.isApiInitiated = false
+                    chemist_address_EDT.error = getString(R.string.field_cannot_be_blank)
+                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_chemist_address))
+                    return
+                } else
+                    shopDataModel.chemist_address = chemist_address_EDT.text.toString().trim()
+
+                if (TextUtils.isEmpty(chemist_pin_code_EDT.text.toString().trim())) {
+                    BaseActivity.isApiInitiated = false
+                    chemist_pin_code_EDT.error = getString(R.string.field_cannot_be_blank)
+                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_chemist_pincode))
+                    return
+                } else
+                    shopDataModel.chemist_pincode = chemist_pin_code_EDT.text.toString().trim()
+
+
+
+
+
+                saveDataToDb()
                 return
             }
 
-            if (TextUtils.isEmpty(doc_address_EDT.text.toString().trim())) {
-                BaseActivity.isApiInitiated = false
-                doc_address_EDT.error = getString(R.string.field_cannot_be_blank)
-                (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_location))
-                return
-            } else
-                shopDataModel.doc_address = doc_address_EDT.text.toString().trim()
+            if (ll_extra_info.visibility == View.VISIBLE) {
+                if (TextUtils.isEmpty(director_name_EDT.text.toString().trim())) {
+                    BaseActivity.isApiInitiated = false
+                    director_name_EDT.error = getString(R.string.field_cannot_be_blank)
+                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_director_name))
+                    return
+                } else
+                    shopDataModel.director_name = director_name_EDT.text.toString().trim()
 
-            if (TextUtils.isEmpty(doc_pin_code_EDT.text.toString().trim())) {
-                BaseActivity.isApiInitiated = false
-                doc_pin_code_EDT.error = getString(R.string.field_cannot_be_blank)
-                (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_pincode))
-                return
-            } else
-                shopDataModel.doc_pincode = doc_pin_code_EDT.text.toString().trim()
+                if (TextUtils.isEmpty(family_mem_dob_EDT.text.toString().trim())) {
+                    BaseActivity.isApiInitiated = false
+                    family_mem_dob_EDT.error = getString(R.string.field_cannot_be_blank)
+                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_family_member_dob))
+                    return
+                } else
+                    shopDataModel.family_member_dob = family_mem_dob_EDT.text.toString().trim()
 
-            if (!iv_yes.isSelected && !iv_no.isSelected) {
-                BaseActivity.isApiInitiated = false
-                (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_select_chamber))
-                return
-            } else if (iv_yes.isSelected)
-                shopDataModel.chamber_status = 1
-            else if (iv_no.isSelected)
-                shopDataModel.chamber_status = 0
+                if (TextUtils.isEmpty(key_person_name_EDT.text.toString().trim())) {
+                    BaseActivity.isApiInitiated = false
+                    key_person_name_EDT.error = getString(R.string.field_cannot_be_blank)
+                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_person_name))
+                    return
+                } else
+                    shopDataModel.person_name = key_person_name_EDT.text.toString().trim()
 
-            if (et_remarks.visibility == View.VISIBLE && TextUtils.isEmpty(et_remarks.text.toString().trim())) {
-                BaseActivity.isApiInitiated = false
-                et_remarks.error = getString(R.string.field_cannot_be_blank)
-                (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_remarks))
-                return
-            } else if (!TextUtils.isEmpty(et_remarks.text.toString().trim()))
-                shopDataModel.remarks = et_remarks.text.toString().trim()
-
-            if (TextUtils.isEmpty(chemist_name_EDT.text.toString().trim())) {
-                BaseActivity.isApiInitiated = false
-                chemist_name_EDT.error = getString(R.string.field_cannot_be_blank)
-                (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_chemist_name))
-                return
-            } else
-                shopDataModel.chemist_name = chemist_name_EDT.text.toString().trim()
-
-            if (TextUtils.isEmpty(chemist_address_EDT.text.toString().trim())) {
-                BaseActivity.isApiInitiated = false
-                chemist_address_EDT.error = getString(R.string.field_cannot_be_blank)
-                (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_chemist_address))
-                return
-            } else
-                shopDataModel.chemist_address = chemist_address_EDT.text.toString().trim()
-
-            if (TextUtils.isEmpty(chemist_pin_code_EDT.text.toString().trim())) {
-                BaseActivity.isApiInitiated = false
-                chemist_pin_code_EDT.error = getString(R.string.field_cannot_be_blank)
-                (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_chemist_pincode))
-                return
-            } else
-                shopDataModel.chemist_pincode = chemist_pin_code_EDT.text.toString().trim()
+                if (TextUtils.isEmpty(key_person_no_EDT.text.toString().trim())) {
+                    BaseActivity.isApiInitiated = false
+                    key_person_no_EDT.error = getString(R.string.field_cannot_be_blank)
+                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_phn_no))
+                    return
+                } else
+                    shopDataModel.person_no = key_person_no_EDT.text.toString().trim()
 
 
+                if (AppUtils.isValidateMobile(key_person_no_EDT.text.toString())) {
+                    shopDataModel.person_no = key_person_no_EDT.text.toString()
+                } else {
+                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.numbervalid_error))
+                    BaseActivity.isApiInitiated = false
+                    return
+                }
 
-
-
-            saveDataToDb()
-            return
-        }
-
-
-        if (ll_extra_info.visibility == View.VISIBLE) {
-            if (TextUtils.isEmpty(director_name_EDT.text.toString().trim())) {
-                BaseActivity.isApiInitiated = false
-                director_name_EDT.error = getString(R.string.field_cannot_be_blank)
-                (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_director_name))
-                return
-            } else
-                shopDataModel.director_name = director_name_EDT.text.toString().trim()
-
-            if (TextUtils.isEmpty(family_mem_dob_EDT.text.toString().trim())) {
-                BaseActivity.isApiInitiated = false
-                family_mem_dob_EDT.error = getString(R.string.field_cannot_be_blank)
-                (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_family_member_dob))
-                return
-            } else
-                shopDataModel.family_member_dob = family_mem_dob_EDT.text.toString().trim()
-
-            if (TextUtils.isEmpty(key_person_name_EDT.text.toString().trim())) {
-                BaseActivity.isApiInitiated = false
-                key_person_name_EDT.error = getString(R.string.field_cannot_be_blank)
-                (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_person_name))
-                return
-            } else
-                shopDataModel.person_name = key_person_name_EDT.text.toString().trim()
-
-            if (TextUtils.isEmpty(key_person_no_EDT.text.toString().trim())) {
-                BaseActivity.isApiInitiated = false
-                key_person_no_EDT.error = getString(R.string.field_cannot_be_blank)
-                (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_phn_no))
-                return
-            } else
-                shopDataModel.person_no = key_person_no_EDT.text.toString().trim()
-
-
-            if (AppUtils.isValidateMobile(key_person_no_EDT.text.toString())) {
-                shopDataModel.person_no = key_person_no_EDT.text.toString()
-            } else {
-                (mContext as DashboardActivity).showSnackMessage(getString(R.string.numbervalid_error))
-                BaseActivity.isApiInitiated = false
+                saveDataToDb()
                 return
             }
 
-            saveDataToDb()
-            return
+            if (Pref.willMoreVisitUpdateOptional)
+                showAddMoreInfoAlertDialog()
+            else {
+                saveDataToDb()
+            }
         }
 
 
-        if (Pref.willMoreVisitUpdateOptional)
-            showAddMoreInfoAlertDialog()
-        else {
-            saveDataToDb()
-        }
+
     }
 
     private fun saveDataToDb() {
@@ -6525,6 +6761,8 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
         //feeback shop_details table
         shopDataModel.purpose = feedbackValue
 
+        shopDataModel.FSSAILicNo = FSSAILic_EDT.text.toString()
+
         if(shopExtraContactList.size>0){
             for(o in 0..shopExtraContactList.size-1){
                 shopExtraContactList.get(o).shop_id = shopDataModel.shop_id
@@ -6609,7 +6847,8 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
                 /*************************************Convert to request object and call api*********************************/
                 convertToReqAndApiCall(shopDataModel)
             }
-        } else {
+        }
+        else {
 
             AppDatabase.getDBInstance()!!.addShopEntryDao().insertAll(shopDataModel)
 
@@ -6852,6 +7091,34 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
         addShopData.GSTN_Number = shopDataModel.gstN_Number
         addShopData.ShopOwner_PAN = shopDataModel.shopOwner_PAN
 
+        try{
+            addShopData.FSSAILicNo = shopDataModel.FSSAILicNo.toString()
+        }catch (ex:Exception){
+            ex.printStackTrace()
+            addShopData.FSSAILicNo = ""
+        }
+
+
+        if(Pref.IsShowWhatsAppIconforVisit){
+            saveWhatsappApiStatusDB(addShopData, shopDataModel.shopImageLocalPath, shopDataModel.doc_degree)
+        }else{
+            addShopApi(addShopData, shopDataModel.shopImageLocalPath, shopDataModel.doc_degree)
+        }
+
+    }
+
+    private fun saveWhatsappApiStatusDB(addShop: AddShopRequestData, shop_imgPath: String?, doc_degree: String?){
+        var obj = VisitRevisitWhatsappStatus()
+        obj.shop_id = addShopData.shop_id!!
+        obj.shop_name = addShopData.shop_name!!
+        obj.contactNo = addShopData.owner_contact_no!!
+        obj.isNewShop = true
+        obj.date = AppUtils.getCurrentDateForShopActi()
+        obj.time = AppUtils.getCurrentTime()
+        obj.isWhatsappSent = false
+        obj.whatsappSentMsg =""
+        obj.isUploaded = false
+        AppDatabase.getDBInstance()?.visitRevisitWhatsappStatusDao()!!.insert(obj)
 
         addShopApi(addShopData, shopDataModel.shopImageLocalPath, shopDataModel.doc_degree)
     }
@@ -7533,7 +7800,8 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
                             rl_type.visibility = View.GONE
                             setMargin(false)
                             contactHeader.visibility = View.GONE
-                            rl_owner_name_main.visibility = View.GONE
+                           // rl_owner_name_main.visibility = View.GONE
+                            rl_owner_name_main.visibility = View.VISIBLE
                             rl_area_main.visibility = View.GONE
                             ownerNumberLL.visibility = View.GONE
                             owneremailLL.visibility = View.GONE
@@ -8195,6 +8463,32 @@ class AddShopFragment : BaseFragment(), View.OnClickListener {
             (mContext as DashboardActivity).loadFragment(FragType.DashboardFragment,true,"")
         }
 
+    }
+
+    fun checkNearbyDuplicacy(shopLat: Double, shopLong: Double):Boolean{
+        var isNearbyDplicate = false
+        var shopN = shopName.text.toString().trim()
+        var selDDid = assignedToDDId
+        var shopType1L: ArrayList<AddShopDBModelEntity> = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopsAccordingToTypeDD("1",selDDid,shopN.toLowerCase()) as ArrayList<AddShopDBModelEntity>
+        if(shopType1L.size>0){
+            for(i in 0..shopType1L.size-1){
+                var obj = shopType1L.get(i)
+                var shopLoc = Location("")
+                shopLoc.latitude = shopLat
+                shopLoc.longitude = shopLong
+                var dbShopLoc = Location("")
+                dbShopLoc.latitude = obj.shopLat.toDouble()
+                dbShopLoc.longitude = obj.shopLong.toDouble()
+                val isShopNearby = FTStorageUtils.checkShopPositionWithinRadious(shopLoc, dbShopLoc, 200)
+                if(obj.shopName.toLowerCase().equals(shopN.toLowerCase()) && isShopNearby){
+                    isNearbyDplicate = true
+                    break
+                }
+            }
+            return isNearbyDplicate
+        }else{
+            return isNearbyDplicate
+        }
     }
 
 }

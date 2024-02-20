@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.fragment.app.DialogFragment
 import com.breezefsmp12.R
 import com.breezefsmp12.widgets.AppCustomTextView
@@ -17,6 +18,7 @@ class LocationHintDialog : DialogFragment(), View.OnClickListener {
     private lateinit var mContext: Context
 
     private lateinit var tv_ok: AppCustomTextView
+    private lateinit var tv_Header: TextView
 
     companion object {
 
@@ -55,7 +57,10 @@ class LocationHintDialog : DialogFragment(), View.OnClickListener {
     private fun initView(v: View) {
         v.apply {
             tv_ok = findViewById(R.id.tv_ok_loc_hint)
+            tv_Header = findViewById(R.id.tv_dialog_loc_hint_app_name_text)
         }
+
+        tv_Header.text = "Allow ${getString(R.string.app_name)} to \n access this device's location"
     }
 
     private fun initClickListener() {

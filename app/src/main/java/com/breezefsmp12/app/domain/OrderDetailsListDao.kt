@@ -4,8 +4,13 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import com.breezefsmp12.app.AppConstant
+import com.breezefsmp12.features.marketAssist.OrderAge
 import com.breezefsmp12.features.marketAssist.OrderDtlsLast30Days
 import com.breezefsmp12.features.marketAssist.SuggestiveProduct
+import com.breezefsmp12.features.performanceAPP.NoOrderTakenList
+import com.breezefsmp12.features.performanceAPP.NoOrderTakenShop
+import com.breezefsmp12.features.performanceAPP.NoOrderTakenShop2
+import com.breezefsmp12.features.performanceAPP.NoProductSoldShop
 import com.breezefsmp12.features.performanceAPP.PartyWiseDataModel
 
 
@@ -130,5 +135,123 @@ interface OrderDetailsListDao {
             "inner join order_product_list as B on A.order_id = B.order_id where A.shop_id =:shop_id \n" +
             "order by A.id desc limit 30\n")
     fun getLast30DaysOrderDtls(shop_id: String): List<OrderDtlsLast30Days>
+
+    /*@Query("select shop_id,shop_name,owner_contact_number,address,case when owner_name IS NULL then '' else owner_name END as owner_name,type from shop_detail where shop_id not in\n" +
+            "( select shopid from shop_activity where date(visited_date) between :dateOf3monthago and :currentDate ) and isOwnshop = 1 order by upper(trim(shop_name))")
+    fun getShopNotVisited30DaysDtls(dateOf3monthago: String,currentDate:String): List<NoOrderTakenShop>*/
+
+    @Query("select shop_id,shop_name,owner_contact_number,address,case when owner_name IS NULL then '' else owner_name END as owner_name,type from shop_detail where shop_id not in\n" +
+            "( select shopid from shop_activity where date(visited_date) between :dateOf3monthago and :currentDate ) and isOwnshop = 1 order by upper(trim(shop_name))")
+    fun getShopNotVisited30DaysDtls(dateOf3monthago: String,currentDate:String): List<NoOrderTakenShop>
+
+    @Query("select shop_id,shop_name,owner_contact_number,address,case when owner_name IS NULL then '' else owner_name END as owner_name,type from shop_detail where shop_id not in\n" +
+            "( select shop_id from collection_list where date between :dateOf3monthago and :currentDate)and isOwnshop = 1 order by upper(trim(shop_name))")
+    fun getShopNotCollection30DaysDtls(dateOf3monthago: String,currentDate:String): List<NoOrderTakenShop>
+
+
+    @Query("select shop_id,shop_name,owner_contact_number,address,case when owner_name IS NULL then '' else owner_name END as owner_name,type from shop_detail where shop_id not in (\n" +
+            "select shop_id from order_details_list where date(date) between :dateOf3monthago and :currentDate \n" +
+            ") and isOwnshop = 1 order by upper(trim(shop_name))")
+    fun getNoOrderTaken(dateOf3monthago: String,currentDate:String): List<NoOrderTakenShop>
+
+
+    @Query("select shop_id,shop_name,owner_contact_number,address,case when owner_name IS NULL then '' else owner_name END as owner_name,type,\n" +
+            "    case when(SELECT max(date(date)) from order_details_list where order_details_list.shop_id = shop_detail.shop_id  )IS NULL then 'N/A' else (SELECT max(date(date)) from order_details_list where order_details_list.shop_id = shop_detail.shop_id  ) END orderDate from shop_detail\n" +
+            "    where shop_id not in (\n" +
+            "    select shop_id from order_details_list where date(date) between :dateOf3monthago and :currentDate \n" +
+            "    ) and isOwnshop = 1 order by upper(trim(shop_name))")
+    fun getNoOrderTaken2(dateOf3monthago: String,currentDate:String): List<NoOrderTakenShop2>
+
+
+
+
+
+
+    @Query("select shop_id,shop_name,owner_contact_number,address,case when owner_name IS NULL then '' else owner_name END as owner_name,type, JULIANDAY(date())- JULIANDAY(added_date) as age_since_party_creation_count from shop_detail where shop_id not in (\n" +
+            "select shop_id from order_details_list \n" +
+            ") and isOwnshop = 1 order by upper(trim(shop_name))")
+    fun getNoOrderTakeList(): List<NoOrderTakenList>
+
+
+    @Query("select product_name from product_list where id not in (\n" +
+            "select DISTINCT(product_id) from order_product_list where order_id in \n" +
+            "(\n" +
+            "select order_id from order_details_list where date(date) between :dateOf3monthago and :currentDate\n" +
+            ")) order by upper(product_name)")
+    fun getProductNotsell(dateOf3monthago: String,currentDate:String): List<NoProductSoldShop>
+
+
+    @Query("select DISTINCT(shop_id),max(date(date)) as maxD,count(shop_id) as countShop,\n" +
+            "JULIANDAY(date()) - JULIANDAY(max(date(date))) AS dateAge,0 as isUp,sum(amount) as totalAmt from order_details_list \n" +
+            "where date(date) between :fromD and :toD group by shop_id order by dateAge")
+    fun getshopOrderAgeToday(fromD: String,toD:String): List<OrderAge>
+
+    @Query("select * from (\n" +
+            "select DISTINCT(shop_id),max(date(date)) as maxD,count(shop_id) as countShop,\n" +
+            "            JULIANDAY(date()) - JULIANDAY(max(date(date))) AS dateAge,0 as isUp,sum(amount) as totalAmt from order_details_list\n" +
+            "            where date(date) between :fromD and :toD group by shop_id order by dateAge desc\n" +
+            " ) where dateAge <90")
+    fun getshopOrderAgeToday90DayRestriction(fromD: String,toD:String): List<OrderAge>
+
+    @Query("select * from (\n" +
+            "select DISTINCT(shop_id),max(date(date)) as maxD,count(shop_id) as countShop,\n" +
+            "            JULIANDAY(date()) - JULIANDAY(max(date(date))) AS dateAge,0 as isUp,sum(amount) as totalAmt from order_details_list \n" +
+            "            where date(date) between :fromD and :toD group by shop_id order by dateAge\n" +
+            ") where countShop = 1 and shop_id=:shop_id ")
+    fun getshopOrderAgeTodayByShopID(fromD: String,toD:String,shop_id: String): OrderAge
+
+    @Query("select DISTINCT(shop_id),max(date(date)) as maxD,count(shop_id) as countShop,\n" +
+            "JULIANDAY(date()) - JULIANDAY(max(date(date))) AS dateAge,0 as isUp,sum(amount) as totalAmt from order_details_list \n" +
+            "where date(date) between :fromD and :toD and shop_id=:shop_id group by shop_id order by dateAge")
+    fun getshopOrderAgeTodayByShop(fromD: String,toD:String,shop_id: String): OrderAge
+
+    @Query("select * from order_details_list where date(date) between :fromD and :toD ")
+    fun getLastXMonthOrderData(fromD: String,toD:String): List<OrderDetailsListEntity>
+
+    @Query("select * from order_details_list where date(date) between :fromD and :toD and shop_id=:shop_id")
+    fun getLastXMonthOrderDataByShopID(fromD: String,toD:String,shop_id: String): List<OrderDetailsListEntity>
+
+    @Query("select JULIANDAY(date()) - JULIANDAY(max(date(date))) as dateAge from order_details_list where \n" +
+            "shop_id = :shop_id order by id desc limit 1")
+    fun getDateAgeFromLastOrd(shop_id: String): String
+
+    @Query("select sum(amount) from order_details_list where shop_id = :shop_id and \n" +
+            "date(date) between :fromD and :toD ")
+    fun getDateAgeFromLastOrd(shop_id: String,fromD:String,toD:String): String
+
+    @Query("select * from order_details_list where shop_id =:shop_id order by id ")
+    fun getOrdDtls(shop_id: String): List<OrderDetailsListEntity>
+
+    @Query("select count(*) as cnt from (\n" +
+            "select * from order_details_list where shop_id = :shop_id \n" +
+            "and date(date) between :fromD and :toD\n" +
+            ")")
+    fun getOrdCntByDateRange(shop_id: String,fromD:String,toD:String): String
+
+
+    /*@Query("update order_details_list set date =:date where \n" +
+            "shop_id =:shop_id and order_id =:order_id ")
+    fun xTest(shop_id:String,order_id:String,date:String)
+
+    @Query("update order_details_list set date = '2023-03-29T12:14:49' where id='1'")
+    fun xTest1()
+    @Query("update order_details_list set date = '2023-03-29T12:14:49' where id='2'")
+    fun xTest2()
+    @Query("update order_details_list set date = '2023-04-29T12:14:49' where id='3'")
+    fun xTest3()
+    @Query("update order_details_list set date = '2023-04-29T12:14:49' where id='4'")
+    fun xTest4()
+    @Query("update order_details_list set date = '2023-04-29T12:14:49' where id='5'")
+    fun xTest5()
+    @Query("update order_details_list set date = '2023-05-29T12:14:49' where id='6'")
+    fun xTest6()
+    @Query("update order_details_list set date = '2023-05-29T12:14:49' where id='7'")
+    fun xTest7()
+    @Query("update order_details_list set date = '2023-05-29T12:14:49' where id='8'")
+    fun xTest8()
+    @Query("update order_details_list set date = '2023-05-29T12:14:49' where id='9'")
+    fun xTest9()
+    @Query("update order_details_list set shop_id = '54855_1688020910633427'")
+    fun xTest10()*/
 
 }

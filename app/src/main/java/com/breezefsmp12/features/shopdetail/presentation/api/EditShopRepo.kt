@@ -13,9 +13,18 @@ import com.breezefsmp12.features.addshop.model.AddLogReqData
 import com.breezefsmp12.features.addshop.model.AddShopRequestData
 import com.breezefsmp12.features.addshop.model.AddShopResponse
 import com.breezefsmp12.features.addshop.model.LogFileResponse
+import com.breezefsmp12.features.contacts.CallHisDtls
+import com.breezefsmp12.features.contacts.CompanyReqData
+import com.breezefsmp12.features.contacts.ContactMasterRes
+import com.breezefsmp12.features.contacts.SourceMasterRes
+import com.breezefsmp12.features.contacts.StageMasterRes
+import com.breezefsmp12.features.contacts.StatusMasterRes
+import com.breezefsmp12.features.contacts.TypeMasterRes
 import com.breezefsmp12.features.dashboard.presentation.DashboardActivity
 import com.breezefsmp12.features.document.model.AddEditDocumentInputParams
 import com.breezefsmp12.features.document.model.DocumentAttachmentModel
+import com.breezefsmp12.features.login.model.WhatsappApiData
+import com.breezefsmp12.features.login.model.WhatsappApiFetchData
 import com.google.gson.Gson
 import io.reactivex.Observable
 import okhttp3.MediaType
@@ -30,6 +39,49 @@ class EditShopRepo(val apiService: EditShopApi) {
 
     fun editShop(shop: AddShopRequestData): Observable<AddShopResponse> {
         return apiService.editShop(shop)
+    }
+
+    fun whatsAppStatusSync(obj: WhatsappApiData): Observable<BaseResponse> {
+        return apiService.whatsAppStatusSyncApi(obj)
+    }
+
+    fun whatsAppStatusFetch(user_id: String): Observable<WhatsappApiFetchData> {
+        return apiService.whatsAppStatusFetchApi(user_id)
+    }
+
+    fun callCompanyMaster(session_token: String): Observable<ContactMasterRes> {
+        return apiService.callCompanyMasterApi(session_token)
+    }
+
+    fun saveCompanyMaster(companyName: String): Observable<BaseResponse> {
+        return apiService.saveCompanyMasterApi(Pref.session_token.toString(),Pref.user_id.toString(),companyName)
+    }
+
+    fun saveCompanyMasterNw(companyName: CompanyReqData): Observable<BaseResponse> {
+        return apiService.saveCompanyMasterApiNw(companyName)
+    }
+
+    fun callTypeMaster(session_token: String): Observable<TypeMasterRes> {
+        return apiService.callTypeMasterApi(session_token)
+    }
+
+    fun callStatusMaster(session_token: String): Observable<StatusMasterRes> {
+        return apiService.callStatusMasterApi(session_token)
+    }
+    fun callSourceMaster(session_token: String): Observable<SourceMasterRes> {
+        return apiService.callSourceMasterApi(session_token)
+    }
+
+    fun callStageMaster(session_token: String): Observable<StageMasterRes> {
+        return apiService.callStageMasterApi(session_token)
+    }
+
+    fun callLogListSaveApi(callLogHisSave: CallHisDtls?): Observable<BaseResponse> {
+        return apiService.callLogListSaveApi(callLogHisSave)
+    }
+
+    fun callCallListHisAPI(user_id: String): Observable<CallHisDtls> {
+        return apiService.callCallListHisAPI(user_id)
     }
 
     fun addShopWithImage(shop: AddShopRequestData, shop_image: String?, context: Context): Observable<AddShopResponse> {

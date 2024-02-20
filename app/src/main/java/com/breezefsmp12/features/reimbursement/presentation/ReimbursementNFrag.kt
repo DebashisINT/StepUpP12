@@ -1193,6 +1193,20 @@ class ReimbursementNFrag : BaseFragment(), DateAdapter.onPetSelectedListener, Vi
     }
 
     private fun initPermissionCheck(state: Int) {
+
+        //begin mantis id 26741 Storage permission updation Suman 22-08-2023
+        var permissionList = arrayOf<String>( Manifest.permission.CAMERA)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            permissionList += Manifest.permission.READ_MEDIA_IMAGES
+            permissionList += Manifest.permission.READ_MEDIA_AUDIO
+            permissionList += Manifest.permission.READ_MEDIA_VIDEO
+        }else{
+            permissionList += Manifest.permission.WRITE_EXTERNAL_STORAGE
+            permissionList += Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+//end mantis id 26741 Storage permission updation Suman 22-08-2023
+
         permissionUtils = PermissionUtils(mContext as Activity, object : PermissionUtils.OnPermissionListener {
             override fun onPermissionGranted() {
                 imageState = state
@@ -1204,7 +1218,7 @@ class ReimbursementNFrag : BaseFragment(), DateAdapter.onPetSelectedListener, Vi
                 (mContext as DashboardActivity).showSnackMessage(getString(R.string.accept_permission))
             }
 
-        }, arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+        }, permissionList)//arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
     }
 
     fun onRequestPermission(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -1242,6 +1256,9 @@ class ReimbursementNFrag : BaseFragment(), DateAdapter.onPetSelectedListener, Vi
 
         date = AppUtils.getFormattedDateForApi(selectedDate!!)
 
+        Handler().postDelayed(Runnable {
+            checkStationStatusFromRevisit(date)
+        }, 100)
 
         if (!isEditable) {
             tv_from_loc.text = ""
@@ -2372,6 +2389,7 @@ class ReimbursementNFrag : BaseFragment(), DateAdapter.onPetSelectedListener, Vi
 
     //Begin 2.0 ReimbursementNFrag AppV 4.0.8 Suman    03/05/2023 Timber CUstomization mantis id 25995
     private fun checkStationStatusFromRevisit(checkDate:String){
+    try {
         var shopActivityList = AppDatabase.getDBInstance()!!.shopActivityDao().getTotalShopVisitedForADay(checkDate) as ArrayList<ShopActivityEntity>
         if(shopActivityList.size>0){
             var stationCodeList = shopActivityList.map { it.stationCode!!.toInt() }
@@ -2399,6 +2417,9 @@ class ReimbursementNFrag : BaseFragment(), DateAdapter.onPetSelectedListener, Vi
             isExstationForRevisit = false
             isOutstationForRevisit = false
         }
+    }catch (ex:Exception){
+        Timber.d("Error ${ex.message}")
+    }
     }
     //End of 2.0 ReimbursementNFrag AppV 4.0.8 Suman    03/05/2023 Timber CUstomization mantis id 25995
 

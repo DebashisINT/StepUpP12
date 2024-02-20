@@ -22,13 +22,15 @@ class PerformanceTabPagerAdapter(fm: FragmentManager?) : FragmentStatePagerAdapt
             return OwnPerformanceFragment()
         } else if (position == 1) {
             return TeamPerformanceFragment()
+        }else if (position == 2) {
+            return allPerformanceFrag()
         } else {
             return Fragment()
         }
     }
 
     override fun getCount(): Int {
-        return 2
+        return 3
     }
 
     override fun getItemPosition(`object`: Any): Int {

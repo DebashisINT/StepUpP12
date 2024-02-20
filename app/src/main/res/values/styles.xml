@@ -98,9 +98,22 @@
         <item name="colorAccent">@color/maroon</item>
     </style>
 
+    <style name="DefaultNumberPickerTheme" parent="AppTheme">
+        <item name="colorControlNormal">@color/white</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColorPrimary">@color/white</item>
+    </style>
+
+    <style name="DefaultNumberPickerTheme1" parent="AppTheme">
+        <item name="colorControlNormal">@color/black</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColorPrimary">@color/black</item>
+    </style>
 
 
-<!--    &lt;!&ndash; The beef: background color for Action Bar overflow menu &ndash;&gt;-->
+
+
+    <!--    &lt;!&ndash; The beef: background color for Action Bar overflow menu &ndash;&gt;-->
 <!--    <style name="MyApp.PopupMenu" parent="android:Widget.Holo.Light.ListPopupWindow">-->
 <!--        <item name="android:popupBackground">@drawable/menu_dropdown_panel</item>-->
 <!--    </style>-->

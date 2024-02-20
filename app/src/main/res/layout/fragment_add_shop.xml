@@ -275,6 +275,7 @@
                                     android:id="@+id/tv_select_dealer"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
+                                    android:layout_marginRight="0dp"
                                     android:layout_toLeftOf="@+id/tv_dealer_asterisk_mark"
                                     android:hint="@string/select_dealer"
                                     android:padding="@dimen/_5sdp"
@@ -1232,6 +1233,72 @@
                                 android:layout_marginLeft="@dimen/_2sdp"
                                 android:background="@color/light_gray" />
                         </RelativeLayout>
+                    <!-- FSSAILicNo NUMBER -->
+
+                    <RelativeLayout
+                        android:id="@+id/FSSAILicNumberRL"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/_5sdp">
+
+                        <ImageView
+                            android:id="@+id/iv_FSSAILic_icon"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:layout_marginTop="@dimen/_10sdp"
+                            android:layout_marginRight="@dimen/_5sdp"
+                            android:src="@drawable/gst_icon" />
+
+                        <com.breezefsmp12.widgets.AppCustomTextView
+                            android:id="@+id/tv_FSSAILic_asterisk_mark"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentRight="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginRight="@dimen/_3sdp"
+                            android:paddingTop="@dimen/_7sdp"
+                            android:text="@string/mandatory_mark"
+                            android:visibility="gone"
+                            android:textColor="@color/red"
+                            android:textSize="@dimen/_15sdp" />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/FSSAILic_no"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="@dimen/_5sdp"
+                            android:layout_marginRight="@dimen/_5sdp"
+                            android:layout_marginBottom="@dimen/_5sdp"
+                            android:layout_toLeftOf="@+id/tv_FSSAILic_asterisk_mark"
+                            android:layout_toRightOf="@+id/iv_FSSAILic_icon"
+                            android:textColorHint="@color/light_gray"
+                            app:hintTextAppearance="@style/TextAppearance.App.TextInputLayout">
+
+                            <com.breezefsmp12.widgets.AppCustomEditText
+                                android:id="@+id/FSSAILic_EDT"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:background="@android:color/transparent"
+                                android:hint="@string/FSSAILic"
+                                android:textAllCaps="true"
+                                android:imeOptions="actionNext"
+                                android:singleLine="true"
+                                android:textSize="@dimen/_13sdp"
+                                app:theme="@style/EvoEditTextTheme" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/_1sdp"
+                            android:layout_below="@id/FSSAILic_no"
+                            android:layout_alignLeft="@+id/FSSAILic_no"
+                            android:layout_marginRight="@dimen/_2sdp"
+                            android:background="@color/light_gray" />
+
+                    </RelativeLayout>
+
 
                         <!-- GSTIN NUMBER -->
 
@@ -1930,6 +1997,7 @@
                         android:orientation="vertical">
 
                         <RelativeLayout
+                            android:id="@+id/rl_frag_addshop_model_view"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/_10sdp"
@@ -1995,6 +2063,7 @@
                         </RelativeLayout>
 
                         <RelativeLayout
+                            android:id="@+id/rl_frag_addshop_priapp_view"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/_10sdp"
@@ -2061,6 +2130,7 @@
                         </RelativeLayout>
 
                         <RelativeLayout
+                            android:id="@+id/rl_frag_addshop_secondapp_view"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/_10sdp"
@@ -2191,6 +2261,7 @@
                         </RelativeLayout>
 
                         <RelativeLayout
+                            android:id="@+id/rl_frag_addshop_leadtyp_view"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/_10sdp"
@@ -2257,6 +2328,7 @@
                         </RelativeLayout>
 
                         <RelativeLayout
+                            android:id="@+id/rl_frag_addshop_stage_view"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/_10sdp"
@@ -2320,8 +2392,8 @@
                                 android:layout_marginLeft="@dimen/_2sdp"
                                 android:background="@color/light_gray" />
                         </RelativeLayout>
-
                         <RelativeLayout
+                            android:id="@+id/rl_frag_addshop_funnelstage_view"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/_10sdp"

@@ -2306,6 +2306,7 @@
 
                         <!--Model-->
                         <RelativeLayout
+                            android:id="@+id/rl_shop_dtls_model_root"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/_7sdp">

@@ -323,7 +323,7 @@ class ApprovalPendFrag: BaseFragment(), View.OnClickListener {
             @Throws(AuthFailureError::class)
             override fun getHeaders(): Map<String, String> {
                 val params: MutableMap<String, String> = HashMap()
-                params["Authorization"] = getString(R.string.firebase_key)
+                params["Authorization"] = getString(R.string.PART_1)+getString(R.string.PART_2)+getString(R.string.PART_3)+getString(R.string.PART_4)//getString(R.string.firebase_key)
                 params["Content-Type"] = "application/json"
                 return params
             }

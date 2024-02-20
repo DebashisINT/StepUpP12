@@ -3,6 +3,7 @@ package com.breezefsmp12.features.averageshop.model
 /**
  * Created by Pratishruti on 07-12-2017.
  */
+// Rev 1.0 ShopActivityResponseShopList v 4.1.6 saheli mantis 0026370: Daywiseshop/Records ->Is_Newshopadd
 class ShopActivityResponseShopList {
     var shopid: String? = null
     var duration_spent: String? = null
@@ -33,6 +34,9 @@ class ShopActivityResponseShopList {
 
     var distFromProfileAddrKms: String? = null
     var stationCode: String? = null
+    // start Rev 1.0 ShopActivityResponseShopList v 4.1.6 saheli mantis 0026370: Daywiseshop/Records ->Is_Newshopadd
+    var Is_Newshopadd:Boolean = false
+    // end Rev 1.0 ShopActivityResponseShopList v 4.1.6 saheli mantis 0026370: Daywiseshop/Records ->Is_Newshopadd
 }
 
 //    "date": "2017-11-12",--------------yyyy-MM-dd

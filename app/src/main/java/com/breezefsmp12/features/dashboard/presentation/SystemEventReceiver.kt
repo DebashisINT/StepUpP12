@@ -15,6 +15,7 @@ import com.breezefsmp12.app.Pref
 import com.breezefsmp12.app.domain.GpsStatusEntity
 import com.breezefsmp12.app.domain.PerformanceEntity
 import com.breezefsmp12.app.utils.AppUtils
+import com.breezefsmp12.app.utils.AppUtils.Companion.reasontagforGPS
 import com.breezefsmp12.features.location.LocationWizard
 import com.breezefsmp12.mappackage.SendBrod
 
@@ -37,14 +38,20 @@ class SystemEventReceiver : BroadcastReceiver() {
 
                 if (Settings.Global.getInt(context.contentResolver, Settings.Global.AIRPLANE_MODE_ON, 0) != 0){
                     text = "Airplane Mode is On "
+                    AppUtils.reasontagforGPS = "Airplane Mode is On "
                     SendBrod.sendBrod(context)
                     calculategpsStatus(false)
                 }
                 else{
-                    Timber.e("First time airplane off detect")
-                    text = "Airplane Mode is Off "
-                    SendBrod.stopBrod(context)
-                    calculategpsStatus(true)
+                    try {
+                        Timber.e("First time airplane off detect")
+                        text = "Airplane Mode is Off "
+                        AppUtils.reasontagforGPS = "Airplane Mode is Off "
+                        SendBrod.stopBrod(context)
+                        calculategpsStatus(true)
+                    }catch (ex : Exception){
+                        Timber.e("First time airplane off detect ${ex.message}")
+                    }
 
                 }
                 Timber.e("========================${text + AppUtils.getCurrentDateTime()}=======================")
@@ -52,8 +59,10 @@ class SystemEventReceiver : BroadcastReceiver() {
             }else if(intent.action == "android.intent.action.ACTION_SHUTDOWN"){
                 val locationName = LocationWizard.getLocationName(context, Pref.latitude!!.toDouble(), Pref.longitude!!.toDouble())
                 Timber.e("\n======================== \n Phone Shutdown || DateTime : ${AppUtils.getCurrentDateTime()} || Location : last_lat: ${Pref.latitude} || last_long: ${Pref.longitude} || LocationName ${locationName} \n=======================")
+                AppUtils.reasontagforGPS = "Phone shutdown"
             }else if(intent.action == "android.os.action.POWER_SAVE_MODE_CHANGED"){
                 Timber.e("\n android.os.action.POWER_SAVE_MODE_CHANGED")
+                AppUtils.reasontagforGPS = "Power save mode on"
             }
 
         }
@@ -83,8 +92,10 @@ class SystemEventReceiver : BroadcastReceiver() {
                     /*val local_intent = Intent()
                     local_intent.action = AppUtils.gpsDisabledAction
                     sendBroadcast(local_intent)*/
+                    AppUtils.reasontagforGPS = "GPS is disabled"
                 }
-            } else {
+            }
+            else {
                 if (AppUtils.isGpsOffCalled) {
                     AppUtils.isGpsOffCalled = false
                     Log.e("GpsLocationReceiver", "===========GPS is enabled================")
@@ -100,6 +111,8 @@ class SystemEventReceiver : BroadcastReceiver() {
                     /*val local_intent = Intent()
                     local_intent.action = AppUtils.gpsEnabledAction
                     sendBroadcast(local_intent)*/
+                    AppUtils.reasontagforGPS = "GPS is enabled"
+
                 }
             }
 
@@ -118,7 +131,8 @@ class SystemEventReceiver : BroadcastReceiver() {
                     AppUtils.gpsOnTime = 0
                     AppUtils.gpsOffTime = 0
                 }
-            } else {
+            }
+            else {
                 if (TextUtils.isEmpty(performance.gps_off_duration)) {
                     if ((AppUtils.gpsOnTime - AppUtils.gpsOffTime) > 0) {
                         AppDatabase.getDBInstance()!!.performanceDao().updateGPSoffDuration((AppUtils.gpsOnTime - AppUtils.gpsOffTime).toString(), AppUtils.getCurrentDateForShopActi())
@@ -159,9 +173,11 @@ class SystemEventReceiver : BroadcastReceiver() {
         gpsStatus.gps_off_time = AppUtils.gpsDisabledTime
         gpsStatus.gps_on_time = AppUtils.gpsEnabledTime
         gpsStatus.duration = duration
+        gpsStatus.reasontagforGPS =  AppUtils.reasontagforGPS
         AppDatabase.getDBInstance()!!.gpsStatusDao().insert(gpsStatus)
         AppUtils.gpsDisabledTime = ""
         AppUtils.gpsEnabledTime = ""
+        AppUtils.reasontagforGPS = ""
         AppUtils.isGpsReceiverCalled = false
     }
 

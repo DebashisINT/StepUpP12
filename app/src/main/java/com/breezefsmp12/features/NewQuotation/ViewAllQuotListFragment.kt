@@ -722,7 +722,7 @@ class ViewAllQuotListFragment : BaseFragment(), View.OnClickListener {
             billing.spacingAfter = 2f
             document.add(billing)
 
-            val product_tolerance_of_thickness = Paragraph("Product Tolerance of Thickness          :     " + addQuotEditResult.product_tolerance_of_thickness, font2Big)
+          /*  val product_tolerance_of_thickness = Paragraph("Product Tolerance of Thickness          :     " + addQuotEditResult.product_tolerance_of_thickness, font2Big)
             product_tolerance_of_thickness.alignment = Element.ALIGN_LEFT
             product_tolerance_of_thickness.spacingAfter = 2f
             document.add(product_tolerance_of_thickness)
@@ -730,7 +730,7 @@ class ViewAllQuotListFragment : BaseFragment(), View.OnClickListener {
             val product_tolerance_of_coating = Paragraph("Tolerance of Coating Thickness          :     " + addQuotEditResult.tolerance_of_coating_thickness, font2Big)
             product_tolerance_of_coating.alignment = Element.ALIGN_LEFT
             product_tolerance_of_coating.spacingAfter = 6f
-            document.add(product_tolerance_of_coating)
+            document.add(product_tolerance_of_coating)*/
 
             // rev 4.0 ViewAllQuotListFragment  AppV 4.0.8  Saheli    16/05/2023 pdf remark field mantis 26139
 
@@ -937,8 +937,8 @@ class ViewAllQuotListFragment : BaseFragment(), View.OnClickListener {
                 m = Mail("eurobondacp02@gmail.com", "nuqfrpmdjyckkukl")
                 toArr = arrayOf("sales1@eurobondacp.com", "sales@eurobondacp.com")
             }else{
-                //m = Mail("saheli.bhattacharjee@indusnet.co.in", "@Intsaheli22")
-                m = Mail("suman.bachar@indusnet.co.in", "dqridqtwsqxatmyt")
+                //m = Mail("suman.bachar@indusnet.co.in", "jfek uhst ltfk arrv")
+                m = Mail("suman.bachar@indusnet.co.in", "jfekuhstltfkarrv") // generate under 2-step verification -> app password
                 toArr = arrayOf("saheli.bhattacharjee@indusnet.co.in","suman.bachar@indusnet.co.in","suman.roy@indusnet.co.in")
             }
 

@@ -52,11 +52,25 @@
                             android:gravity="center"
                             android:paddingStart="@dimen/_20sdp">
 
-                            <ImageView
-                                android:layout_width="@dimen/_22sdp"
-                                android:layout_height="@dimen/_22sdp"
-                                android:src="@drawable/icon_rupee_gold"
-                                android:layout_marginRight="@dimen/_5sdp"/>
+                            <androidx.cardview.widget.CardView
+                                android:layout_width="@dimen/_27sdp"
+                                android:layout_height="@dimen/_27sdp"
+                                app:cardCornerRadius="250dp"
+                                android:layout_gravity="center|top"
+                                app:cardElevation="@dimen/_3sdp"
+                                app:cardBackgroundColor="@color/smoke_white"
+                                android:layout_marginTop="@dimen/_2sdp"
+                                android:layout_marginRight="@dimen/_3sdp"
+                                android:foreground="@drawable/round_ripple_back">
+
+                                <ImageView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:scaleType="centerCrop"
+                                    android:src="@drawable/ic_rupee_icon"
+                                    android:padding="@dimen/_5sdp" />
+
+                            </androidx.cardview.widget.CardView>
 
                             <TextView
                                 android:id="@+id/tv_frag_shop_dtls_avg_ord_amt"
@@ -74,7 +88,7 @@
                                 android:layout_height="@dimen/_20sdp"
                                 android:text="(Average Order Value)"
                                 android:textSize="@dimen/_8sdp"
-                                android:textColor="@color/black"
+                                android:textColor="@color/gray_50_dark"
                                 android:gravity="center"
                                 android:layout_marginLeft="@dimen/_5sdp"
                                 android:layout_gravity="center"
@@ -96,7 +110,9 @@
                             <FrameLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_weight="1">
+                                android:layout_weight="1"
+                                android:layout_marginLeft="@dimen/_1sdp"
+                                android:layout_marginRight="@dimen/_1sdp">
 
                                 <androidx.cardview.widget.CardView
                                     android:layout_width="@dimen/_27sdp"
@@ -112,8 +128,8 @@
                                         android:layout_width="match_parent"
                                         android:layout_height="match_parent"
                                         android:scaleType="centerCrop"
-                                        android:src="@drawable/icon_rupee_1"
-                                        android:padding="@dimen/_5sdp"/>
+                                        android:src="@drawable/ic_ind_rupee"
+                                        android:padding="@dimen/_5sdp" />
 
                                 </androidx.cardview.widget.CardView>
 
@@ -137,15 +153,31 @@
                                             android:layout_height="wrap_content"
                                             android:orientation="vertical">
 
-                                            <TextView
+                                            <LinearLayout
                                                 android:layout_width="match_parent"
-                                                android:layout_height="@dimen/_30sdp"
-                                                android:text="Purchased Product on Order Value"
-                                                android:gravity="center"
-                                                android:textColor="@color/white"
-                                                android:textSize="@dimen/_9sdp"
-                                                android:textStyle="bold"
-                                                android:background="#083681"/>
+                                                android:layout_height="@dimen/_40sdp"
+                                                android:orientation="vertical"
+                                                android:background="#083681"
+                                                android:paddingBottom="@dimen/_2sdp">
+
+                                                <TextView
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="@dimen/_25sdp"
+                                                    android:text="Purchased Product on Order Value"
+                                                    android:gravity="center"
+                                                    android:textColor="@color/white"
+                                                    android:textSize="@dimen/_11sdp"
+                                                    android:textStyle="bold" />
+
+                                                <TextView
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="@dimen/_15sdp"
+                                                    android:text="(Derived from total historical data)"
+                                                    android:gravity="center|top"
+                                                    android:textColor="#E3E2E2"
+                                                    android:textSize="@dimen/_10sdp" />
+
+                                            </LinearLayout>
 
                                             <LinearLayout
                                                 android:layout_width="match_parent"
@@ -168,7 +200,7 @@
                                                         android:text="Most Purchased"
                                                         android:textSize="@dimen/_10sdp"
                                                         android:textStyle="bold"
-                                                        android:textColor="@color/green"
+                                                        android:textColor="@color/black"
                                                         android:gravity="center"/>
 
                                                     <LinearLayout
@@ -176,7 +208,7 @@
                                                         android:layout_height="match_parent"
                                                         android:layout_weight="1"
                                                         android:orientation="vertical"
-                                                        android:layout_marginLeft="@dimen/_10sdp">
+                                                        android:layout_marginLeft="@dimen/_5sdp">
 
                                                         <!--android:scrollbars="vertical"
                                                         android:scrollHorizontally="true"
@@ -195,9 +227,9 @@
                                                             android:gravity="center|start"
                                                             android:maxLines="2"
                                                             android:text="Product Name"
-
-                                                            android:textColor="@color/completed_green"
-                                                            android:textSize="@dimen/_9sdp" />
+                                                            android:textStyle="bold"
+                                                            android:textColor="@color/black"
+                                                            android:textSize="@dimen/_11sdp" />
 
                                                         <LinearLayout
                                                             android:layout_width="match_parent"
@@ -211,43 +243,43 @@
                                                                 android:layout_gravity="center"
                                                                 app:cardCornerRadius="@dimen/_20sdp"
                                                                 app:cardElevation="@dimen/_3sdp"
-                                                                app:cardBackgroundColor="@color/transparent"
+                                                                app:cardBackgroundColor="@color/smoke_white"
                                                                 android:foreground="@drawable/round_ripple_back2">
 
                                                                 <ImageView
-                                                                    android:layout_width="@dimen/_17sdp"
-                                                                    android:layout_height="@dimen/_17sdp"
-                                                                    android:src="@drawable/icon_rupee_1"
-                                                                    android:layout_gravity="center"/>
+                                                                    android:layout_width="@dimen/_19sdp"
+                                                                    android:layout_height="@dimen/_19sdp"
+                                                                    android:src="@drawable/ic_ind_rupee"
+                                                                    android:layout_gravity="center"
+                                                                    android:padding="@dimen/_3sdp" />
 
                                                             </androidx.cardview.widget.CardView>
 
                                                             <LinearLayout
                                                                 android:layout_width="match_parent"
                                                                 android:layout_height="match_parent"
-                                                                android:orientation="vertical"
-                                                                android:paddingLeft="@dimen/_10sdp">
+                                                                android:orientation="horizontal"
+                                                                android:paddingLeft="@dimen/_5sdp">
 
                                                                 <TextView
                                                                     android:id="@+id/tv_product_ord_by_val_max_val"
-                                                                    android:layout_width="match_parent"
+                                                                    android:layout_width="wrap_content"
                                                                     android:layout_height="match_parent"
-                                                                    android:layout_weight="1"
                                                                     android:text="Total Value"
                                                                     android:gravity="center|start"
                                                                     android:singleLine="true"
-                                                                    android:textColor="@color/completed_green"
-                                                                    android:textSize="@dimen/_9sdp"/>
+                                                                    android:textColor="@color/black"
+                                                                    android:textSize="@dimen/_11sdp"
+                                                                    android:textStyle="bold"/>
 
                                                                 <TextView
-                                                                    android:layout_width="match_parent"
+                                                                    android:layout_width="@dimen/_100sdp"
                                                                     android:layout_height="match_parent"
-                                                                    android:layout_weight="1"
-                                                                    android:text="Total Value"
+                                                                    android:text="    (Total Value)"
                                                                     android:gravity="center|start"
                                                                     android:singleLine="true"
                                                                     android:textColor="@color/gray_50_dark"
-                                                                    android:textSize="@dimen/_8sdp"/>
+                                                                    android:textSize="@dimen/_8sdp" />
 
                                                             </LinearLayout>
 
@@ -275,18 +307,18 @@
                                                     <TextView
                                                         android:layout_width="wrap_content"
                                                         android:layout_height="match_parent"
+                                                        android:gravity="center"
                                                         android:text="Least Purchased"
+                                                        android:textColor="@color/black"
                                                         android:textSize="@dimen/_10sdp"
-                                                        android:textStyle="bold"
-                                                        android:textColor="@color/deep_maroon"
-                                                        android:gravity="center"/>
+                                                        android:textStyle="bold" />
 
                                                     <LinearLayout
                                                         android:layout_width="match_parent"
                                                         android:layout_height="match_parent"
                                                         android:layout_weight="1"
                                                         android:orientation="vertical"
-                                                        android:layout_marginLeft="@dimen/_10sdp">
+                                                        android:layout_marginLeft="@dimen/_5sdp">
 
                                                         <!--android:scrollbars="vertical"
                                                         android:scrollHorizontally="true"
@@ -305,9 +337,10 @@
                                                             android:gravity="center|start"
                                                             android:maxLines="2"
                                                             android:text="Product Name"
+                                                            android:textStyle="bold"
 
-                                                            android:textColor="@color/red"
-                                                            android:textSize="@dimen/_9sdp" />
+                                                            android:textColor="@color/black"
+                                                            android:textSize="@dimen/_11sdp" />
 
                                                         <LinearLayout
                                                             android:layout_width="match_parent"
@@ -321,39 +354,40 @@
                                                                 android:layout_gravity="center"
                                                                 app:cardCornerRadius="@dimen/_20sdp"
                                                                 app:cardElevation="@dimen/_3sdp"
-                                                                app:cardBackgroundColor="@color/transparent"
-                                                                android:foreground="@drawable/round_ripple_back3">
+                                                                app:cardBackgroundColor="@color/smoke_white"
+                                                                android:foreground="@drawable/round_ripple_back2">
 
                                                                 <ImageView
-                                                                    android:layout_width="@dimen/_17sdp"
-                                                                    android:layout_height="@dimen/_17sdp"
-                                                                    android:src="@drawable/icon_rupee_1"
-                                                                    android:layout_gravity="center"/>
+                                                                    android:layout_width="@dimen/_19sdp"
+                                                                    android:layout_height="@dimen/_19sdp"
+                                                                    android:src="@drawable/ic_ind_rupee"
+                                                                    android:layout_gravity="center"
+                                                                    android:padding="@dimen/_3sdp" />
 
                                                             </androidx.cardview.widget.CardView>
 
                                                             <LinearLayout
                                                                 android:layout_width="match_parent"
                                                                 android:layout_height="match_parent"
-                                                                android:orientation="vertical"
-                                                                android:paddingLeft="@dimen/_10sdp">
+                                                                android:orientation="horizontal"
+                                                                android:paddingLeft="@dimen/_5sdp">
 
                                                                 <TextView
                                                                     android:id="@+id/tv_product_ord_by_val_min_val"
-                                                                    android:layout_width="match_parent"
+                                                                    android:layout_width="wrap_content"
                                                                     android:layout_height="match_parent"
-                                                                    android:layout_weight="1"
                                                                     android:text="Total Value"
                                                                     android:gravity="center|start"
                                                                     android:singleLine="true"
-                                                                    android:textColor="@color/red"
-                                                                    android:textSize="@dimen/_9sdp"/>
+                                                                    android:textColor="@color/black"
+                                                                    android:textSize="@dimen/_11sdp"
+                                                                    android:textStyle="bold"/>
 
                                                                 <TextView
                                                                     android:layout_width="match_parent"
                                                                     android:layout_height="match_parent"
                                                                     android:layout_weight="1"
-                                                                    android:text="Total Value"
+                                                                    android:text="    (Total Value)"
                                                                     android:gravity="center|start"
                                                                     android:singleLine="true"
                                                                     android:textColor="@color/gray_50_dark"
@@ -396,7 +430,7 @@
                                         android:layout_width="match_parent"
                                         android:layout_height="match_parent"
                                         android:scaleType="centerCrop"
-                                        android:src="@drawable/icon_product_1"
+                                        android:src="@drawable/ic_product"
                                         android:padding="@dimen/_5sdp"/>
 
                                 </androidx.cardview.widget.CardView>
@@ -421,15 +455,31 @@
                                             android:layout_height="wrap_content"
                                             android:orientation="vertical">
 
-                                            <TextView
+                                            <LinearLayout
                                                 android:layout_width="match_parent"
-                                                android:layout_height="@dimen/_30sdp"
-                                                android:text="Purchased Product on Order Quantity"
-                                                android:gravity="center"
-                                                android:textColor="@color/white"
-                                                android:textSize="@dimen/_9sdp"
-                                                android:textStyle="bold"
-                                                android:background="#4F0BDD"/>
+                                                android:layout_height="@dimen/_40sdp"
+                                                android:orientation="vertical"
+                                                android:background="#4F0BDD"
+                                                android:paddingBottom="@dimen/_2sdp">
+
+                                                <TextView
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="@dimen/_25sdp"
+                                                    android:text="Purchased Product on Order Quantity"
+                                                    android:gravity="center"
+                                                    android:textColor="@color/white"
+                                                    android:textSize="@dimen/_11sdp"
+                                                    android:textStyle="bold" />
+
+                                                <TextView
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="@dimen/_15sdp"
+                                                    android:text="(Derived from total historical data)"
+                                                    android:gravity="center|top"
+                                                    android:textColor="#E3E2E2"
+                                                    android:textSize="@dimen/_10sdp" />
+
+                                            </LinearLayout>
 
                                             <LinearLayout
                                                 android:layout_width="match_parent"
@@ -452,7 +502,7 @@
                                                         android:text="Most Purchased"
                                                         android:textSize="@dimen/_10sdp"
                                                         android:textStyle="bold"
-                                                        android:textColor="@color/green"
+                                                        android:textColor="@color/black"
                                                         android:gravity="center"/>
 
                                                     <LinearLayout
@@ -460,7 +510,7 @@
                                                         android:layout_height="match_parent"
                                                         android:layout_weight="1"
                                                         android:orientation="vertical"
-                                                        android:layout_marginLeft="@dimen/_10sdp">
+                                                        android:layout_marginLeft="@dimen/_5sdp">
 
                                                         <!--android:scrollbars="vertical"
                                                         android:scrollHorizontally="true"
@@ -479,9 +529,10 @@
                                                             android:gravity="center|start"
                                                             android:maxLines="2"
                                                             android:text="Product Name"
+                                                            android:textStyle="bold"
 
-                                                            android:textColor="@color/completed_green"
-                                                            android:textSize="@dimen/_9sdp" />
+                                                            android:textColor="@color/black"
+                                                            android:textSize="@dimen/_11sdp" />
 
                                                         <LinearLayout
                                                             android:layout_width="match_parent"
@@ -495,39 +546,41 @@
                                                                 android:layout_gravity="center"
                                                                 app:cardCornerRadius="@dimen/_20sdp"
                                                                 app:cardElevation="@dimen/_3sdp"
-                                                                app:cardBackgroundColor="@color/transparent"
+                                                                android:layout_marginLeft="@dimen/_3sdp"
+                                                                app:cardBackgroundColor="@color/smoke_white"
                                                                 android:foreground="@drawable/round_ripple_back2">
 
                                                                 <ImageView
-                                                                    android:layout_width="@dimen/_17sdp"
-                                                                    android:layout_height="@dimen/_17sdp"
-                                                                    android:src="@drawable/icon_product_1"
-                                                                    android:layout_gravity="center"/>
+                                                                    android:layout_width="@dimen/_19sdp"
+                                                                    android:layout_height="@dimen/_19sdp"
+                                                                    android:src="@drawable/ic_product"
+                                                                    android:layout_gravity="center"
+                                                                    android:padding="@dimen/_3sdp" />
 
                                                             </androidx.cardview.widget.CardView>
 
                                                             <LinearLayout
                                                                 android:layout_width="match_parent"
                                                                 android:layout_height="match_parent"
-                                                                android:orientation="vertical"
-                                                                android:paddingLeft="@dimen/_10sdp">
+                                                                android:orientation="horizontal"
+                                                                android:paddingLeft="@dimen/_5sdp">
 
                                                                 <TextView
                                                                     android:id="@+id/tv_product_ord_by_qty_max_amt"
-                                                                    android:layout_width="match_parent"
+                                                                    android:layout_width="wrap_content"
                                                                     android:layout_height="match_parent"
-                                                                    android:layout_weight="1"
                                                                     android:text="Total Quantity"
                                                                     android:gravity="center|start"
                                                                     android:singleLine="true"
-                                                                    android:textColor="@color/completed_green"
-                                                                    android:textSize="@dimen/_9sdp"/>
+                                                                    android:textColor="@color/black"
+                                                                    android:textSize="@dimen/_11sdp"
+                                                                    android:textStyle="bold"/>
 
                                                                 <TextView
                                                                     android:layout_width="match_parent"
                                                                     android:layout_height="match_parent"
                                                                     android:layout_weight="1"
-                                                                    android:text="Total Quantity"
+                                                                    android:text="    (Total Quantity)"
                                                                     android:gravity="center|start"
                                                                     android:singleLine="true"
                                                                     android:textColor="@color/gray_50_dark"
@@ -562,7 +615,7 @@
                                                         android:text="Least Purchased"
                                                         android:textSize="@dimen/_10sdp"
                                                         android:textStyle="bold"
-                                                        android:textColor="@color/deep_maroon"
+                                                        android:textColor="@color/black"
                                                         android:gravity="center"/>
 
                                                     <LinearLayout
@@ -570,7 +623,7 @@
                                                         android:layout_height="match_parent"
                                                         android:layout_weight="1"
                                                         android:orientation="vertical"
-                                                        android:layout_marginLeft="@dimen/_10sdp">
+                                                        android:layout_marginLeft="@dimen/_5sdp">
 
                                                         <!--android:scrollbars="vertical"
                                                         android:scrollHorizontally="true"
@@ -589,9 +642,10 @@
                                                             android:gravity="center|start"
                                                             android:maxLines="2"
                                                             android:text="Product Name"
+                                                            android:textStyle="bold"
 
-                                                            android:textColor="@color/red"
-                                                            android:textSize="@dimen/_9sdp" />
+                                                            android:textColor="@color/black"
+                                                            android:textSize="@dimen/_11sdp" />
 
                                                         <LinearLayout
                                                             android:layout_width="match_parent"
@@ -605,39 +659,40 @@
                                                                 android:layout_gravity="center"
                                                                 app:cardCornerRadius="@dimen/_20sdp"
                                                                 app:cardElevation="@dimen/_3sdp"
-                                                                app:cardBackgroundColor="@color/transparent"
-                                                                android:foreground="@drawable/round_ripple_back3">
+                                                                app:cardBackgroundColor="@color/smoke_white"
+                                                                android:foreground="@drawable/round_ripple_back2">
 
                                                                 <ImageView
-                                                                    android:layout_width="@dimen/_17sdp"
-                                                                    android:layout_height="@dimen/_17sdp"
-                                                                    android:src="@drawable/icon_product_1"
-                                                                    android:layout_gravity="center"/>
+                                                                    android:layout_width="@dimen/_19sdp"
+                                                                    android:layout_height="@dimen/_19sdp"
+                                                                    android:src="@drawable/ic_product"
+                                                                    android:layout_gravity="center"
+                                                                    android:padding="@dimen/_3sdp" />
 
                                                             </androidx.cardview.widget.CardView>
 
                                                             <LinearLayout
                                                                 android:layout_width="match_parent"
                                                                 android:layout_height="match_parent"
-                                                                android:orientation="vertical"
-                                                                android:paddingLeft="@dimen/_10sdp">
+                                                                android:orientation="horizontal"
+                                                                android:paddingLeft="@dimen/_5sdp">
 
                                                                 <TextView
                                                                     android:id="@+id/tv_product_ord_by_qty_min_amt"
-                                                                    android:layout_width="match_parent"
+                                                                    android:layout_width="wrap_content"
                                                                     android:layout_height="match_parent"
-                                                                    android:layout_weight="1"
                                                                     android:text="Total Quantity"
                                                                     android:gravity="center|start"
                                                                     android:singleLine="true"
-                                                                    android:textColor="@color/red"
-                                                                    android:textSize="@dimen/_9sdp"/>
+                                                                    android:textColor="@color/black"
+                                                                    android:textSize="@dimen/_11sdp"
+                                                                    android:textStyle="bold"/>
 
                                                                 <TextView
                                                                     android:layout_width="match_parent"
                                                                     android:layout_height="match_parent"
                                                                     android:layout_weight="1"
-                                                                    android:text="Total Quantity"
+                                                                    android:text="    (Total Quantity)"
                                                                     android:gravity="center|start"
                                                                     android:singleLine="true"
                                                                     android:textColor="@color/gray_50_dark"
@@ -681,11 +736,29 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:padding="@dimen/_5sdp"
-                        android:layout_marginTop="@dimen/_10sdp">
+                        android:layout_marginTop="@dimen/_5sdp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/_20sdp"
+                            android:gravity="center"
+                            android:text="Derived from recent 1month historical data"
+                            android:textSize="@dimen/_14sdp"
+                            android:textColor="@color/date_bg_selected_color"
+                            android:textStyle="bold" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/_1sdp"
+                            android:background="@color/gray_50"
+                            android:layout_marginLeft="@dimen/_10sdp"
+                            android:layout_marginRight="@dimen/_10sdp"
+                            android:layout_marginTop="@dimen/_2sdp"
+                            android:layout_marginBottom="@dimen/_4sdp"/>
 
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="@dimen/_60sdp"
+                            android:layout_height="@dimen/_70sdp"
                             android:orientation="horizontal">
 
                             <FrameLayout
@@ -713,8 +786,8 @@
                                         <TextView
                                             android:layout_width="match_parent"
                                             android:layout_height="match_parent"
-                                            android:layout_weight="1"
-                                            android:text="Last VIsit"
+                                            android:layout_weight="1.1"
+                                            android:text="Last Visit"
                                             android:textColor="@color/white"
                                             android:textSize="@dimen/_10sdp"
                                             android:textStyle="bold"
@@ -805,7 +878,7 @@
                                         <TextView
                                             android:layout_width="match_parent"
                                             android:layout_height="match_parent"
-                                            android:layout_weight="1"
+                                            android:layout_weight="1.1"
                                             android:text="Average Spent Time"
                                             android:textColor="@color/white"
                                             android:textSize="@dimen/_10sdp"
@@ -823,6 +896,7 @@
                                             android:gravity="center|end"/>
 
                                         <TextView
+                                            android:id="@+id/tv_frag_shop_dtls_ma_avg_visit_time_caption"
                                             android:layout_width="match_parent"
                                             android:layout_height="match_parent"
                                             android:layout_weight="1"
@@ -858,6 +932,25 @@
 
                         </LinearLayout>
 
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/_20sdp"
+                            android:gravity="center"
+                            android:text="Distance from Your Current Location"
+                            android:textSize="@dimen/_14sdp"
+                            android:textColor="@color/date_bg_selected_color"
+                            android:textStyle="bold"
+                            android:layout_marginTop="@dimen/_8sdp"/>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/_1sdp"
+                            android:background="@color/gray_50"
+                            android:layout_marginLeft="@dimen/_10sdp"
+                            android:layout_marginRight="@dimen/_10sdp"
+                            android:layout_marginTop="@dimen/_2sdp"
+                            android:layout_marginBottom="@dimen/_2sdp"/>
+
                         <FrameLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content">
@@ -865,8 +958,8 @@
                             <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="@dimen/_150sdp"
-                                android:layout_marginTop="10dp"
-                                android:layout_marginBottom="10dp"
+                                android:layout_marginTop="@dimen/_5sdp"
+                                android:layout_marginBottom="@dimen/_5sdp"
                                 android:layout_marginLeft="@dimen/_2sdp"
                                 android:layout_marginRight="@dimen/_2sdp">
 
@@ -915,10 +1008,31 @@
                                 android:foreground="@drawable/round_ripple_back1"
                                 app:cardBackgroundColor="#ffffff">
 
+                                    <ImageView
+                                        android:layout_width="@dimen/_25sdp"
+                                        android:layout_height="@dimen/_25sdp"
+                                        android:background="@drawable/icon_road_direction"
+                                        android:layout_margin="@dimen/_4sdp"/>
+
+                            </androidx.cardview.widget.CardView>
+
+                            <androidx.cardview.widget.CardView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="start|top"
+                                android:layout_marginBottom="@dimen/_10sdp"
+                                android:layout_marginStart="@dimen/_40sdp"
+                                app:cardElevation="0dp"
+                                android:layout_marginTop="@dimen/_10sdp"
+                                app:cardBackgroundColor="@color/transparent">
+
                                 <ImageView
+                                    android:id="@+id/iv_frag_shop_dtls_ma_map_direction_pointer"
                                     android:layout_width="@dimen/_25sdp"
                                     android:layout_height="@dimen/_25sdp"
-                                    android:background="@drawable/icon_road_direction"
+                                    android:rotation="-90"
+                                    android:scaleY="-1"
+                                    android:background="@drawable/icon_pointer_gif"
                                     android:layout_margin="@dimen/_4sdp"/>
 
                             </androidx.cardview.widget.CardView>
@@ -944,20 +1058,43 @@
                         android:layout_marginTop="@dimen/_5sdp"
                         android:layout_marginBottom="@dimen/_10sdp">
 
-                        <TextView
+                        <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="@dimen/_20sdp"
-                            android:gravity="center"
-                            android:text="Suggestions for Productive Visits:"
-                            android:textSize="@dimen/_14sdp"
-                            android:textColor="@color/date_bg_selected_color"
-                            android:textStyle="bold"
-                            android:layout_marginTop="@dimen/_5sdp" />
+                            android:layout_height="@dimen/_40sdp"
+                            android:orientation="vertical"
+                            android:paddingBottom="@dimen/_2sdp">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/_25sdp"
+                                android:text="Suggestions for Productive Visits"
+                                android:gravity="center"
+                                android:textColor="@color/date_bg_selected_color"
+                                android:textSize="@dimen/_14sdp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/_15sdp"
+                                android:text="(Derived from recent 1month historical data)"
+                                android:gravity="center|top"
+                                android:textColor="@color/date_bg_selected_color"
+                                android:textSize="@dimen/_11sdp" />
+
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/_1sdp"
+                            android:background="@color/gray_50"
+                            android:layout_marginLeft="@dimen/_10sdp"
+                            android:layout_marginRight="@dimen/_10sdp"
+                            android:layout_marginTop="@dimen/_3sdp"
+                            android:layout_marginBottom="@dimen/_2sdp"/>
 
                         <FrameLayout
                             android:layout_width="match_parent"
-                            android:layout_height="@dimen/_60sdp"
-                            android:layout_marginTop="@dimen/_10sdp">
+                            android:layout_height="@dimen/_75sdp">
 
                             <androidx.cardview.widget.CardView
                                 android:layout_width="match_parent"
@@ -983,7 +1120,7 @@
                                         android:layout_height="match_parent"
                                         android:layout_weight="1"
                                         android:orientation="vertical"
-                                        android:paddingStart="@dimen/_10sdp">
+                                        android:paddingStart="@dimen/_28sdp">
 
                                         <TextView
                                             android:layout_width="match_parent"
@@ -1003,7 +1140,7 @@
                                             android:text="Stay At Lease"
                                             android:textColor="@color/white"
                                             android:textSize="@dimen/_9sdp"
-                                            android:gravity="center"/>
+                                            android:gravity="center|top"/>
 
 
                                     </LinearLayout>
@@ -1020,7 +1157,7 @@
                                         android:layout_height="match_parent"
                                         android:layout_weight="1"
                                         android:orientation="vertical"
-                                        android:paddingEnd="@dimen/_10sdp">
+                                        android:paddingEnd="@dimen/_28sdp">
 
                                         <TextView
                                             android:layout_width="match_parent"
@@ -1040,7 +1177,7 @@
                                             android:text="Visit between"
                                             android:textColor="@color/white"
                                             android:textSize="@dimen/_9sdp"
-                                            android:gravity="center"/>
+                                            android:gravity="center|top"/>
 
 
                                     </LinearLayout>
@@ -1091,7 +1228,7 @@
 
                         <FrameLayout
                             android:layout_width="match_parent"
-                            android:layout_height="@dimen/_60sdp"
+                            android:layout_height="@dimen/_75sdp"
                             android:layout_marginTop="@dimen/_6sdp">
 
                             <androidx.cardview.widget.CardView
@@ -1118,7 +1255,7 @@
                                         android:layout_height="match_parent"
                                         android:layout_weight="1"
                                         android:orientation="vertical"
-                                        android:paddingStart="@dimen/_10sdp">
+                                        android:paddingStart="@dimen/_28sdp">
 
                                         <TextView
                                             android:layout_width="match_parent"
@@ -1137,8 +1274,8 @@
                                             android:layout_weight="1"
                                             android:text="Order Value"
                                             android:textColor="@color/white"
-                                            android:textSize="@dimen/_9sdp"
-                                            android:gravity="center"/>
+                                            android:textSize="@dimen/_10sdp"
+                                            android:gravity="center|top"/>
 
 
                                     </LinearLayout>
@@ -1155,7 +1292,7 @@
                                         android:layout_height="match_parent"
                                         android:layout_weight="1"
                                         android:orientation="vertical"
-                                        android:paddingEnd="@dimen/_10sdp">
+                                        android:paddingEnd="@dimen/_28sdp">
 
                                         <TextView
                                             android:layout_width="match_parent"
@@ -1174,8 +1311,8 @@
                                             android:layout_weight="1"
                                             android:text="Order Quantity"
                                             android:textColor="@color/white"
-                                            android:textSize="@dimen/_9sdp"
-                                            android:gravity="center"/>
+                                            android:textSize="@dimen/_10sdp"
+                                            android:gravity="center|top"/>
 
 
                                     </LinearLayout>
@@ -1226,7 +1363,7 @@
 
                         <FrameLayout
                             android:layout_width="match_parent"
-                            android:layout_height="@dimen/_60sdp"
+                            android:layout_height="@dimen/_75sdp"
                             android:layout_marginTop="@dimen/_6sdp">
 
                             <androidx.cardview.widget.CardView
@@ -1253,7 +1390,7 @@
                                         android:layout_height="match_parent"
                                         android:layout_weight="1"
                                         android:orientation="vertical"
-                                        android:paddingStart="@dimen/_10sdp">
+                                        android:paddingStart="@dimen/_28sdp">
 
                                         <TextView
                                             android:layout_width="match_parent"
@@ -1270,10 +1407,10 @@
                                             android:layout_width="match_parent"
                                             android:layout_height="match_parent"
                                             android:layout_weight="1"
+                                            android:gravity="center|top"
                                             android:text="Visit this Party"
                                             android:textColor="@color/white"
-                                            android:textSize="@dimen/_9sdp"
-                                            android:gravity="center"/>
+                                            android:textSize="@dimen/_9sdp" />
 
 
                                     </LinearLayout>
@@ -1290,7 +1427,7 @@
                                         android:layout_height="match_parent"
                                         android:layout_weight="1"
                                         android:orientation="vertical"
-                                        android:paddingEnd="@dimen/_10sdp">
+                                        android:paddingEnd="@dimen/_28sdp">
 
                                         <TextView
                                             android:layout_width="match_parent"
@@ -1310,7 +1447,7 @@
                                             android:text="Avoid"
                                             android:textColor="@color/white"
                                             android:textSize="@dimen/_9sdp"
-                                            android:gravity="center"/>
+                                            android:gravity="center|top"/>
 
 
                                     </LinearLayout>
@@ -1377,15 +1514,38 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
 
-                        <TextView
+                        <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="@dimen/_20sdp"
-                            android:gravity="center"
-                            android:text="Suggestive Product to Push:"
-                            android:textSize="@dimen/_14sdp"
-                            android:textColor="@color/date_bg_selected_color"
-                            android:textStyle="bold"
-                            android:layout_marginTop="@dimen/_10sdp" />
+                            android:layout_height="@dimen/_40sdp"
+                            android:orientation="vertical"
+                            android:paddingBottom="@dimen/_2sdp">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/_25sdp"
+                                android:text="Suggestive Product to Push"
+                                android:gravity="center"
+                                android:textColor="@color/date_bg_selected_color"
+                                android:textSize="@dimen/_14sdp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/_15sdp"
+                                android:text="(Derived from Recent 30 orders)"
+                                android:gravity="center|top"
+                                android:textColor="@color/date_bg_selected_color"
+                                android:textSize="@dimen/_11sdp" />
+
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/_1sdp"
+                            android:background="@color/gray_50"
+                            android:layout_marginLeft="@dimen/_10sdp"
+                            android:layout_marginRight="@dimen/_10sdp"
+                            android:layout_marginTop="@dimen/_3sdp" />
 
                         <androidx.cardview.widget.CardView
                             android:layout_width="match_parent"
@@ -1393,7 +1553,6 @@
                             app:cardCornerRadius="@dimen/_10sdp"
                             app:cardElevation="0dp"
                             app:cardBackgroundColor="@color/transparent"
-                            android:layout_marginTop="@dimen/_3sdp"
                             android:layout_marginLeft="@dimen/_3sdp"
                             android:layout_marginRight="@dimen/_3sdp">
 
@@ -1402,7 +1561,7 @@
                                 android:layout_height="match_parent"
                                 android:orientation="vertical"
                                 android:background="@color/white"
-                                android:layout_marginTop="@dimen/_5sdp"
+                                android:layout_marginTop="@dimen/_2sdp"
                                 android:layout_marginBottom="@dimen/_5sdp"
                                 android:padding="@dimen/_5sdp">
 
@@ -1577,15 +1736,38 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
 
-                        <TextView
+                        <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="@dimen/_20sdp"
-                            android:gravity="center"
-                            android:text="Suggestive Product to Cross Sell:"
-                            android:textSize="@dimen/_14sdp"
-                            android:textColor="@color/date_bg_selected_color"
-                            android:textStyle="bold"
-                            android:layout_marginTop="@dimen/_10sdp"/>
+                            android:layout_height="@dimen/_40sdp"
+                            android:orientation="vertical"
+                            android:paddingBottom="@dimen/_2sdp">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/_25sdp"
+                                android:text="Suggestive Product to Cross Sell"
+                                android:gravity="center"
+                                android:textColor="@color/date_bg_selected_color"
+                                android:textSize="@dimen/_14sdp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/_15sdp"
+                                android:text="(Derived from Recent 30 orders on Qty)"
+                                android:gravity="center|top"
+                                android:textColor="@color/date_bg_selected_color"
+                                android:textSize="@dimen/_11sdp" />
+
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/_1sdp"
+                            android:background="@color/gray_50"
+                            android:layout_marginLeft="@dimen/_10sdp"
+                            android:layout_marginRight="@dimen/_10sdp"
+                            android:layout_marginTop="@dimen/_3sdp" />
 
                         <androidx.cardview.widget.CardView
                             android:layout_width="match_parent"
@@ -1593,7 +1775,6 @@
                             app:cardCornerRadius="@dimen/_10sdp"
                             app:cardElevation="0dp"
                             app:cardBackgroundColor="@color/transparent"
-                            android:layout_marginTop="@dimen/_3sdp"
                             android:layout_marginLeft="@dimen/_3sdp"
                             android:layout_marginRight="@dimen/_3sdp">
 
@@ -1601,7 +1782,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
                                 android:orientation="vertical"
-                                android:layout_marginTop="@dimen/_5sdp"
+                                android:layout_marginTop="@dimen/_2sdp"
                                 android:layout_marginBottom="@dimen/_5sdp"
                                 android:padding="@dimen/_5sdp">
 

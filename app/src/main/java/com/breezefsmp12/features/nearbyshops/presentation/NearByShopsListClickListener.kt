@@ -17,6 +17,7 @@ interface NearByShopsListClickListener {
     fun onQuotationClick(position: Int)
     fun onActivityClick(position: Int)
     fun onShareClick(position: Int)
+    fun onLocationShareClick(position: Int)
     fun onCollectionClick(position: Int)
     fun onWhatsAppClick(no: String)
     fun onSmsClick(no: String)

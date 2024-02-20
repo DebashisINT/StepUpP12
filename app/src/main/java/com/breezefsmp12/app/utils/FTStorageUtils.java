@@ -49,10 +49,14 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREG
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
 import static android.content.Context.ACTIVITY_SERVICE;
 
+import androidx.core.content.FileProvider;
+
+import timber.log.Timber;
+
 /**
  * DStorageUtils
  */
-
+// 1.0 REV 0026445: Order QR code can't share in whatsapp, its showing "The file format is not supported"
 public class FTStorageUtils {
 
     private static String APP_FOLDERNAME = "breezefsmp12App/FTS";
@@ -319,8 +323,12 @@ public class FTStorageUtils {
 
     public static boolean isMyServiceRunning(Class<?> serviceClass, Context mContext) {
         ActivityManager manager = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+        Timber.d("TAG_CHECK_LOC_SERVICE_STATUS");
+
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
             if (serviceClass.getName().equals(service.service.getClassName())) {
+                Timber.d("TAG_CHECK_LOC_SERVICE_STATUS");
+
                 return true;
             }
         }
@@ -630,7 +638,10 @@ public class FTStorageUtils {
             FileOutputStream stream = new FileOutputStream(file);
             image.compress(Bitmap.CompressFormat.PNG, 90, stream);
             stream.close();
-            uri = Uri.fromFile(file);
+            // start 1.0 REV 0026445: Order QR code can't share in whatsapp, its showing "The file format is not supported"
+            uri = FileProvider.getUriForFile(context, context.getPackageName()+ ".provider", file);
+//            uri = Uri.fromFile(file);
+            // end 1.0 REV 0026445: Order QR code can't share in whatsapp, its showing "The file format is not supported"
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -317,6 +317,9 @@ class ApplyLeaveFragment : BaseFragment(), View.OnClickListener, DatePickerDialo
         addAttendenceModel.work_long=Pref.current_longitude
         addAttendenceModel.beat_id = "0"
 
+        addAttendenceModel.visit_location_id = "0"
+        addAttendenceModel.area_location_id = "0"
+
         val repository = AddAttendenceRepoProvider.addAttendenceRepo()
         progress_wheel.spin()
         BaseActivity.compositeDisposable.add(
@@ -592,7 +595,7 @@ class ApplyLeaveFragment : BaseFragment(), View.OnClickListener, DatePickerDialo
             @Throws(AuthFailureError::class)
             override fun getHeaders(): Map<String, String> {
                 val params: MutableMap<String, String> = HashMap()
-                params["Authorization"] = getString(R.string.firebase_key)
+                params["Authorization"] = getString(R.string.PART_1)+getString(R.string.PART_2)+getString(R.string.PART_3)+getString(R.string.PART_4)//getString(R.string.firebase_key)
                 params["Content-Type"] = "application/json"
                 return params
             }

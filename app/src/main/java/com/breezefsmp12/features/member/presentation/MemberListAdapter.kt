@@ -228,6 +228,10 @@ class MemberListAdapter(context: Context, val teamList: ArrayList<TeamListDataMo
                     itemView.iv_leave.visibility = View.GONE
                 }
             }
+
+            itemView.tv_team_details_all_party.setOnClickListener {
+                listener.onAllPartyClick(teamList[adapterPosition])
+            }
             //end 1.0  OfflineMemberAdapter AppV 4.1.5 Saheli    06/06/2023  mantis 0026301: Team Details page working
 
         }
@@ -253,6 +257,8 @@ class MemberListAdapter(context: Context, val teamList: ArrayList<TeamListDataMo
         fun onBeatClick(team: TeamListDataModel)
 
         fun getSize(size: Int)
+
+        fun onAllPartyClick(team: TeamListDataModel)
     }
 
     override fun getFilter(): Filter {

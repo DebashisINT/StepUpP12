@@ -65,13 +65,19 @@ import com.breezefsmp12.features.geofence.GeofenceService
 import com.breezefsmp12.features.location.LocationFuzedService
 import com.breezefsmp12.features.location.LocationWizard
 import com.breezefsmp12.features.location.SingleShotLocationProvider
+import com.breezefsmp12.features.location.UserLocationDataEntity
 import com.breezefsmp12.features.login.UserLoginDataEntity
+import com.breezefsmp12.features.login.api.LoginRepositoryProvider
+import com.breezefsmp12.features.login.model.LoginResponse
 import com.breezefsmp12.features.login.model.LoginStateListDataModel
 import com.breezefsmp12.features.login.presentation.LoginActivity
 import com.breezefsmp12.features.member.api.TeamRepoProvider
 import com.breezefsmp12.features.member.model.TeamListDataModel
 import com.breezefsmp12.features.member.model.TeamListResponseModel
 import com.breezefsmp12.features.newcollectionreport.PendingCollData
+import com.breezefsmp12.features.orderhistory.api.LocationUpdateRepositoryProviders
+import com.breezefsmp12.features.orderhistory.model.LocationData
+import com.breezefsmp12.features.orderhistory.model.LocationUpdateRequest
 import com.breezefsmp12.features.photoReg.api.GetUserListPhotoRegProvider
 import com.breezefsmp12.features.photoReg.model.UserFacePicUrlResponse
 import com.breezefsmp12.features.viewAllOrder.presentation.ProductListNewOrderDialog
@@ -95,6 +101,7 @@ import com.google.mlkit.vision.face.FaceDetectorOptions
 import com.themechangeapp.pickimage.PermissionHelper
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import kotlinx.android.synthetic.main.activity_login_new.login_TV
 import kotlinx.android.synthetic.main.fragment_add_attendence.iv_reimb_type_dropdown
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
@@ -123,6 +130,8 @@ import kotlin.collections.ArrayList
 // Rev 7.0 AddAttendanceFragment AppV 4.1.3 Suman    17/05/2023 beat flow updation 26118
 // Rev 8.0 AddAttendanceFragment AppV 4.1.3 Suman    18/05/2023 beat flow updation 26120
 // Rev 9.0 AddAttendanceFragment AppV 4.1.3 Suman    20/05/2023 beat flow updation 26163
+// Rev 10.0 AddAttendanceFragment AppV 4.1.3 Suman    14/06/2023 leave problem with Reimbursement mantis id 26330
+// Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
 
 class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog.OnDateSetListener, OnMapReadyCallback {
 
@@ -267,7 +276,34 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
             Timber.d("addAttend_check ${AppUtils.getCurrentDateTime()} ${Pref.current_latitude} ${Pref.current_latitude}")
         }, 1500)
 
+        if(AppUtils.getSharedPreferencesIsFaceDetection(mContext)){
+            initPermissionCheckStart()
+        }
+
         return view
+    }
+
+    private fun initPermissionCheckStart() {
+        //begin mantis id 26741 Storage permission updation Suman 22-08-2023
+        var permissionList = arrayOf<String>( Manifest.permission.CAMERA)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            permissionList += Manifest.permission.READ_MEDIA_IMAGES
+            permissionList += Manifest.permission.READ_MEDIA_AUDIO
+            permissionList += Manifest.permission.READ_MEDIA_VIDEO
+        }else{
+            permissionList += Manifest.permission.WRITE_EXTERNAL_STORAGE
+            permissionList += Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+        //end mantis id 26741 Storage permission updation Suman 22-08-2023
+
+        permissionUtils = PermissionUtils(mContext as Activity, object : PermissionUtils.OnPermissionListener {
+            override fun onPermissionGranted() {
+            }
+            override fun onPermissionNotGranted() {
+                (mContext as DashboardActivity).showSnackMessage(getString(R.string.accept_permission))
+            }
+        },permissionList)// arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
     }
 
     fun fetchCUrrentLoc(){
@@ -1304,10 +1340,16 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
     }
 
     fun getLocforStart() {
+        //start Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
+        Timber.d("------enter to getLocforStart -----")
+        //end Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
             if (AppUtils.isOnline(mContext)) {
                 if (AppUtils.mLocation != null) {
                     if (AppUtils.mLocation!!.accuracy <= Pref.gpsAccuracy.toInt()) {
                         if (AppUtils.mLocation!!.accuracy <= Pref.shopLocAccuracy.toFloat()) {
+                            //start Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
+                            Timber.d("------enter to near by shoplist DD------")
+                            //end Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
                             getNearyShopListDD(AppUtils.mLocation!!)
                         } else {
                             //getDDList(AppUtils.mLocation!!)
@@ -1408,6 +1450,9 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
                     shopLocation.longitude = shopLong
                     //val isShopNearby = FTStorageUtils.checkShopPositionWithinRadious(location, shopLocation, LocationWizard.NEARBY_RADIUS)
                     val isShopNearby = FTStorageUtils.checkShopPositionWithinRadious(location, shopLocation, Pref.DistributorGPSAccuracy.toInt())
+                    //start Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
+                    Timber.d("------isShopNearby avalibale------{$isShopNearby}")
+                    //end Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
                     var dist=location.distanceTo(shopLocation).toInt()  //21-10-2021
                     if (isShopNearby) {
                         if ((location.distanceTo(shopLocation)) < nearBy) {
@@ -1446,6 +1491,9 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
                     val isShopNearby = FTStorageUtils.checkShopPositionWithinRadious(location, ddLocation, Pref.DistributorGPSAccuracy.toInt())
                     var dist=location.distanceTo(ddLocation).toInt()  //21-10-2021
                     if (isShopNearby) {
+                        //start Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
+                        Timber.d("------isShopNearby avalibale allDD------{$isShopNearby}")
+                        //end Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
                         if ((location.distanceTo(ddLocation)) < nearBy) {
                             nearBy = location.distanceTo(ddLocation).toDouble()
                             finalNearByDD = newDDList[i]
@@ -1586,6 +1634,9 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
     override fun onClick(view: View?) {
         when (view?.id) {
             R.id.tv_attendance_submit -> {
+                //start Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
+                Timber.d("------enter attendance to onClick------")
+                //end Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
                 AppUtils.hideSoftKeyboard(mContext as DashboardActivity)
                 if(Pref.IsShowDayStart){
                     getLocforStart()
@@ -1642,7 +1693,7 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
             R.id.ll_at_work -> {
 
                 if (!checkHomeLocation()) {
-                    (mContext as DashboardActivity).showSnackMessage("'Not allowed to Mark Attendance. You are not at permitted location.")
+                    (mContext as DashboardActivity).showSnackMessage("Not allowed to Mark Attendance. You are not at permitted location.")
                     return
                 }
 
@@ -2044,18 +2095,26 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
 
 
     private fun visibilityCheck() {
+        //start Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
+        Timber.d("------enter to visibilityCheck ------")
+        //end Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
         // 4.0 AddAttendanceFragment AppV 4.0.8 Suman    07/04/2023 Attendance beat selection validation updation mantis 0025782
         var isBeatPresent = false
         if(Pref.IsBeatRouteAvailableinAttendance){
             val bList = AppDatabase.getDBInstance()?.beatDao()?.getAll() as ArrayList<BeatEntity>
+            //start Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
+            Timber.d("------IsBeatRouteAvailableinAttendance ${Pref.IsBeatRouteAvailableinAttendance}------")
+            //end Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
             if (bList != null && bList.isNotEmpty()){
                 isBeatPresent = true
             }else{
                 isBeatPresent = false
             }
         }
-
-        if(Pref.IsShowReimbursementTypeInAttendance && Pref.isExpenseFeatureAvailable){
+        //Begin Rev 10.0 AddAttendanceFragment AppV 4.1.3 Suman    14/06/2023 leave problem with Reimbursement mantis id 26330
+        //if(Pref.IsShowReimbursementTypeInAttendance && Pref.isExpenseFeatureAvailable && isOnLeave == false){
+        if(Pref.IsShowReimbursementTypeInAttendance && Pref.isExpenseFeatureAvailable && isOnLeave == false){
+            //End of Rev 10.0 AddAttendanceFragment AppV 4.1.3 Suman    14/06/2023 leave problem with Reimbursement mantis id 26330
             if(selectedVisitStationID.equals("")){
                 (mContext as DashboardActivity).showSnackMessage("Please select Reimbursement type.")
                 return
@@ -2195,7 +2254,9 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
         Pref.isAddAttendence = true
         (mContext as DashboardActivity).showSnackMessage("Attendance added successfully")
         (mContext as DashboardActivity).onBackPressed()*/
-
+        //start Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
+        Timber.d("------checkNetworkConnectivity------")
+        //end Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
         if (AppUtils.isOnline(mContext)) {
             if (BaseActivity.isApiInitiated)
                 return
@@ -2259,6 +2320,10 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
     }
 
     private fun showSelfieDialog() {
+        //start Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
+        Timber.d("------showSelfieDialog ------")
+        //end Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
+
         selfieDialog = SelfieDialog.getInstance({
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
                 initPermissionCheck()
@@ -2271,6 +2336,18 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
 
     private var permissionUtils: PermissionUtils? = null
     private fun initPermissionCheck() {
+//begin mantis id 26741 Storage permission updation Suman 22-08-2023
+        var permissionList = arrayOf<String>( Manifest.permission.CAMERA)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            permissionList += Manifest.permission.READ_MEDIA_IMAGES
+            permissionList += Manifest.permission.READ_MEDIA_AUDIO
+            permissionList += Manifest.permission.READ_MEDIA_VIDEO
+        }else{
+            permissionList += Manifest.permission.WRITE_EXTERNAL_STORAGE
+            permissionList += Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+//end mantis id 26741 Storage permission updation Suman 22-08-2023
         permissionUtils = PermissionUtils(mContext as Activity, object : PermissionUtils.OnPermissionListener {
             override fun onPermissionGranted() {
                 //showPictureDialog()
@@ -2280,8 +2357,9 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
             override fun onPermissionNotGranted() {
                 (mContext as DashboardActivity).showSnackMessage(getString(R.string.accept_permission))
             }
+            // mantis id 26741 Storage permission updation Suman 22-08-2023
+        },permissionList) //arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
 
-        }, arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
     }
 
     fun onRequestPermission(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -2340,6 +2418,7 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
     }
 
     private fun showFingerPrintDialog() {
+        Timber.d("------showFingerPrintDialog ------")
         (mContext as DashboardActivity).checkForFingerPrint()
 
         fingerprintDialog = FingerprintDialog()
@@ -2759,7 +2838,7 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
             @Throws(AuthFailureError::class)
             override fun getHeaders(): Map<String, String> {
                 val params: MutableMap<String, String> = HashMap()
-                params["Authorization"] = getString(R.string.firebase_key)
+                params["Authorization"] = getString(R.string.PART_1)+getString(R.string.PART_2)+getString(R.string.PART_3)+getString(R.string.PART_4)//getString(R.string.firebase_key)
                 params["Content-Type"] = "application/json"
                 return params
             }
@@ -2795,6 +2874,9 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
         //(mContext as DashboardActivity).showSnackMessage("prepareAddAttendanceInputParams")
         //Toast.makeText(mContext,"prepareAddAttendanceInputParams",Toast.LENGTH_SHORT).show()
         try {
+            //start Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
+            Timber.d("------prepareAddAttendanceInputParams------")
+            //end Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
             addAttendenceModel.session_token = Pref.session_token!!
             addAttendenceModel.user_id = Pref.user_id!!
             addAttendenceModel.is_on_leave = isOnLeave.toString()
@@ -2912,11 +2994,17 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
 
         } catch (e: Exception) {
             e.printStackTrace()
+            //start Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
+            Timber.d("------prepareAddAttendanceInputParams error{$e}------")
+            //end Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
         }
     }
 
     // 1.0 AddAttendanceFragment AppV 4.0.6 25615 mantis
     private fun checkDDwiseNearbyShopAvaliable() {
+        //start Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
+        Timber.d("------checkDDwiseNearbyShopAvaliable ------")
+        //end Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
         val currentLocation = Location("")
         currentLocation.latitude = Pref.current_latitude.toDouble()
         currentLocation.longitude = Pref.current_longitude.toDouble()
@@ -2935,6 +3023,9 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
                     ddLocation.longitude = ddLong
                     //val isShopNearby = FTStorageUtils.checkShopPositionWithinRadious(location, shopLocation, LocationWizard.NEARBY_RADIUS)
                     val isDDNearby = FTStorageUtils.checkShopPositionWithinRadious(currentLocation, ddLocation,Pref.DistributorGPSAccuracy.toInt())
+                    //start Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
+                    Timber.d("------isDDNearby {$isDDNearby}------")
+                    //end Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
                     if (isDDNearby) {
                         isDiswiseNearBYshopVisit = "Yes"
                         break
@@ -2949,10 +3040,19 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
 
 
     private fun doAttendanceViaApiOrPlanScreen() {
+        //start Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
+        Timber.d("------doAttendanceViaApiOrPlanScreen ------")
+        //end Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
         if (!willShowUpdateDayPlan) {
 
             if (!isOnLeave) {
+                //start Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
+                Timber.d("------isOnLeave {$isOnLeave}------")
+                //end Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
                 if (Pref.isFingerPrintMandatoryForAttendance) {
+                    //start Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
+                    Timber.d("------isFingerPrintMandatoryForAttendance {${Pref.isFingerPrintMandatoryForAttendance}------")
+                    //end Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
                     if ((mContext as DashboardActivity).isFingerPrintSupported)
                         showFingerPrintDialog()
                     else {
@@ -2970,46 +3070,25 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
 
         } else {
             if (!isOnLeave) {
+                //start Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
+                Timber.d("------isOnLeave {$isOnLeave}------")
+                //end Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
                 AppUtils.isFromAttendance = true
                 (mContext as DashboardActivity).isDailyPlanFromAlarm = false
                 BaseActivity.isApiInitiated = false
                 (mContext as DashboardActivity).loadFragment(FragType.DailyPlanListFragment, true, addAttendenceModel)
-            } else
+            } else {
+                //start Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
+                Timber.d("------callAddAttendanceApi before------")
+                //end Rev 11.0	AddAttendanceFragment AppV 4.1.3 Saheli    10/07/2023  0026539: log update in attendance module
                 callAddAttendanceApi(addAttendenceModel)
+            }
         }
     }
 
     @SuppressLint("NewApi")
     private fun callAddAttendanceApi(addAttendenceModel: AddAttendenceInpuModel) {
         Timber.e("==========AddAttendance=============")
-    /*    Timber.d("=====AddAttendance Input Params========")
-        Timber.d("session_token-----> " + addAttendenceModel.session_token)
-        Timber.d("user_id----------> " + addAttendenceModel.user_id)
-        Timber.d("is_on_leave----------> " + addAttendenceModel.is_on_leave)
-        Timber.d("work_lat----------> " + addAttendenceModel.work_lat)
-        Timber.d("work_long----------> " + addAttendenceModel.work_long)
-        Timber.d("work_address----------> " + addAttendenceModel.work_address)
-        Timber.d("work_type----------> " + addAttendenceModel.work_type)
-        Timber.d("route----------> " + addAttendenceModel.route)
-        Timber.d("leave_from_date----------> " + addAttendenceModel.leave_from_date)
-        Timber.d("leave_to_date----------> " + addAttendenceModel.leave_to_date)
-        Timber.d("leave_type----------> " + addAttendenceModel.leave_type)
-        Timber.d("leave_reason----------> " + addAttendenceModel.leave_reason)
-        Timber.d("work_date_time----------> " + addAttendenceModel.work_date_time)
-        Timber.d("add_attendence_time----------> " + addAttendenceModel.add_attendence_time)
-        Timber.d("order taken----------> " + addAttendenceModel.order_taken)
-        Timber.d("collection taken----------> " + addAttendenceModel.collection_taken)
-        Timber.d("visit new shop----------> " + addAttendenceModel.new_shop_visit)
-        Timber.d("revisit shop----------> " + addAttendenceModel.revisit_shop)
-        Timber.d("state id----------> " + addAttendenceModel.state_id)
-        Timber.d("shop_list size----------> " + addAttendenceModel.shop_list.size)
-        Timber.d("primary_value_list size----------> " + addAttendenceModel.primary_value_list.size)
-        Timber.d("update_plan_list size----------> " + addAttendenceModel.update_plan_list.size)
-        Timber.d("from_id----------> " + addAttendenceModel.from_id)
-        Timber.d("to_id----------> " + addAttendenceModel.to_id)
-        Timber.d("distance----------> " + addAttendenceModel.distance)
-        Timber.d("======End AddAttendance Input Params======")*/
-
         Timber.d("=====AddAttendance Input Params========")
         Timber.d("session_token-----> " + addAttendenceModel.session_token)
         Timber.d("user_id----------> " + addAttendenceModel.user_id)
@@ -3081,6 +3160,8 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
                                         Pref.IsLeavePressed=true
 
                                         if (isLocationServiceRunning(LocationFuzedService::class.java)) {
+                                            Timber.d("TAG_CHECK_LOC_SERVICE_STATUS")
+
                                             mContext.stopService(Intent(mContext, LocationFuzedService::class.java))
                                         }
 
@@ -3170,6 +3251,7 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
 
                                         Pref.isAddAttendence = true
                                         Pref.add_attendence_time = addAttendenceModel.add_attendence_time
+                                        println("add_attendence_time"+Pref.add_attendence_time)
                                         (mContext as DashboardActivity).update_worktype_tv.apply {
                                             visibility = if (Pref.isUpdateWorkTypeEnable)
                                                 View.VISIBLE
@@ -3211,6 +3293,45 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
 
                                 //Pref.isAddAttendence = true
                                 BaseActivity.isApiInitiated = false
+                                println("add_attendence_time_LocationWizard"+LocationWizard.getFormattedTime24Hours(true))
+
+                                //attendance room insert begin
+                                if(!isOnLeave && Pref.IsRouteStartFromAttendance) {
+                                    println("not in leave"+isOnLeave)
+                                    var locationObj: UserLocationDataEntity =
+                                        UserLocationDataEntity()
+                                    locationObj.latitude = Pref.latitude.toString()
+                                    locationObj.longitude = Pref.longitude.toString()
+                                    locationObj.locationName =
+                                        "Attendance from " + LocationWizard.getLocationName(
+                                            mContext,
+                                            Pref.latitude!!.toDouble(),
+                                            Pref.longitude!!.toDouble()
+                                        )
+                                    locationObj.time =
+                                        LocationWizard.getFormattedTime24Hours(true) //LocationWizard.getFormattedTime24Hours(true)
+                                    locationObj.meridiem =
+                                        LocationWizard.getMeridiem() //LocationWizard.getMeridiem()
+                                    locationObj.isUploaded = true
+                                    locationObj.meeting = "0"
+                                    locationObj.battery_percentage = AppUtils.getBatteryPercentage(mContext).toString()
+                                    locationObj.distance = "0"
+                                    locationObj.visit_distance = ""
+                                    locationObj.home_distance = "0"
+                                    locationObj.home_duration = ""
+                                    locationObj.updateDate = AppUtils.getCurrentDateForShopActi()
+                                    locationObj.updateDateTime = AppUtils.getCurrentDateTime()
+                                    locationObj.timestamp = LocationWizard.getTimeStamp()
+                                    locationObj.shops = "0"
+                                    locationObj.network_status = "Online"
+                                    locationObj.minutes = LocationWizard.getMinute()
+                                    locationObj.hour = LocationWizard.getHour()
+                                    AppDatabase.getDBInstance()!!.userLocationDataDao().insertAll(locationObj)
+                                }
+                                else{
+                                    println("is in leave"+isOnLeave)
+                                }
+                                //attendance room insert end
 
                                 (mContext as DashboardActivity).showSnackMessage(response.message!!)
 
@@ -3221,11 +3342,38 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
                                 //getDobAnniv()
 
                                 Handler().postDelayed(Runnable {
-                                    (mContext as DashboardActivity).onBackPressed()
-                                }, 1000)
 
+                                    if (isOnLeave==false && Pref.IsRouteStartFromAttendance) {
+                                        val locationList: MutableList<LocationData> = ArrayList()
+                                        val locationUpdateReq = LocationUpdateRequest()
+                                        locationUpdateReq.location_details = ArrayList()
+                                        locationUpdateReq.user_id = Pref.user_id
+                                        locationUpdateReq.session_token = Pref.session_token
+                                        val locationData = LocationData()
 
+                                        locationData.location_name = "Attendance from "+addAttendenceModel.work_address
+                                        locationData.latitude = addAttendenceModel.work_lat
+                                        locationData.longitude = addAttendenceModel.work_long
+                                        locationData.distance_covered = "0.0"
+                                        locationData.last_update_time = LocationWizard.getFormattedTime24Hours(true) +" "+ LocationWizard.getMeridiem()
+                                        locationData.date = AppUtils.getCurrentDateTime()
+                                        locationData.shops_covered = "0"
+                                        locationData.meeting_attended = "0"
+                                        locationData.home_distance = "0.0"
+                                        locationData.network_status = "Online"
+                                        locationData.battery_percentage = AppUtils.getBatteryPercentage(mContext).toString()
+                                        locationData.home_duration = ""
+                                      //  locationData.locationId = apiLocationList[i].locationId.toString()
 
+                                        locationList.add(locationData)
+                                        locationUpdateReq.location_details = locationList
+                                        callLocationUpdateAPIOvveride(locationUpdateReq)
+                                    }
+                                    else{
+                                        (mContext as DashboardActivity).onBackPressed()
+                                    }
+                                   // (mContext as DashboardActivity).onBackPressed()
+                                }, 600)
 
                                 /*Pref.isAddAttendence = true
                         BaseActivity.isApiInitiated = false
@@ -4033,4 +4181,26 @@ class AddAttendanceFragment : Fragment(), View.OnClickListener, DatePickerDialog
     }
     //End of Rev 8.0 AddAttendanceFragment AppV 4.1.3 Suman    18/05/2023 beat flow updation 26120
 
+
+    fun callLocationUpdateAPIOvveride(locApi: LocationUpdateRequest){
+        val repository = LocationUpdateRepositoryProviders.provideLocationUpdareRepository()
+        BaseActivity.compositeDisposable.add(
+            repository.sendLocationUpdate(locApi)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe({ result ->
+
+                    val loginResponse = result as BaseResponse
+                    if (loginResponse.status == NetworkConstant.SUCCESS) {
+                        (mContext as DashboardActivity).onBackPressed()
+                    }else{
+                        (mContext as DashboardActivity).onBackPressed()
+                    }
+                },
+                    { error ->
+                        Timber.d("AddAttendance Response Msg=========> " + error.message)
+
+                    })
+        )
+    }
 }

@@ -166,6 +166,11 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 val intent = Intent()
                 intent.action = "FCM_ACTION_RECEIVER_quotation_approval"
                 LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+            }else if(remoteMessage?.data?.get("type").equals("lead_work")){
+                notification.sendFCMNotificaitonLead(applicationContext, remoteMessage)
+                //val intent = Intent()
+                //intent.action = "FCM_ACTION_RECEIVER_LEAD"
+                //LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
             }
             else {
                 notification.sendFCMNotificaiton(applicationContext, remoteMessage)

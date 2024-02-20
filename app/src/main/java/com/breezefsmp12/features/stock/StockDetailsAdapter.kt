@@ -1,14 +1,14 @@
 package com.breezefsmp12.features.stock
 
 import android.content.Context
-import androidx.recyclerview.widget.RecyclerView
+import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 import com.breezefsmp12.R
 import com.breezefsmp12.app.domain.StockProductListEntity
 import com.breezefsmp12.features.dashboard.presentation.DashboardActivity
-
 import kotlinx.android.synthetic.main.inflate_cart.view.*
 
 /**
@@ -54,6 +54,19 @@ class StockDetailsAdapter(private val context: Context, private val selectedProd
                 itemView.tv_category_item.text = "Quantity: " + categoryList[adapterPosition].qty?.toFloat()?.toInt() //categoryList?.get(adapterPosition)?.category
             else
                 itemView.tv_category_item.text = "Quantity: " + categoryList[adapterPosition].qty
+
+            try{
+                val qtyRectify = String.format("%.3f", categoryList[adapterPosition].qty!!.toDouble()).toDouble()
+                if (qtyRectify - qtyRectify.toInt() == 0.0) {
+                    itemView.tv_category_item.text = "Quantity: " + qtyRectify.toInt().toString()
+                } else {
+                    itemView.tv_category_item.text = "Quantity: " + qtyRectify.toString()
+                }
+            }catch (ex:Exception){
+                ex.printStackTrace()
+            }
+
+
 
             try {
                 //val totalPrice = DecimalFormat("##.##").format(categoryList[adapterPosition].total_price?.toDouble())

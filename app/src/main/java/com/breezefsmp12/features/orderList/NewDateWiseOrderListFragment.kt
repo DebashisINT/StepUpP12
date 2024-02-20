@@ -883,6 +883,10 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
             override fun onMultipleImageClick(shop: Any, position: Int) {
 
             }
+
+            override fun onWhatsApiClick(shop_id: String) {
+                TODO("Not yet implemented")
+            }
         }, { shopId: String, orderId: String ->
             val shopType = AppDatabase.getDBInstance()?.addShopEntryDao()?.getShopType(shopId)
             senOrderEmail(shopId, orderId, shopType)
@@ -1095,11 +1099,28 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
             } catch (e: java.lang.Exception) {
                 e.printStackTrace()
             }
-        }, {
-            if (!TextUtils.isEmpty(it.order_lat) && !TextUtils.isEmpty(it.order_long))
+        },{
+            if (!TextUtils.isEmpty(it.order_lat) && !TextUtils.isEmpty(it.order_long)) {
                 (mContext as DashboardActivity).openLocationMap(it, false)
-            else
+            }
+            else{
                 (mContext as DashboardActivity).showSnackMessage("No order location available")
+            }
+        },
+
+            {
+                if (!TextUtils.isEmpty(it.order_lat) && !TextUtils.isEmpty(it.order_long)) {
+                    val uri = "https://www.google.com/maps/?q=" + it.order_lat + "," + it.order_long
+                    val sharingIntent = Intent(Intent.ACTION_SEND)
+                    sharingIntent.let {
+                        it.type = "text/plain"
+                        it.putExtra(Intent.EXTRA_TEXT, uri)
+                        startActivity(Intent.createChooser(it, "Share via"))
+                    }
+                }
+                else{
+                    (mContext as DashboardActivity).showSnackMessage("No order location available")
+                }
         }, {
             var pdfBody = "Order No.: " + it.order_id + "\n\nOrder Date: " + AppUtils.convertDateTimeToCommonFormat(it.date!!) +
                     "\n\nParty Name: "
@@ -1147,7 +1168,7 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
             var fontBoldU: Font = Font(Font.FontFamily.HELVETICA, 12f, Font.UNDERLINE or Font.BOLD)
             var font1: Font = Font(Font.FontFamily.HELVETICA, 8f, Font.NORMAL)
             val grayFront = Font(Font.FontFamily.HELVETICA, 8f, Font.NORMAL, BaseColor.GRAY)
-
+            var fontSmall: Font = Font(Font.FontFamily.HELVETICA, 9f, Font.BOLD)
 
 
 
@@ -1416,7 +1437,9 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
             // AppV 4.0.6  mantis 25601
             var mrp: String = ""
             var discount: String = ""
-
+            //new code
+            var tAmt="0"
+            //
             val productList = AppDatabase.getDBInstance()!!.orderProductListDao().getDataAccordingToOrderId(obj.order_id!!)
 
             for (i in 0..productList.size-1) {
@@ -1428,6 +1451,9 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
                 rate =   getString(R.string.rupee_symbol_with_space)+" "+productList !!.get(i).rate +" "
                 amount = getString(R.string.rupee_symbol_with_space)+" "+productList!!.get(i).total_price +" "
 
+                //new code
+                tAmt = (tAmt.toDouble()+productList.get(i).total_price!!.toDouble()).toString()
+                //
                 // AppV 4.0.6  mantis 25601
                 try{
                     mrp = getString(R.string.rupee_symbol_with_space)+" "+productList!!.get(i).order_mrp+" "
@@ -1519,10 +1545,30 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
             val ph1 = Phrase()
             val main = Paragraph()
             //ph1.add(Chunk("Rupees " + convertIntoWords(obj.amount!!.toDouble(), "en", "US")!!.toUpperCase() + " Only  ", font))
-            ph1.add(Chunk("Rupees " + NumberToWords.numberToWord(obj.amount!!.toDouble().toInt()!!)!!.toUpperCase() + " Only  ", font))
+
+            //new code begin
+            var intP = ""
+            var decPart = ""
+            var finalConcatWord = ""
+            tAmt = String.format("%.2f",tAmt.toDouble()) // 52.70
+            if(tAmt.contains(".")){
+                intP = String.format("%.2f",tAmt.toDouble()).split(".").get(0).toString() //52
+                decPart = String.format("%.2f",tAmt.toDouble()).split(".").get(1).toString() //70
+                finalConcatWord = NumberToWords.numberToWord(intP.toDouble().toInt()!!)!!.toUpperCase()+" Rupees "+
+                        NumberToWords.numberToWord(decPart.toDouble().toInt()!!)!!.toUpperCase()+" Paisa"  //52 rupees 70 paisa
+                if(NumberToWords.numberToWord(decPart.toDouble().toInt()!!)!!.toUpperCase().contains("ZERO")){
+                    ph1.add(Chunk( NumberToWords.numberToWord(intP.toDouble().toInt()!!)!!.toUpperCase() + " Only  ", fontSmall))
+                }else{
+                    ph1.add(Chunk( finalConcatWord + " Only  ", fontSmall))
+                }
+            }
+            //new code end
+
+            //ph1.add(Chunk("Rupees " + NumberToWords.numberToWord(obj.amount!!.toDouble().toInt()!!)!!.toUpperCase() + " Only  ", font))
+
             ph1.add(glue) // Here I add special chunk to the same phrase.
 
-            ph1.add(Chunk("Total Amount: " + "\u20B9" + obj.amount, font))
+            ph1.add(Chunk("Total Amount: " + "\u20B9" + /*obj.amount*/ tAmt.toString(), font))
             para.add(ph1)
             document.add(para)
 
@@ -1847,6 +1893,14 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
         // duplicate shop api call
         addShopData.isShopDuplicate=mAddShopDBModelEntity.isShopDuplicate
         addShopData.purpose=mAddShopDBModelEntity.purpose
+//start AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+        try {
+            addShopData.FSSAILicNo = mAddShopDBModelEntity.FSSAILicNo
+        }catch (ex:Exception){
+            ex.printStackTrace()
+            addShopData.FSSAILicNo = ""
+        }
+//end AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
 
         addShopData.GSTN_Number=mAddShopDBModelEntity.gstN_Number
         addShopData.ShopOwner_PAN=mAddShopDBModelEntity.shopOwner_PAN
@@ -2477,6 +2531,14 @@ class NewDateWiseOrderListFragment : BaseFragment(), DatePickerListener, View.On
         addShopData.isShopDuplicate=shop.isShopDuplicate
 
         addShopData.purpose=shop.purpose
+//start AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+        try {
+            addShopData.FSSAILicNo = shop.FSSAILicNo
+        }catch (ex:Exception){
+            ex.printStackTrace()
+            addShopData.FSSAILicNo = ""
+        }
+//end AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
 
         addShopData.GSTN_Number=shop.gstN_Number
         addShopData.ShopOwner_PAN=shop.shopOwner_PAN

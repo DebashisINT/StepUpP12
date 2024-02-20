@@ -33,7 +33,7 @@ class ChartDataModelNew {
                                     .dataLabels(AADataLabels()
                                             .enabled(true)
                                             .useHTML(true)
-                                            .distance(10)
+                                            .distance(5)
                                             .format("<b></b> {point.percentage:.1f} %"))
                                     .data(arrayOf(
                                             arrayOf("Present", attendP),

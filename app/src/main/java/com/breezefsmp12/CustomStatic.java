@@ -1,7 +1,12 @@
 package com.breezefsmp12;
 
+import android.content.Context;
+import android.database.Cursor;
+import android.provider.CallLog;
+
 import com.breezefsmp12.features.lead.model.CustomerListReq;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -78,5 +83,11 @@ public class CustomStatic {
     public static String TeamUserSelect_user_id = "";
 
     public static Boolean IsBackFromNewOptiCart = false;
+
+    public static String lead_msgBody = "";
+    public static String lead_msgLeadDate = "";
+    public static String lead_msgLeadEnquiry = "";
+
+    public static Boolean IsTeamAllParty = false;
 
 }

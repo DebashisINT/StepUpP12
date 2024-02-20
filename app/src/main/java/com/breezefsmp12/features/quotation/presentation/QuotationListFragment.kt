@@ -624,6 +624,14 @@ class QuotationListFragment : BaseFragment() {
             addShopData.isShopDuplicate=isShopDuplicate
 
             addShopData.purpose=purpose
+//start AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+            try {
+                addShopData.FSSAILicNo = FSSAILicNo
+            }catch (ex:Exception){
+                ex.printStackTrace()
+                addShopData.FSSAILicNo = ""
+            }
+//end AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
 
             addShopData.GSTN_Number=gstN_Number
             addShopData.ShopOwner_PAN=shopOwner_PAN

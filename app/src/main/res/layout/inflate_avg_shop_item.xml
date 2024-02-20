@@ -22,6 +22,7 @@
             android:background="@drawable/nearby_shop_list_bg"
             android:orientation="vertical">
 
+
             <RelativeLayout
                 android:id="@+id/shop_detail_RL"
                 android:layout_width="match_parent"
@@ -124,6 +125,7 @@
                         android:drawableLeft="@drawable/gst_icon"
                         android:textColor="@color/light_gray"
                         android:textSize="@dimen/_11sdp" />
+
 
                     <com.breezefsmp12.widgets.AppCustomTextView
                         android:id="@+id/tv_shop_contact_no"
@@ -520,6 +522,38 @@
                             android:visibility="gone" />
 
                         <LinearLayout
+                            android:id="@+id/shop_totalv_call_his_ll"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <ImageView
+                                android:layout_width="@dimen/_21sdp"
+                                android:layout_height="@dimen/_23sdp"
+                                android:layout_gravity="center"
+                                android:background="@drawable/icon_call_time"
+                                android:backgroundTint="@color/black"/>
+
+                            <com.breezefsmp12.widgets.AppCustomTextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:singleLine="true"
+                                android:text="Call Log History"
+                                android:textColor="@color/login_txt_color"
+                                android:textSize="@dimen/_8sdp"  />
+                        </LinearLayout>
+
+                        <View
+                            android:id="@+id/shop_totalv_call_his_view"
+                            android:layout_width="@dimen/_1sdp"
+                            android:layout_height="@dimen/_20sdp"
+                            android:layout_marginLeft="@dimen/_5sdp"
+                            android:layout_marginRight="@dimen/_5sdp"
+                            android:background="@color/popup_window_bar_color" />
+
+                        <LinearLayout
                             android:id="@+id/shop_totalv_survey_ll"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -545,6 +579,38 @@
 
                         <View
                             android:id="@+id/shop_totalv_survey_view"
+                            android:layout_width="@dimen/_1sdp"
+                            android:layout_height="@dimen/_20sdp"
+                            android:layout_marginLeft="@dimen/_5sdp"
+                            android:layout_marginRight="@dimen/_5sdp"
+                            android:background="@color/popup_window_bar_color" />
+
+                        <LinearLayout
+                            android:id="@+id/ll_avg_shop_item_whatsapp_api"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:orientation="vertical">
+
+                            <ImageView
+                                android:id="@+id/iv_avg_shop_item_whatsapp_api"
+                                android:layout_width="@dimen/_25sdp"
+                                android:layout_height="@dimen/_25sdp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_whatsapp" />
+
+                            <com.breezefsmp12.widgets.AppCustomTextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:singleLine="true"
+                                android:text="Whatsapp"
+                                android:textColor="@color/login_txt_color"
+                                android:textSize="@dimen/_8sdp"  />
+                        </LinearLayout>
+
+                        <View
+                            android:id="@+id/shop_totalv_whats_view"
                             android:layout_width="@dimen/_1sdp"
                             android:layout_height="@dimen/_20sdp"
                             android:layout_marginLeft="@dimen/_5sdp"

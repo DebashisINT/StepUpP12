@@ -58,7 +58,7 @@ public class FileLoggingTree extends Timber.DebugTree {
 //                                        .append(message)
 //                                        .append("</p>");
                                 //writer.append("<p style=<font-size='1' color='#337744'>");
-                                writer.append("<p style=\"color:blue;font-size:12px;\">");
+                                writer.append("<p style=\"color:blue;font-size:9px;\">");
                                 writer.append("\n"+logTimeStamp+" "+tag +" "+message);
                                 writer.append("</font></p>");
                                 writer.flush();
@@ -124,7 +124,7 @@ public class FileLoggingTree extends Timber.DebugTree {
                 long sizeInKb = sizeInBytes / 1024 ; //transform in MB
                 println("log_tag "+sizeInMb);
                 //delete file
-                if(sizeInMb>25){
+                if(sizeInMb>30){
                         file.delete();
                         file = new File("/data/user/0/com.breezefsmp12/files", fileName);
                 }

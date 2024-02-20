@@ -109,10 +109,12 @@ class DocumentAdapter(private val mContext: Context, private val docList: ArrayL
                 else
                     tv_doc_file_name.text = "N.A."
 
-                tv_attachment.setOnClickListener {
-                    onOpenFileClick(docList[adapterPosition], tv_attachment.text.toString().trim())
-                }
+           if (tv_attachment.text.toString().contains("jpg")||tv_attachment.text.toString().contains("jpeg")||tv_attachment.text.toString().contains("png")) {
+               tv_attachment.setOnClickListener {
+                   onOpenFileClick(docList[adapterPosition], tv_attachment.text.toString().trim())
+               }
 
+           }
 
                 /*tv_attachment.setOnClickListener {
                     onAttchmentClick(docList[adapterPosition], tv_attachment.text.toString().trim())

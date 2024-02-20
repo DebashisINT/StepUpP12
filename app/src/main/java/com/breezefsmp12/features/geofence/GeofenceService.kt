@@ -97,9 +97,7 @@ class GeofenceService : Service(), OnCompleteListener<Void> {
                     .setLoiteringDelay(1000 * 60)
 
                     // Set the circular region of this geofence.
-                    .setCircularRegion(
-                        newList[i].shopLat,
-                        newList[i].shopLong,
+                    .setCircularRegion(newList[i].shopLat, newList[i].shopLong,
                         //Pref.gpsAccuracy.toFloat()
                         mRadious
                     )
@@ -192,7 +190,11 @@ class GeofenceService : Service(), OnCompleteListener<Void> {
     private fun removeGeofence() {
         Timber.d("removeGeofence : ")
         Pref.isGeoFenceAdded = false
-        mGeofencingClient.removeGeofences(getGeofencePendingIntent())
+        try{
+            mGeofencingClient.removeGeofences(getGeofencePendingIntent())
+        }catch (ex:Exception){
+            Timber.d("removeGeofence : ${ex.message}")
+        }
     }
 
 }

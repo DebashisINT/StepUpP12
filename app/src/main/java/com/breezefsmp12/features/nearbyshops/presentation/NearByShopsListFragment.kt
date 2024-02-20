@@ -36,7 +36,6 @@ import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
 import com.breezefsmp12.R
 import com.breezefsmp12.app.*
-import com.breezefsmp12.app.Pref.IsVoiceEnable
 import com.breezefsmp12.app.domain.*
 import com.breezefsmp12.app.types.FragType
 import com.breezefsmp12.app.uiaction.IntentActionable
@@ -80,7 +79,6 @@ import com.breezefsmp12.features.shopdetail.presentation.api.addcollection.AddCo
 import com.breezefsmp12.features.shopdetail.presentation.model.addcollection.AddCollectionInputParamsModel
 import com.breezefsmp12.features.viewAllOrder.interf.QaOnCLick
 import com.breezefsmp12.widgets.AppCustomTextView
-
 import com.github.clans.fab.FloatingActionButton
 import com.github.clans.fab.FloatingActionMenu
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -90,7 +88,6 @@ import org.jetbrains.anko.uiThread
 import timber.log.Timber
 import java.io.*
 import java.util.*
-import kotlin.collections.ArrayList
 
 
 /**
@@ -105,6 +102,7 @@ import kotlin.collections.ArrayList
 // 6.0 NearByShopsListFragment AppV 4.0.7 saheli 20-02-2023 voice search mantis 0025683
 // 7.0 NearByShopsListFragment AppV 4.0.7 saheli 21-02-2023 voice search mantis 0025683
 // 8.0 NearByShopsListFragment AppV 4.0.7 saheli 08-06-2023 0026307 mantis  Play store console report issues
+// 9.0 NearByShopsListFragment AppV 4.0.7 Suman 26-06-2023 0026307 mantis  26437
 class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
 
     private lateinit var mNearByShopsListAdapter: NearByShopsListAdapter
@@ -165,7 +163,7 @@ class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
     override fun onAttach(context: Context) {
         super.onAttach(context)
         mContext = context
-
+        println("fab_check onAttach")
         try {
             beatId = arguments?.getString("beatId").toString()
         }
@@ -177,6 +175,8 @@ class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
         val view = inflater.inflate(R.layout.fragment_nearby_shops, container, false)
+        println("fab_check onCreateView")
+        println("time_check onCreateView")
         initView(view)
 //        if (AppDatabase.getDBInstance()!!.marketingCategoryMasterDao().getAll().isEmpty())
 //            callMarketingCategoryListApi()
@@ -354,7 +354,6 @@ class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
 
     override fun onResume() {
         super.onResume()
-
     }
 
     override fun updateUI(any: Any) {
@@ -372,8 +371,14 @@ class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
             shopObj.shop_id = shop_list[i].shop_id
             shopObj.shopName = shop_list[i].shop_name
             shopObj.shopImageLocalPath = shop_list[i].Shop_Image
-            shopObj.shopLat = shop_list[i].shop_lat!!.toDouble()
-            shopObj.shopLong = shop_list[i].shop_long!!.toDouble()
+            try {
+                shopObj.shopLat = shop_list[i].shop_lat!!.toDouble()
+                shopObj.shopLong = shop_list[i].shop_long!!.toDouble()
+            }catch (ex:Exception){
+                ex.printStackTrace()
+                shopObj.shopLat = 0.0
+                shopObj.shopLong = 0.0
+            }
             shopObj.duration = "0"
             shopObj.endTimeStamp = "0"
             shopObj.timeStamp = "0"
@@ -391,7 +396,12 @@ class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
             shopObj.ownerContactNumber = shop_list[i].owner_contact_no
             shopObj.pinCode = shop_list[i].pin_code
             shopObj.isUploaded = true
-            shopObj.ownerName = shop_list[i].owner_name
+
+            if(shop_list[i].owner_name==null){
+                shopObj.ownerName = shop_list[i].shop_name
+            }else{
+                shopObj.ownerName = shop_list[i].owner_name
+            }
             shopObj.user_id = Pref.user_id
             shopObj.orderValue = 0
             shopObj.type = shop_list[i].type
@@ -603,9 +613,39 @@ class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
 
             shopObj.purpose=shop_list[i].purpose
 
+            //start AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+            try {
+                shopObj.FSSAILicNo = shop_list[i].FSSAILicNo
+            }catch (ex:Exception){
+                ex.printStackTrace()
+                shopObj.FSSAILicNo = ""
+            }
+//end AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+
+
             /*GSTIN & PAN NUMBER*/
             shopObj.gstN_Number=shop_list[i].GSTN_Number
             shopObj.shopOwner_PAN=shop_list[i].ShopOwner_PAN
+
+            //crm details
+            shopObj.companyName_id = if(shop_list[i].crm_companyID.isNullOrEmpty()) "" else shop_list[i].crm_companyID
+            shopObj.companyName = if(shop_list[i].crm_companyName.isNullOrEmpty()) "" else shop_list[i].crm_companyName
+            shopObj.jobTitle = if(shop_list[i].crm_jobTitle.isNullOrEmpty()) "" else shop_list[i].crm_jobTitle
+            shopObj.crm_type_ID = if(shop_list[i].crm_typeID.isNullOrEmpty()) "" else shop_list[i].crm_typeID
+            shopObj.crm_type = if(shop_list[i].crm_type.isNullOrEmpty()) "" else shop_list[i].crm_type
+            shopObj.crm_status_ID = if(shop_list[i].crm_statusID.isNullOrEmpty()) "" else shop_list[i].crm_statusID
+            shopObj.crm_status = if(shop_list[i].crm_status.isNullOrEmpty()) "" else shop_list[i].crm_status
+            shopObj.crm_source_ID = if(shop_list[i].crm_sourceID.isNullOrEmpty()) "" else shop_list[i].crm_sourceID
+            shopObj.crm_source = if(shop_list[i].crm_source.isNullOrEmpty()) "" else shop_list[i].crm_source
+            shopObj.crm_reference = if(shop_list[i].crm_reference.isNullOrEmpty()) "" else shop_list[i].crm_reference
+            shopObj.crm_reference_ID = if(shop_list[i].crm_referenceID.isNullOrEmpty()) "" else shop_list[i].crm_referenceID
+            shopObj.crm_reference_ID_type = if(shop_list[i].crm_referenceID_type.isNullOrEmpty()) "" else shop_list[i].crm_referenceID_type
+            shopObj.crm_stage_ID = if(shop_list[i].crm_stage_ID.isNullOrEmpty()) "" else shop_list[i].crm_stage_ID
+            shopObj.crm_stage = if(shop_list[i].crm_stage.isNullOrEmpty()) "" else shop_list[i].crm_stage
+            shopObj.crm_assignTo = if(shop_list[i].assign_to.isNullOrEmpty()) "" else shop_list[i].assign_to
+            shopObj.crm_saved_from = if(shop_list[i].saved_from_status.isNullOrEmpty()) "" else shop_list[i].saved_from_status
+            shopObj.crm_firstName = if(shop_list[i].shop_firstName.isNullOrEmpty()) "" else shop_list[i].shop_firstName
+            shopObj.crm_lastName = if(shop_list[i].shop_lastName.isNullOrEmpty()) "" else shop_list[i].shop_lastName
 
             list.add(shopObj)
             AppDatabase.getDBInstance()!!.addShopEntryDao().insert(shopObj)
@@ -804,6 +844,7 @@ class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
         nearByShopsList.visibility = View.VISIBLE*/
 
         //val allShopList = AppDatabase.getDBInstance()!!.addShopEntryDao().all
+        println("time_check initAdapterstart")
         val allShopList = AppDatabase.getDBInstance()!!.addShopEntryDao().getAllOwn(true)
         getOwnShop(allShopList)
 //        ( list as ArrayList).set()
@@ -820,10 +861,27 @@ class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
         tv_shop_count.text = "Total " + Pref.shopText + "(s): " + list.size
 
 
+        //Begin 9.0 NearByShopsListFragment AppV 4.0.7 Suman 26-06-2023 0026307 mantis  26437
+        try{
+            //sortAlphabatically()
+            floating_fab.close(true)
+            programFab1.colorNormal = mContext.resources.getColor(R.color.delivery_status_green)
+            programFab2.colorNormal = mContext.resources.getColor(R.color.colorAccent)
+            programFab3.colorNormal = mContext.resources.getColor(R.color.colorAccent)
+            programFab1.setImageResource(R.drawable.ic_tick_float_icon)
+            programFab2.setImageResource(R.drawable.ic_tick_float_icon_gray)
+            programFab3.setImageResource(R.drawable.ic_tick_float_icon_gray)
+            println("fab_check ok")
+        }catch (ex:Exception){
+            ex.printStackTrace()
+            println("fab_check err ${ex.message}")
+        }
+        //ENd of 9.0 NearByShopsListFragment AppV 4.0.7 Suman 26-06-2023 0026307 mantis  26437
+
         mNearByShopsListAdapter = NearByShopsListAdapter(this.mContext!!, list, object : NearByShopsListClickListener {
 
             override fun onUpdateStatusClick(obj: AddShopDBModelEntity) {
-                UpdateShopStatusDialog.getInstance(obj.shopName!!, "Cancel", "Confirm", true,"",obj.user_id.toString()!!,
+                UpdateShopStatusDialog.getInstance(obj.shopName!!, "Cancel", "Confirm", true,"",obj.user_id.toString()!!,"Select Shop Status",
                     object : UpdateShopStatusDialog.OnDSButtonClickListener {
                         override fun onLeftClick() {
 
@@ -1096,6 +1154,29 @@ class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
                 }
             }
 
+            override fun onLocationShareClick(position: Int) {
+
+              //  val uri = ("geo:"+list[position].shopLat  + "," + list[position].shopLat) + "?q=" + Pref.latitude + "," + Pref.longitude
+              /*  val uri = ("geo:"+Pref.latitude  + "," + Pref.longitude) + "?q=" + list[position].shopLat + "," + list[position].shopLong
+                startActivity(
+                    Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse(uri)
+                    )
+                )*/
+
+                val latitude: Double = list[position].shopLat
+                val longitude: Double = list[position].shopLong
+
+                val uri = "https://www.google.com/maps/?q=" + latitude + "," + longitude
+                val sharingIntent = Intent(Intent.ACTION_SEND)
+                sharingIntent.let {
+                    it.type = "text/plain"
+                    it.putExtra(Intent.EXTRA_TEXT, uri)
+                    startActivity(Intent.createChooser(it, "Share via"))
+                }
+            }
+
             override fun onShareClick(position: Int) {
                 val heading = "${Pref.shopText.toUpperCase()} DETAILS"
                 var pdfBody = "\n\n\n\n${Pref.shopText} Name: " + list[position].shopName + "\n\nAddress: " + list[position].address +
@@ -1119,38 +1200,38 @@ class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
                 if (!TextUtils.isEmpty(list[position].shopImageLocalPath)) {
                     var image: Bitmap? = null//BitmapFactory.decodeResource(mContext.resources, R.mipmap.ic_launcher)
                     Glide.with(mContext)
-                            .asBitmap()
-                            .load(list[position].shopImageLocalPath)
-                            .into(object : SimpleTarget<Bitmap>() {
-                                override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
-                                    image = resource
+                        .asBitmap()
+                        .load(list[position].shopImageLocalPath)
+                        .into(object : SimpleTarget<Bitmap>() {
+                            override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
+                                image = resource
 
-                                    val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "FTS_" + list[position].shop_id + ".pdf",
-                                            image, heading, 2.7f)
+                                val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "FTS_" + list[position].shop_id + ".pdf",
+                                    image, heading, 2.7f)
 
-                                    if (!TextUtils.isEmpty(path)) {
-                                        try {
-                                            val shareIntent = Intent(Intent.ACTION_SEND)
-                                            val fileUrl = Uri.parse(path)
+                                if (!TextUtils.isEmpty(path)) {
+                                    try {
+                                        val shareIntent = Intent(Intent.ACTION_SEND)
+                                        val fileUrl = Uri.parse(path)
 
-                                            val file = File(fileUrl.path)
+                                        val file = File(fileUrl.path)
 //                                            val uri = Uri.fromFile(file)
-                                            val uri:Uri= FileProvider.getUriForFile(mContext, context!!.applicationContext.packageName.toString() + ".provider", file)
-                                            shareIntent.type = "image/png"
-                                            shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
-                                            startActivity(Intent.createChooser(shareIntent, "Share pdf using"));
-                                        } catch (e: Exception) {
-                                            e.printStackTrace()
-                                        }
-                                    } else {
-                                        (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")
-                                        }
+                                        val uri:Uri= FileProvider.getUriForFile(mContext, context!!.applicationContext.packageName.toString() + ".provider", file)
+                                        shareIntent.type = "image/png"
+                                        shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
+                                        startActivity(Intent.createChooser(shareIntent, "Share pdf using"));
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                    }
+                                } else {
+                                    (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")
                                 }
-                            })
+                            }
+                        })
                 }
                 else {
                     val path = FTStorageUtils.stringToPdf(pdfBody, mContext, "FTS_" + list[position].shop_id + ".pdf",
-                            null, heading, 2.7f)
+                        null, heading, 2.7f)
 
                     if (!TextUtils.isEmpty(path)) {
                         try {
@@ -1168,9 +1249,10 @@ class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
                         }
                     } else {
                         (mContext as DashboardActivity).showSnackMessage("Pdf can not be sent.")
-                        }
+                    }
                 }
             }
+
 
             override fun onCollectionClick(position: Int) {
                 floating_fab.close(true)
@@ -1469,6 +1551,14 @@ class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
                     addShopData.isShopDuplicate=mAddShopDBModelEntity.isShopDuplicate
 
                     addShopData.purpose=mAddShopDBModelEntity.purpose
+//start AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+                    try {
+                        addShopData.FSSAILicNo = mAddShopDBModelEntity.FSSAILicNo
+                    }catch (ex:Exception){
+                        ex.printStackTrace()
+                        addShopData.FSSAILicNo = ""
+                    }
+//end AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
 
                     addShopData.GSTN_Number=mAddShopDBModelEntity.gstN_Number
                     addShopData.ShopOwner_PAN=mAddShopDBModelEntity.shopOwner_PAN
@@ -1591,6 +1681,28 @@ class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
                     addShopData.beat_id = addShopData.beat_id
                     addShopData.assigned_to_shop_id = addShopData.assigned_to_shop_id
 
+                    // contact module
+                    try{
+                        addShopData.address = mAddShopDBModelEntity.address
+                        addShopData.actual_address = mAddShopDBModelEntity.address
+                        addShopData.shop_firstName= mAddShopDBModelEntity.crm_firstName
+                        addShopData.shop_lastName=  mAddShopDBModelEntity.crm_lastName
+                        addShopData.crm_companyID=  if(mAddShopDBModelEntity.companyName_id.equals("")) "0" else mAddShopDBModelEntity.companyName_id
+                        addShopData.crm_jobTitle=  mAddShopDBModelEntity.jobTitle
+                        addShopData.crm_typeID=  if(mAddShopDBModelEntity.crm_type_ID.equals("")) "0" else mAddShopDBModelEntity.crm_type_ID
+                        addShopData.crm_statusID=  if(mAddShopDBModelEntity.crm_status_ID.equals("")) "0" else mAddShopDBModelEntity.crm_status_ID
+                        addShopData.crm_sourceID= if(mAddShopDBModelEntity.crm_source_ID.equals("")) "0" else mAddShopDBModelEntity.crm_source_ID
+                        addShopData.crm_reference=  mAddShopDBModelEntity.crm_reference
+                        addShopData.crm_referenceID=  if(mAddShopDBModelEntity.crm_reference_ID.equals("")) "0" else mAddShopDBModelEntity.crm_reference_ID
+                        addShopData.crm_referenceID_type=  mAddShopDBModelEntity.crm_reference_ID_type
+                        addShopData.crm_stage_ID=  if(mAddShopDBModelEntity.crm_stage_ID.equals("")) "0" else mAddShopDBModelEntity.crm_stage_ID
+                        addShopData.assign_to=  mAddShopDBModelEntity.crm_assignTo_ID
+                        addShopData.saved_from_status=  mAddShopDBModelEntity.crm_saved_from
+                    }catch (ex:Exception){
+                        ex.printStackTrace()
+                        Timber.d("Logout edit sync err ${ex.message}")
+                    }
+
                     callEditShopApi(addShopData, mAddShopDBModelEntity.shopImageLocalPath, true, false,
                             mAddShopDBModelEntity.doc_degree)
                 }
@@ -1640,6 +1752,9 @@ class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
         layoutManager = LinearLayoutManager(mContext, LinearLayout.VERTICAL, false) as RecyclerView.LayoutManager
         nearByShopsList.layoutManager = layoutManager
         nearByShopsList.adapter = mNearByShopsListAdapter
+
+        println("time_check initAdapterend")
+
     }
 
 
@@ -1953,9 +2068,37 @@ class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
         addShopData.isShopDuplicate=mAddShopDBModelEntity.isShopDuplicate
 
         addShopData.purpose=mAddShopDBModelEntity.purpose
+//start AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+        try {
+            addShopData.FSSAILicNo = mAddShopDBModelEntity.FSSAILicNo
+        }catch (ex:Exception){
+            ex.printStackTrace()
+            addShopData.FSSAILicNo = ""
+        }
+//end AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
 
         addShopData.GSTN_Number=mAddShopDBModelEntity.gstN_Number
         addShopData.ShopOwner_PAN=mAddShopDBModelEntity.shopOwner_PAN
+
+        //contact shop sync
+        try{
+            addShopData.actual_address = mAddShopDBModelEntity.address
+            addShopData.shop_firstName=  mAddShopDBModelEntity.crm_firstName
+            addShopData.shop_lastName=  mAddShopDBModelEntity.crm_lastName
+            addShopData.crm_companyID=  if(mAddShopDBModelEntity.companyName_id.equals("")) "0" else mAddShopDBModelEntity.companyName_id
+            addShopData.crm_jobTitle=  mAddShopDBModelEntity.jobTitle
+            addShopData.crm_typeID=  if(mAddShopDBModelEntity.crm_type_ID.equals("")) "0" else mAddShopDBModelEntity.crm_type_ID
+            addShopData.crm_statusID=  if(mAddShopDBModelEntity.crm_status_ID.equals("")) "0" else mAddShopDBModelEntity.crm_status_ID
+            addShopData.crm_sourceID= if(mAddShopDBModelEntity.crm_source_ID.equals("")) "0" else mAddShopDBModelEntity.crm_source_ID
+            addShopData.crm_reference=  mAddShopDBModelEntity.crm_reference
+            addShopData.crm_referenceID=  if(mAddShopDBModelEntity.crm_reference_ID.equals("")) "0" else mAddShopDBModelEntity.crm_reference_ID
+            addShopData.crm_referenceID_type=  mAddShopDBModelEntity.crm_reference_ID_type
+            addShopData.crm_stage_ID=  if(mAddShopDBModelEntity.crm_stage_ID.equals("")) "0" else mAddShopDBModelEntity.crm_stage_ID
+            addShopData.assign_to=  mAddShopDBModelEntity.crm_assignTo_ID
+            addShopData.saved_from_status=  mAddShopDBModelEntity.crm_saved_from
+        }catch (ex:Exception){
+            ex.printStackTrace()
+        }
 
 
         callAddShopApi(addShopData, mAddShopDBModelEntity.shopImageLocalPath, shop_id, order_id, amount, collection,
@@ -2642,6 +2785,7 @@ class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
         val addShopReqData = AddShopRequestData()
         addShopReqData.session_token = Pref.session_token
         addShopReqData.address = addShopData.address
+        addShopReqData.actual_address = addShopData.address
         addShopReqData.owner_contact_no = addShopData.ownerContactNumber
         addShopReqData.owner_email = addShopData.ownerEmailId
         addShopReqData.owner_name = addShopData.ownerName
@@ -2721,12 +2865,39 @@ class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
         addShopReqData.dealer_id = addShopData.dealer_id
         addShopReqData.beat_id = addShopData.beat_id
         addShopReqData.assigned_to_shop_id = addShopData.assigned_to_shop_id
-        addShopReqData.actual_address = addShopData.actual_address
+        addShopReqData.actual_address = addShopData.address
 
 
         addShopReqData.GSTN_Number = addShopData.gstN_Number
         addShopReqData.ShopOwner_PAN = addShopData.shopOwner_PAN
 
+        //begin Suman 12-10-2023 mantis id 26874
+        if(isAddressUpdated){
+            addShopReqData.isUpdateAddressFromShopMaster = true
+        }
+        //end Suman 12-10-2023 mantis id 26874
+
+        // contact module
+        try{
+            addShopReqData.address = addShopData.address
+            addShopReqData.actual_address = addShopData.address
+            addShopReqData.shop_firstName= addShopData.crm_firstName
+            addShopReqData.shop_lastName=  addShopData.crm_lastName
+            addShopReqData.crm_companyID=  if(addShopData.companyName_id.equals("")) "0" else addShopData.companyName_id
+            addShopReqData.crm_jobTitle=  addShopData.jobTitle
+            addShopReqData.crm_typeID=  if(addShopData.crm_type_ID.equals("")) "0" else addShopData.crm_type_ID
+            addShopReqData.crm_statusID=  if(addShopData.crm_status_ID.equals("")) "0" else addShopData.crm_status_ID
+            addShopReqData.crm_sourceID= if(addShopData.crm_source_ID.equals("")) "0" else addShopData.crm_source_ID
+            addShopReqData.crm_reference=  addShopData.crm_reference
+            addShopReqData.crm_referenceID=  if(addShopData.crm_reference_ID.equals("")) "0" else addShopData.crm_reference_ID
+            addShopReqData.crm_referenceID_type=  addShopData.crm_reference_ID_type
+            addShopReqData.crm_stage_ID=  if(addShopData.crm_stage_ID.equals("")) "0" else addShopData.crm_stage_ID
+            addShopReqData.assign_to=  addShopData.crm_assignTo_ID
+            addShopReqData.saved_from_status=  addShopData.crm_saved_from
+        }catch (ex:Exception){
+            ex.printStackTrace()
+            Timber.d("Logout edit sync err ${ex.message}")
+        }
 
         callEditShopApi(addShopReqData, addShopData.shopImageLocalPath, false, isAddressUpdated, addShopData.doc_degree)
     }
@@ -3028,6 +3199,11 @@ class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
 
                         shop.actual_address = address_
                         shop.isEditUploaded = 0
+
+                        // begin Suman 12-10-2023 mantis id 26874
+                        shop.isUpdateAddressFromShopMaster = true
+                        // end Suman 12-10-2023 mantis id 26874
+
                         AppDatabase.getDBInstance()?.addShopEntryDao()?.updateAddShop(shop)
 
                         convertToReqAndApiCall(shop, true)
@@ -3863,6 +4039,14 @@ class NearByShopsListFragment : BaseFragment(), View.OnClickListener {
         addShopData.isShopDuplicate=mAddShopDBModelEntity.isShopDuplicate
 
         addShopData.purpose=mAddShopDBModelEntity.purpose
+//start AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+        try {
+            addShopData.FSSAILicNo = mAddShopDBModelEntity.FSSAILicNo
+        }catch (ex:Exception){
+            ex.printStackTrace()
+            addShopData.FSSAILicNo = ""
+        }
+//end AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
 
         addShopData.GSTN_Number=mAddShopDBModelEntity.gstN_Number
         addShopData.ShopOwner_PAN=mAddShopDBModelEntity.shopOwner_PAN

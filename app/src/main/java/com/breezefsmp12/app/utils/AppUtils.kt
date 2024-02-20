@@ -22,6 +22,8 @@ import android.os.Build
 import android.os.Environment
 import android.os.SystemClock
 import android.provider.CalendarContract
+import android.provider.CallLog
+import android.provider.ContactsContract
 import android.provider.MediaStore
 import android.provider.Settings
 import android.provider.Settings.SettingNotFoundException
@@ -39,6 +41,8 @@ import androidx.core.content.ContextCompat
 import com.breezefsmp12.R
 import com.breezefsmp12.app.AppDatabase
 import com.breezefsmp12.app.Pref
+import com.breezefsmp12.features.contacts.ContactDtls
+import com.breezefsmp12.features.contacts.ContactGr
 import com.breezefsmp12.features.location.LocationWizard
 import com.breezefsmp12.features.login.model.LoginStateListDataModel
 import com.breezefsmp12.features.login.model.productlistmodel.ProductRateDataModel
@@ -49,6 +53,7 @@ import com.google.gson.reflect.TypeToken
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.WriterException
 import com.google.zxing.qrcode.QRCodeWriter
+import kotlinx.coroutines.delay
 import okhttp3.CacheControl
 import okhttp3.Interceptor
 import org.apache.commons.lang3.StringEscapeUtils
@@ -58,6 +63,7 @@ import java.math.BigDecimal
 import java.sql.Timestamp
 import java.text.ParseException
 import java.text.SimpleDateFormat
+import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -102,6 +108,7 @@ class AppUtils {
         var idle_time = "30"
 //        var isShopVisited = false
         var isLocationActivityUpdating = false
+
         var isAppInfoUpdating = false
         var notificationChannelId = "fts_1"
         var notificationChannelName = "FTS Channel"
@@ -119,6 +126,7 @@ class AppUtils {
         //var tempDistance = 0.0
         //var totalS2SDistance = 0.0  // Shop to shop distance
         //var mGoogleAPIClient: GoogleApiClient? = null
+        var reasontagforGPS = ""
 
         private var mLastClickTime: Long = 0
 
@@ -1612,6 +1620,14 @@ class AppUtils {
             return dateFormat.format(cal.time) //your formatted date here
         }
 
+        fun getCustomPreviousDate(dateString: String, previous:Int): String {
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
+            val cal = Calendar.getInstance(Locale.ENGLISH)
+            cal.time = dateFormat.parse(dateString)
+            cal.add(Calendar.DATE, -previous)
+            return dateFormat.format(cal.time) //your formatted date here
+        }
+
         fun changeAttendanceDateFormat(dateString: String): String {
             val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
             var convertedDate = Date()
@@ -1848,6 +1864,16 @@ class AppUtils {
         fun getCurrentISODateAtt(): String {
             val df = SimpleDateFormat("yyyy-MM-dd'T'00:00:00", Locale.ENGLISH)
             return df.format(Date()).toString()
+        }
+
+        fun geTimeDuration( startTime: String , endTime: String ): String { // "2023-09-07T15:29:24" "2023-09-07T15:20:24"
+            val timestamp1 = LocalDateTime.parse(startTime)
+            val timestamp2 = LocalDateTime.parse(endTime)
+
+            val duration = Duration.between(timestamp1, timestamp2).abs()
+            val minutes = duration.toMinutes().toString()
+            return  minutes
+
         }
 
         fun getCurrentDateForShopActi(): String {
@@ -3052,6 +3078,20 @@ class AppUtils {
             }
         }
 
+        fun changeDateFormat1(date:String):String{ // convert 14-Nov-22 to dd/MM/yyyy
+            val format1 = SimpleDateFormat("dd/MM/yyyy")
+            val format2 = SimpleDateFormat("dd-MMM-yy")
+            val date = format2.parse(date)
+            return format1.format(date)
+        }
+
+        fun changeDateFormat2(date:String):String{ // convert 14-Nov-22 to yyyy/MM/dd
+            val format1 = SimpleDateFormat("yyyy/MM/dd")
+            val format2 = SimpleDateFormat("dd-MMM-yy")
+            val date = format2.parse(date)
+            return format1.format(date)
+        }
+
         /*fun getDurationFromOnlineVideoLink(link: String) : String {
             val retriever = MediaMetadataRetriever()
             retriever.setDataSource(link, HashMap<String, String>())
@@ -3075,6 +3115,341 @@ class AppUtils {
             }
         }*/
              var isFromOrderToshowSchema = false
+
+        fun getDateDiff(fromD: String,toD: String): String {
+            val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
+            var  date1:Date = simpleDateFormat.parse(fromD)
+            var  date2:Date= simpleDateFormat.parse(toD)
+            val calendar1 = Calendar.getInstance()
+            calendar1.time = date1
+            val calendar2 = Calendar.getInstance()
+            calendar2.time = date2
+            val differenceInMillis = calendar2.timeInMillis - calendar1.timeInMillis
+            val differenceInDays = differenceInMillis / (24 * 60 * 60 * 1000)
+            return differenceInDays.toString()
+        }
+
+        fun addMonths(startDt:String):String{
+            try {
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
+                var convertedDate = Date()
+                try {
+                    convertedDate = dateFormat.parse(startDt)
+                } catch (e: ParseException) {
+                    e.printStackTrace()
+                }
+                convertedDate.month = convertedDate.month+1
+
+                return dateFormat.format(convertedDate.time)
+            }catch (ex:Exception){
+                ex.printStackTrace()
+                return ""
+            }
+        }
+
+        fun getPrevXMonthDate(prevMonthCount:Int):String{
+            val calendar = Calendar.getInstance()
+            calendar.add(Calendar.MONTH, -prevMonthCount)
+            var agoDate = calendar.time
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd")
+            return dateFormat.format(agoDate).toString()
+        }
+
+        fun getDaysAgo(daysAgo: Int): Date {
+            val calendar = Calendar.getInstance()
+            calendar.add(Calendar.DAY_OF_YEAR, -daysAgo)
+
+            return calendar.time
+        }
+
+        fun getDiffDateTime(startTime:String,endTime:String):Int{
+            var date1 :Date = SimpleDateFormat("yy-mm-dd hh:mm:ss").parse(startTime)
+            var date2 :Date = SimpleDateFormat("yy-mm-dd hh:mm:ss").parse(endTime)
+            val diff: Long = date2.getTime() - date1.getTime()
+            val seconds = diff / 1000
+            val minutes = seconds / 60
+            val hours = minutes / 60
+            val days = hours / 24
+
+            return minutes.toInt()
+        }
+
+        data class PhoneCallDtls(var number:String?="",var type:String?="",var callDate:String?="",var callDateTime:String?="",var callDuration:String?="")
+
+        fun obtenerDetallesLlamadas(context: Context): ArrayList<PhoneCallDtls>? {
+            try {
+
+                val stringBuffer = StringBuffer()
+                val cursor = context.contentResolver.query(CallLog.Calls.CONTENT_URI, null, null, null, CallLog.Calls.DATE + " DESC")
+                val number = cursor!!.getColumnIndex(CallLog.Calls.NUMBER)
+                val type = cursor.getColumnIndex(CallLog.Calls.TYPE)
+                val date = cursor.getColumnIndex(CallLog.Calls.DATE)
+                val duration = cursor.getColumnIndex(CallLog.Calls.DURATION)
+
+                val phoneCallRecord = ArrayList<PhoneCallDtls>()
+
+                while (cursor.moveToNext()) {
+                    val phNumber = cursor.getString(number)
+                    val callType = cursor.getString(type)
+                    val callDate = cursor.getString(date)
+                    val callDayTime = java.sql.Date(java.lang.Long.valueOf(callDate))
+                    var callDateTime = AppUtils.getDateTimeFromTimeStamp(callDate.toLong())
+                    val callDuration = cursor.getString(duration)
+                    var dir: String? = null
+                    val dircode = callType.toInt()
+                    when (dircode) {
+                        CallLog.Calls.OUTGOING_TYPE -> dir = "OUTGOING"
+                        CallLog.Calls.INCOMING_TYPE -> dir = "INCOMING"
+                        CallLog.Calls.MISSED_TYPE -> dir = "MISSED"
+                    }
+                    stringBuffer.append(
+                        "\nPhone Number:--- " + phNumber + " \nCall Type:--- "
+                                + dir + " \nCall Date:--- " + callDayTime
+                                + " \nCall duration in sec :--- " + callDuration
+                    )
+                    stringBuffer.append("\n----------------------------------")
+
+                    try{
+                        val obj = PhoneCallDtls()
+                        obj.number = phNumber
+                        obj.type = dir
+                        obj.callDate = callDate
+                        obj.callDateTime = callDateTime
+                        obj.callDuration = callDuration
+                        phoneCallRecord.add(obj)
+                        Timber.d("Call record fetched ${obj.number} ${obj.callDateTime}")
+                    }catch (ex:Exception){
+                        ex.printStackTrace()
+                    }
+
+                }
+                cursor.close()
+                return phoneCallRecord
+                //return stringBuffer.toString();
+            } catch (ex: java.lang.Exception) {
+                ex.printStackTrace()
+            }
+            return null
+        }
+
+        fun obtenerDetallesLlamadasByDate(context: Context,startDt:String,endDt:String): ArrayList<PhoneCallDtls>? {
+            val phoneCallRecord = ArrayList<PhoneCallDtls>()
+            try {
+                val calendar1 = Calendar.getInstance()
+                calendar1.set(startDt.split("-").get(0).toInt(), startDt.split("-").get(1).toInt()-1, startDt.split("-").get(2).toInt())
+                calendar1.set(Calendar.HOUR,0)
+                calendar1.set(Calendar.MINUTE,0)
+                calendar1.set(Calendar.SECOND,0)
+                val fromDate = java.lang.String.valueOf(calendar1.timeInMillis)
+
+                val calendar2 = Calendar.getInstance()
+                calendar2.set(endDt.split("-").get(0).toInt(), endDt.split("-").get(1).toInt()-1, endDt.split("-").get(2).toInt())
+                val toDate = java.lang.String.valueOf(calendar2.timeInMillis)
+                val whereValue = arrayOf(fromDate, toDate)
+
+                println("tag_time_dt fromDt : $fromDate toDt: $toDate")
+
+                val stringBuffer = StringBuffer()
+                //val cursor = context.contentResolver.query(CallLog.Calls.CONTENT_URI, null, null, null, CallLog.Calls.DATE + " DESC")
+                val cursor = context.contentResolver.query(CallLog.Calls.CONTENT_URI, null, android.provider.CallLog.Calls.DATE+" BETWEEN ? AND ?", whereValue, CallLog.Calls.DATE + " DESC");
+                val number = cursor!!.getColumnIndex(CallLog.Calls.NUMBER)
+                val type = cursor.getColumnIndex(CallLog.Calls.TYPE)
+                val date = cursor.getColumnIndex(CallLog.Calls.DATE)
+                val duration = cursor.getColumnIndex(CallLog.Calls.DURATION)
+
+
+                while (cursor.moveToNext()) {
+                    val phNumber = cursor.getString(number)
+                    val callType = cursor.getString(type)
+                    val callDate = cursor.getString(date)
+                    val callDayTime = java.sql.Date(java.lang.Long.valueOf(callDate))
+                    var callDateTime = AppUtils.getDateTimeFromTimeStamp(callDate.toLong())
+                    val callDuration = cursor.getString(duration)
+                    var dir: String? = null
+                    val dircode = callType.toInt()
+                    when (dircode) {
+                        CallLog.Calls.OUTGOING_TYPE -> dir = "OUTGOING"
+                        CallLog.Calls.INCOMING_TYPE -> dir = "INCOMING"
+                        CallLog.Calls.MISSED_TYPE -> dir = "MISSED"
+                    }
+                    stringBuffer.append(
+                        "\nPhone Number:--- " + phNumber + " \nCall Type:--- "
+                                + dir + " \nCall Date:--- " + callDayTime
+                                + " \nCall duration in sec :--- " + callDuration
+                    )
+                    stringBuffer.append("\n----------------------------------")
+
+                    try{
+                        val obj = PhoneCallDtls()
+                        obj.number = phNumber
+                        obj.type = dir
+                        obj.callDate = callDate
+                        obj.callDateTime = callDateTime
+                        obj.callDuration = callDuration
+                        phoneCallRecord.add(obj)
+                        Timber.d("Call record fetched ${obj.number} ${obj.callDateTime}")
+                    }catch (ex:Exception){
+                        ex.printStackTrace()
+                    }
+
+                }
+                cursor.close()
+                return phoneCallRecord
+                //return stringBuffer.toString();
+            } catch (ex: java.lang.Exception) {
+                ex.printStackTrace()
+                return phoneCallRecord
+            }
+            return null
+        }
+
+        fun obtenerDetallesLlamadasByNumber(context: Context,num:String): ArrayList<PhoneCallDtls> {
+            var phoneCallRecord : ArrayList<PhoneCallDtls> = ArrayList()
+            try {
+                val whereValue :Array<String> = arrayOf("+91${num}",num)
+                println("tag_time_dt enter ${AppUtils.getCurrentDateTime()}")
+                val stringBuffer = StringBuffer()
+                val cursor = context.contentResolver.query(CallLog.Calls.CONTENT_URI, null,
+                    CallLog.Calls.NUMBER + " = ? OR "+ CallLog.Calls.NUMBER + " = ?", whereValue, CallLog.Calls.DATE + " DESC");
+                val number = cursor!!.getColumnIndex(CallLog.Calls.NUMBER)
+                val type = cursor.getColumnIndex(CallLog.Calls.TYPE)
+                val date = cursor.getColumnIndex(CallLog.Calls.DATE)
+                val duration = cursor.getColumnIndex(CallLog.Calls.DURATION)
+
+
+                while (cursor.moveToNext()) {
+                    println("tag_time_dt loop ${AppUtils.getCurrentDateTime()}")
+                    val phNumber = cursor.getString(number)
+                    val callType = cursor.getString(type)
+                    val callDate = cursor.getString(date)
+                    val callDayTime = java.sql.Date(java.lang.Long.valueOf(callDate))
+                    var callDateTime = AppUtils.getDateTimeFromTimeStamp(callDate.toLong())
+                    val callDuration = cursor.getString(duration)
+                    var dir: String? = null
+                    val dircode = callType.toInt()
+                    when (dircode) {
+                        CallLog.Calls.OUTGOING_TYPE -> dir = "OUTGOING"
+                        CallLog.Calls.INCOMING_TYPE -> dir = "INCOMING"
+                        CallLog.Calls.MISSED_TYPE -> dir = "MISSED"
+                    }
+                    stringBuffer.append(
+                        "\nPhone Number:--- " + phNumber + " \nCall Type:--- "
+                                + dir + " \nCall Date:--- " + callDayTime
+                                + " \nCall duration in sec :--- " + callDuration
+                    )
+                    stringBuffer.append("\n----------------------------------")
+
+                    try{
+                        val obj = PhoneCallDtls()
+                        obj.number = phNumber
+                        obj.type = dir
+                        obj.callDate = callDate
+                        obj.callDateTime = callDateTime
+                        obj.callDuration = callDuration
+                        phoneCallRecord.add(obj)
+                        Timber.d("Call record fetched ${obj.number} ${obj.callDateTime}")
+                    }catch (ex:Exception){
+                        ex.printStackTrace()
+                        println("tag_time_dt err1 ${ex.message}")
+                    }
+
+                }
+                cursor.close()
+                return phoneCallRecord
+                //return stringBuffer.toString();
+            } catch (ex: java.lang.Exception) {
+                ex.printStackTrace()
+                println("tag_time_dt err2 ${ex.message}")
+                return phoneCallRecord
+            }
+            return phoneCallRecord
+        }
+
+        fun getMMSSfromSeconds(sec:Int):String{
+            var d :Date=  Date(sec * 1000L)
+            var df : SimpleDateFormat = SimpleDateFormat("HH:mm:ss")
+            df.setTimeZone(TimeZone.getTimeZone("GMT"))
+            var time:String = df.format(d)
+            return time
+        }
+
+        @SuppressLint("Range")
+        fun getPhoneBookGroups(context:Context): ArrayList<ContactGr> {
+            val groups : ArrayList<ContactGr> = ArrayList()
+            try{
+                val projection = arrayOf(ContactsContract.Groups._ID, ContactsContract.Groups.TITLE)
+                val cursor = context.contentResolver.query(ContactsContract.Groups.CONTENT_URI, projection, null, null, null)
+                cursor?.use {
+                    while (it.moveToNext()) {
+                        val groupName = it.getString(it.getColumnIndex(ContactsContract.Groups.TITLE))
+                        val groupId = it.getString(it.getColumnIndex(ContactsContract.Groups._ID))
+                        if(!groups.map { it.gr_name }.contains(groupName)){
+                            groups.add(ContactGr(groupId,groupName))
+                            //println("tag_contact_gr $groupId $groupName")
+                        }
+
+                    }
+                }
+                return groups
+            }catch (ex:Exception){
+                ex.printStackTrace()
+                return groups
+            }
+
+        }
+
+        @SuppressLint("Range")
+        fun getContactsFormGroup(grId:String, grName:String, context:Context):ArrayList<ContactDtls>{
+
+            println("tag_cont getContactsFormGroup start ")
+
+            var contactDtls:ArrayList<ContactDtls> = ArrayList()
+            val groupId: String = grId
+            val cProjection = arrayOf<String>(ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.CommonDataKinds.GroupMembership.CONTACT_ID)
+
+            val groupCursor = context.contentResolver.query(
+                ContactsContract.Data.CONTENT_URI,
+                cProjection,
+                ContactsContract.CommonDataKinds.GroupMembership.GROUP_ROW_ID + "= ?" + " AND "
+                        + ContactsContract.CommonDataKinds.GroupMembership.MIMETYPE + "='"
+                        + ContactsContract.CommonDataKinds.GroupMembership.CONTENT_ITEM_TYPE + "'",
+                arrayOf<String>(groupId.toString()),
+                null
+            )
+            if (groupCursor != null && groupCursor.moveToFirst()) {
+                do {
+                    val nameCoumnIndex = groupCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+                    val name = groupCursor.getString(nameCoumnIndex)
+                    val contactId =
+                        groupCursor.getLong(groupCursor.getColumnIndex(ContactsContract.CommonDataKinds.GroupMembership.CONTACT_ID))
+                    val numberCursor = context.contentResolver.query(
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        arrayOf<String>(ContactsContract.CommonDataKinds.Phone.NUMBER),
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=" + contactId,
+                        null,
+                        null
+                    )
+                    if (numberCursor!!.moveToFirst()) {
+                        val numberColumnIndex = numberCursor!!.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                        do {
+                            val phoneNumber = numberCursor!!.getString(numberColumnIndex)
+                            //Log.d("your tag", "contact $name:$phoneNumber")
+                            //println("tag_contact for grId ${groupId} contact $name:$phoneNumber")
+                            var ph = phoneNumber.toString().replace(" ","")
+                            if(!contactDtls.map { it.number }.contains(ph)){
+                                contactDtls.add(ContactDtls(grName,name,ph))
+                                println("tag_cont ___________________ $name $ph")
+                            }
+                        } while (numberCursor!!.moveToNext())
+                        numberCursor!!.close()
+                    }
+                } while (groupCursor.moveToNext())
+                groupCursor.close()
+            }
+            println("tag_cont getContactsFormGroup end ")
+            return contactDtls
+        }
+
     }
 
 }

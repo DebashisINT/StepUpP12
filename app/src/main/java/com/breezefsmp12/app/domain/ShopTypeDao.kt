@@ -31,4 +31,9 @@ interface ShopTypeDao {
 
     @Query("SELECT shoptype_name FROM " + AppConstant.SHOP_TYPE + " where shoptype_id=:shoptype_id")
     fun getShopNameById(shoptype_id: String): String
+
+    @Query("select shoptype_name from shop_type_list where shoptype_id = (\n" +
+            "select type from shop_detail where shop_id =:shop_id) ")
+    fun getShopTypeNameById(shop_id: String): String
+
 }

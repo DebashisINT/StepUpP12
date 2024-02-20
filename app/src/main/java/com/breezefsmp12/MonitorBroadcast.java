@@ -112,7 +112,7 @@ public class MonitorBroadcast extends BroadcastReceiver {
                 funcc(context);
             }
         }catch (Exception ex){
-            Timber.e("MonitorBroadcast error "+ex.getMessage().toString());
+            Timber.e("MonitorBroadcast error "+ex.getMessage());
             ex.printStackTrace();
         }
     }

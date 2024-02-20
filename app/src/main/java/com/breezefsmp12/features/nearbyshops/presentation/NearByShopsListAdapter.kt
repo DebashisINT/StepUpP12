@@ -3,9 +3,9 @@ package com.breezefsmp12.features.nearbyshops.presentation
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.PorterDuff
+import android.location.Location
 import android.net.Uri
-import androidx.recyclerview.widget.RecyclerView
-import android.text.Html
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.TextUtils
@@ -17,7 +17,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
+import androidx.recyclerview.widget.RecyclerView
 import com.amulyakhare.textdrawable.TextDrawable
 import com.amulyakhare.textdrawable.util.ColorGenerator
 import com.breezefsmp12.R
@@ -30,32 +30,97 @@ import com.breezefsmp12.app.utils.AppUtils
 import com.breezefsmp12.app.utils.Toaster
 import com.breezefsmp12.features.dashboard.presentation.DashboardActivity
 import com.breezefsmp12.features.location.LocationWizard
+import com.breezefsmp12.features.location.SingleShotLocationProvider
 import com.breezefsmp12.features.nearbyshops.model.NewOrderModel
 import com.breezefsmp12.widgets.AppCustomTextView
 import com.squareup.picasso.Picasso
-import kotlinx.android.synthetic.main.inflate_nearby_shops.view.*
-import kotlinx.android.synthetic.main.inflate_registered_shops.view.*
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.activity_view
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.add_multiple_ll
 import kotlinx.android.synthetic.main.inflate_registered_shops.view.add_order_ll
 import kotlinx.android.synthetic.main.inflate_registered_shops.view.add_quot_ll
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.avg_order_amount_tv
 import kotlinx.android.synthetic.main.inflate_registered_shops.view.call_iv
 import kotlinx.android.synthetic.main.inflate_registered_shops.view.call_ll
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.call_log_his_ll
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.call_log_his_view
 import kotlinx.android.synthetic.main.inflate_registered_shops.view.call_tv
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.collection_view
 import kotlinx.android.synthetic.main.inflate_registered_shops.view.direction_ll
 import kotlinx.android.synthetic.main.inflate_registered_shops.view.direction_view
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.high_value_month_tv
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.highest_order_amount_tv
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.iv_create_qr
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.iv_sms
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.iv_whatsapp
 import kotlinx.android.synthetic.main.inflate_registered_shops.view.last_visited_date_TV
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.lead_new_question_ll
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.lead_new_question_view
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.lead_return_ll
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.lead_return_view
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.ll_activity
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.ll_average_visit_time
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.ll_collection
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.ll_dd_name
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.ll_distance
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.ll_last_visit_age
 import kotlinx.android.synthetic.main.inflate_registered_shops.view.ll_shop_code
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.ll_shop_type
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.ll_stock
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.low_value_month_tv
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.lowest_order_amount_tv
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.myshop_Gstin_TV
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.myshop_Pan_TV
 import kotlinx.android.synthetic.main.inflate_registered_shops.view.myshop_address_TV
 import kotlinx.android.synthetic.main.inflate_registered_shops.view.myshop_name_TV
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.new_multi_view
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.next_visit_date_RL
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.next_visit_date_TV
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.order_amount_tv
 import kotlinx.android.synthetic.main.inflate_registered_shops.view.order_amt_p_TV
 import kotlinx.android.synthetic.main.inflate_registered_shops.view.order_view
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.rl_beat_type
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.rl_entity_type
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.rl_party_status
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.share_icon
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.share_loc_ll
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.share_loc_view
 import kotlinx.android.synthetic.main.inflate_registered_shops.view.shop_IV
 import kotlinx.android.synthetic.main.inflate_registered_shops.view.shop_damage_ll
 import kotlinx.android.synthetic.main.inflate_registered_shops.view.shop_damage_view
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.shop_extra_contact_ll
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.shop_extra_contact_view
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.shop_history_ll
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.shop_history_view
 import kotlinx.android.synthetic.main.inflate_registered_shops.view.shop_image_IV
 import kotlinx.android.synthetic.main.inflate_registered_shops.view.shop_list_LL
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.shop_survey_ll
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.shop_survey_view
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.stock_view
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.sync_icon
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.tag_iv
 import kotlinx.android.synthetic.main.inflate_registered_shops.view.total_visited_value_TV
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.tv_avg_visit_time
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.tv_beat_type
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.tv_dd_name
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.tv_distance
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.tv_entity_type
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.tv_funnel_stage
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.tv_funnel_stage_header
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.tv_last_visit_age
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.tv_party_status
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.tv_retailer_entity
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.tv_retailer_entity_headerr
 import kotlinx.android.synthetic.main.inflate_registered_shops.view.tv_shop_code
 import kotlinx.android.synthetic.main.inflate_registered_shops.view.tv_shop_contact_no
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.tv_stage
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.tv_stage_header
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.tv_type
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.tv_update_status_inflate_registered_shops
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.update_address_TV
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.update_bank_details_TV
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.update_party_status_TV
+import kotlinx.android.synthetic.main.inflate_registered_shops.view.update_stage_TV
+import timber.log.Timber
 
 
 /**
@@ -66,6 +131,7 @@ import kotlinx.android.synthetic.main.inflate_registered_shops.view.tv_shop_cont
 // 2.0 NearByShopsListAdapter  AppV 4.0.6  Saheli   11/01/2023 IsAllowShopStatusUpdate
 // 3.0 NearByShopsListAdapter  AppV 4.0.6  Suman   31/01/2023 Retailer/Entity show from room db mantis_id 25636
 class NearByShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>, val listener: NearByShopsListClickListener) : RecyclerView.Adapter<NearByShopsListAdapter.MyViewHolder>() {
+
     private val layoutInflater: LayoutInflater
     private var context: Context
     private var mList: List<AddShopDBModelEntity>
@@ -93,9 +159,11 @@ class NearByShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>,
     }
 
     class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
         val newOrderList = ArrayList<NewOrderModel>()
         fun bindItems(context: Context, list: List<AddShopDBModelEntity>, listener: NearByShopsListClickListener) {
             //Picasso.with(context).load(list[adapterPosition].shopImageLocalPath).into(itemView.shop_image_IV)
+            println("time_check NearByShopsListAdapterstart")
             try {
                 if (!TextUtils.isEmpty(list[adapterPosition].shopImageLocalPath)) {
                     Picasso.get()
@@ -120,8 +188,16 @@ class NearByShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>,
                         val visitedShop = AppDatabase.getDBInstance()!!.shopActivityDao().getVisitedShopForDay(list[adapterPosition].shop_id, AppUtils.getCurrentDateForShopActi(),
                                 true)
 
-                        if (visitedShop == null)
+                        if (visitedShop == null){
                             itemView.update_address_TV.visibility = View.VISIBLE
+
+                            // begin Suman 12-10-2023 mantis id 0026874
+                            if(Pref.IsDisabledUpdateAddress && list[adapterPosition].isUpdateAddressFromShopMaster){
+                                itemView.update_address_TV.visibility = View.GONE
+                            }
+                            // begin Suman 12-10-2023 mantis id 0026874
+
+                        }
                         else
                             itemView.update_address_TV.visibility = View.GONE
                     }
@@ -144,6 +220,11 @@ class NearByShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>,
                 itemView.direction_ll.findViewById<LinearLayout>(R.id.direction_ll).setOnClickListener(View.OnClickListener {
                     //listener.mapClick(adapterPosition)
                     try{
+                        //val gmmIntentUri = Uri.parse("https://www.google.com/maps/dir/?api=1&origin=22.497013652788425,88.3154464620276&destination=22.462972465878618,88.3071007426955&waypoints=22.475403007798953,88.30885895679373|22.471053209879425,88.3098540562982&travelmode=driving")
+                        //val gmmIntentUri = Uri.parse("https://www.google.com/maps/dir/?api=1&origin=22.497013652788425,88.3154464620276&destination=22.462972465878618,88.3071007426955&waypoints=22.475403007798953,88.30885895679373|22.471053209879425,88.3098540562982&travelmode=driving&dir_action=navigate")
+                        //val gmmIntentUri = Uri.parse("https://www.google.com/maps/dir/?api=1&origin=22.497013652788425,88.3154464620276&destination=22.462972465878618,88.3071007426955&waypoints=22.475403007798953,88.30885895679373|22.471053209879425,88.3098540562982&mode=1&dir_action=navigate")
+                        //var intentGmap: Intent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+
                         var intentGmap: Intent = Intent(Intent.ACTION_VIEW, Uri.parse("google.navigation:q=${list[adapterPosition].shopLat},${list[adapterPosition].shopLong}&mode=1"))
                         intentGmap.setPackage("com.google.android.apps.maps")
                         if(intentGmap.resolveActivity(context.packageManager) !=null){
@@ -161,6 +242,9 @@ class NearByShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>,
                 itemView.update_address_TV.findViewById<AppCustomTextView>(R.id.update_address_TV).setOnClickListener(View.OnClickListener {
                     listener.updateLocClick(adapterPosition)
                 })
+
+
+
                 itemView.order_amt_p_TV.text = " " + context.getString(R.string.zero_order_in_value)
                 itemView.total_visited_value_TV.text = " " + list[adapterPosition].totalVisitCount
                 itemView.last_visited_date_TV.text = " " + list[adapterPosition].lastVisitedDate
@@ -257,6 +341,9 @@ class NearByShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>,
                 itemView.share_icon.setOnClickListener {
                     listener.onShareClick(adapterPosition)
                 }
+                itemView.share_loc_ll.setOnClickListener {
+                    listener.onLocationShareClick(adapterPosition)
+                }
 
                 itemView.lead_new_question_ll.setOnClickListener {
                     listener.onQuestionnarieClick(list[adapterPosition].shop_id!!)
@@ -344,10 +431,12 @@ class NearByShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>,
                     itemView.call_tv.text = context.getString(R.string.verified)
                     itemView.call_tv.setTextColor(context.resources.getColor(R.color.colorPrimary))
                     itemView.call_iv.setImageResource(R.drawable.ic_registered_shop_call_select_green)
+                    itemView.call_iv.setColorFilter( Color.parseColor("#119C25"), PorterDuff.Mode.SRC_IN)
                 } else {
                     itemView.call_tv.text = context.getString(R.string.unverified)
                     itemView.call_tv.setTextColor(context.resources.getColor(R.color.login_txt_color))
                     itemView.call_iv.setImageResource(R.drawable.ic_registered_shop_call_deselect)
+                    itemView.call_iv.setColorFilter( Color.parseColor("#000000"), PorterDuff.Mode.SRC_IN)
                 }
 
                 val orderList = AppDatabase.getDBInstance()!!.orderDetailsListDao().getListAccordingToShopId(list[adapterPosition].shop_id) as ArrayList<OrderDetailsListEntity>
@@ -1008,8 +1097,26 @@ class NearByShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>,
                         itemView.new_multi_view.visibility = View.GONE
                     }
 
+            if(Pref.IsCallLogHistoryActivated){
+                itemView.call_log_his_ll.visibility = View.VISIBLE
+                itemView.call_log_his_view.visibility = View.VISIBLE
+            }else{
+                itemView.call_log_his_ll.visibility = View.GONE
+                itemView.call_log_his_view.visibility = View.GONE
+            }
 
+            if(Pref.IsShowCustomerLocationShare){
+                itemView.share_loc_ll.visibility = View.VISIBLE
+                itemView.share_loc_view.visibility = View.VISIBLE
+            }else{
+                itemView.share_loc_ll.visibility = View.GONE
+                itemView.share_loc_view.visibility = View.GONE
+            }
 
+            itemView.call_log_his_ll.setOnClickListener {
+                (context as DashboardActivity).loadFragment(FragType.ShopCallHisFrag, true, list[adapterPosition].shop_id)
+            }
+            println("time_check NearByShopsListAdapterend")
 
         }
     }

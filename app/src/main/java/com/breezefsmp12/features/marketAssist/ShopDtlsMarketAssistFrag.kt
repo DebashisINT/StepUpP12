@@ -21,10 +21,12 @@ import com.bumptech.glide.Glide
 import com.breezefsmp12.R
 import com.breezefsmp12.app.AppDatabase
 import com.breezefsmp12.app.Pref
+import com.breezefsmp12.app.domain.AddShopDBModelEntity
 import com.breezefsmp12.app.domain.ShopActivityEntity
 import com.breezefsmp12.app.types.FragType
 import com.breezefsmp12.app.utils.AppUtils
 import com.breezefsmp12.app.utils.AppUtils.Companion.bitmapDescriptorFromVector
+import com.breezefsmp12.app.utils.Toaster
 import com.breezefsmp12.base.presentation.BaseFragment
 import com.breezefsmp12.features.dashboard.presentation.DashboardActivity
 import com.breezefsmp12.features.dashboard.presentation.DashboardFragment
@@ -41,6 +43,7 @@ import com.google.android.gms.maps.model.PolylineOptions
 import com.pnikosis.materialishprogress.ProgressWheel
 import kotlinx.android.synthetic.main.activity_login_new.iv_background_color_set
 import kotlinx.android.synthetic.main.activity_login_new.iv_loader_spin
+import kotlinx.android.synthetic.main.row_shop_list_ma.view.iv_row_shop_list_ma_pointer
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 import java.util.Collections
@@ -70,10 +73,12 @@ class ShopDtlsMarketAssistFrag : BaseFragment(), View.OnClickListener, OnMapRead
     private lateinit var lastVisitDateTV: TextView
     private lateinit var lastVisitTimeTV: TextView
     private lateinit var avgVisitTimeTV: TextView
+    private lateinit var avgVisitTimeTVCaption: TextView
     private lateinit var visitBetweenTV: TextView
 
     private lateinit var distanceTV: TextView
     private lateinit var mapDirectionCV: CardView
+    private lateinit var mapDirectionPointer: ImageView
 
     private lateinit var rvProductSuggest: RecyclerView
     private lateinit var rvProductCross: RecyclerView
@@ -145,9 +150,11 @@ class ShopDtlsMarketAssistFrag : BaseFragment(), View.OnClickListener, OnMapRead
         lastVisitDateTV = view.findViewById(R.id.tv_frag_shop_dtls_ma_last_visit_date)
         lastVisitTimeTV = view.findViewById(R.id.tv_frag_shop_dtls_ma_last_visit_time)
         avgVisitTimeTV = view.findViewById(R.id.tv_frag_shop_dtls_ma_avg_visit_time)
+        avgVisitTimeTVCaption = view.findViewById(R.id.tv_frag_shop_dtls_ma_avg_visit_time_caption)
 
         distanceTV = view.findViewById(R.id.tv_frag_shop_dtls_ma_dist)
         mapDirectionCV = view.findViewById(R.id.iv_frag_shop_dtls_ma_map_direction)
+        mapDirectionPointer = view.findViewById(R.id.iv_frag_shop_dtls_ma_map_direction_pointer)
 
         stayAtLeastTV = view.findViewById(R.id.tv_frag_shop_dtls_ma_stay_at_least)
         visitOrdValTV = view.findViewById(R.id.tv_frag_shop_dtls_ma_visit_ord_val)
@@ -161,6 +168,10 @@ class ShopDtlsMarketAssistFrag : BaseFragment(), View.OnClickListener, OnMapRead
         cvCrossProdRoot = view.findViewById(R.id.cv_frag_shop_dtls_ma_cross_prod_root)
 
         mapDirectionCV.setOnClickListener(this)
+
+        Glide.with(mContext)
+            .load(R.drawable.icon_pointer_gif)
+            .into(mapDirectionPointer)
 
         mapFragment = childFragmentManager.findFragmentById(R.id.map_frag_shop_dtls_ma) as SupportMapFragment
 
@@ -237,9 +248,9 @@ class ShopDtlsMarketAssistFrag : BaseFragment(), View.OnClickListener, OnMapRead
                         //prodNameMinAmt.isSelected = true
 
                         prodNameMaxQty.text = maxQtyObj!!.product_name
-                        prodNameMaxQtyAmt.text = maxQtyObj!!.totalQty
+                        prodNameMaxQtyAmt.text = String.format("%.02f",maxQtyObj!!.totalQty.toDouble())
                         prodNameMinQty.text = minQtyObj!!.product_name
-                        prodNameMinQtyAmt.text = minQtyObj!!.totalQty
+                        prodNameMinQtyAmt.text = String.format("%.02f",minQtyObj!!.totalQty.toDouble())
 
                         //prodNameMaxQty.isSelected = true
                         //prodNameMaxQtyAmt.isSelected = true
@@ -265,45 +276,67 @@ class ShopDtlsMarketAssistFrag : BaseFragment(), View.OnClickListener, OnMapRead
 
         try {
             var lastVisitRecord = AppDatabase.getDBInstance()!!.shopActivityDao().getLastRow(shopObj.shop_id)
-            var lastVisitDate = lastVisitRecord.visited_date!!.replace("T", " ").split(" ").get(0)
-            lastVisitDateTV.text = "Date: " + AppUtils.getFormatedDateNew(lastVisitDate, "yyyy-mm-dd", "dd-mm-yyyy")!!.replace("-", "/") + " " + AppUtils.getDayName(lastVisitDate)
-            //lastVisitDateTV.isSelected = true
-            lastVisitTimeTV.text = "Time: " + AppUtils.getMeredianTimeFromISODateTime(lastVisitRecord.visited_date!!)
+            if(lastVisitRecord == null){
+                val shopDtlObj : AddShopDBModelEntity = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopByIdN(shopObj.shop_id)
+                var lastVisitDate = AppUtils.getFormatedDateNew(AppUtils.changeDateFormat1(shopDtlObj.lastVisitedDate)!!.replace("/", "-"), "dd-mm-yyyy", "yyyy-mm-dd")!!
+                lastVisitDateTV.text = "Date: " + AppUtils.getFormatedDateNew(lastVisitDate,"yyyy-mm-dd","dd-mm-yyyy")!!.replace("-","/") + " " + AppUtils.getDayName(lastVisitDate!!)
+            }else{
+                var lastVisitDate = lastVisitRecord.visited_date!!.replace("T", " ").split(" ").get(0)
+                lastVisitDateTV.text = "Date: " + AppUtils.getFormatedDateNew(lastVisitDate, "yyyy-mm-dd", "dd-mm-yyyy")!!.replace("-", "/") + " " + AppUtils.getDayName(lastVisitDate)
+                //lastVisitDateTV.isSelected = true
+            }
+            try{
+                lastVisitTimeTV.text = "Time: " + AppUtils.getMeredianTimeFromISODateTime(lastVisitRecord.visited_date!!)
+            }catch (ex:Exception){
+                lastVisitTimeTV.text = "Time: " + "N/A"
+            }
+
             var shopActivityL30Days: ArrayList<ShopActivityEntity> = AppDatabase.getDBInstance()!!.shopActivityDao().getShopActivity(shopObj.shop_id) as ArrayList<ShopActivityEntity>
             var durationL: ArrayList<String> = shopActivityL30Days.map { it.duration_spent } as ArrayList<String>
-            var hrTotal = 0
-            var minTotal = 0
-            var secTotal = 0
-            for (i in 0..durationL.size - 1) {
-                var obj = durationL.get(i)
-                hrTotal = hrTotal + obj.split(":").get(0).toInt()
-                minTotal = minTotal + obj.split(":").get(1).toInt()
-                secTotal = secTotal + obj.split(":").get(2).toInt()
-            }
-            if (secTotal > 60) {
-                minTotal = minTotal + secTotal / 60
-                secTotal = secTotal % 60
-            }
-            if (minTotal > 60) {
-                hrTotal = hrTotal + minTotal / 60
-                minTotal = minTotal % 60
+
+            if(durationL.size==0){
+                avgVisitTimeTV.text = "N/A"
+                avgVisitTimeTVCaption.text = ""
+            }else{
+                var hrTotal = 0
+                var minTotal = 0
+                var secTotal = 0
+                for (i in 0..durationL.size - 1) {
+                    var obj = durationL.get(i)
+                    hrTotal = hrTotal + obj.split(":").get(0).toInt()
+                    minTotal = minTotal + obj.split(":").get(1).toInt()
+                    secTotal = secTotal + obj.split(":").get(2).toInt()
+                }
+                if (secTotal > 60) {
+                    minTotal = minTotal + secTotal / 60
+                    secTotal = secTotal % 60
+                }
+                if (minTotal > 60) {
+                    hrTotal = hrTotal + minTotal / 60
+                    minTotal = minTotal % 60
+                }
+
+                var totalAvgTimeInSec = ((hrTotal * 60 * 60) + (minTotal * 60) + secTotal) / durationL.size
+                var avgSec = totalAvgTimeInSec % 60
+                var avgMin = totalAvgTimeInSec / 60
+                var avgHr = avgMin / 60
+                avgMin = avgMin % 60
+
+                var avgDuration: String = ""
+                if (avgHr == 0) {
+                    avgDuration =
+                        avgMin.toInt().toString() + "mins " + avgSec.toInt().toString() + "secs"
+                }
+                else {
+                    avgDuration = avgHr.toInt().toString() + "hrs " + avgMin.toInt()
+                        .toString() + "mins " + avgSec.toInt().toString() + "secs"
+                }
+                avgVisitTimeTV.text = avgDuration
+                avgVisitTimeTVCaption.text = "Per Visit"
             }
 
-            var totalAvgTimeInSec = ((hrTotal * 60 * 60) + (minTotal * 60) + secTotal) / durationL.size
-            var avgSec = totalAvgTimeInSec % 60
-            var avgMin = totalAvgTimeInSec / 60
-            var avgHr = avgMin / 60
-            avgMin = avgMin % 60
 
-            var avgDuration: String = ""
-            if (avgHr == 0) {
-                avgDuration =
-                    avgMin.toInt().toString() + "mins " + avgSec.toInt().toString() + "secs"
-            } else {
-                avgDuration = avgHr.toInt().toString() + "hrs " + avgMin.toInt()
-                    .toString() + "mins " + avgSec.toInt().toString() + "secs"
-            }
-            avgVisitTimeTV.text = avgDuration
+
 
         } catch (ex: Exception) {
             ex.printStackTrace()
@@ -332,13 +365,11 @@ class ShopDtlsMarketAssistFrag : BaseFragment(), View.OnClickListener, OnMapRead
                     var suggestProductLDistinctId = suggestProductL.distinctBy { it.product_id }
                     for (i in 0..suggestProductLDistinctId.size - 1) {
                         var proID = suggestProductLDistinctId.get(i).product_id
-                        productOccuranceL.add(
-                            ProductOccur(
-                                proID,
-                                suggestProductL.count { it.product_id == proID })
-                        )
+                        productOccuranceL.add(ProductOccur(proID, suggestProductL.count { it.product_id == proID }))
                     }
-                    productOccuranceL = ArrayList(productOccuranceL).sortedWith(compareBy { it.occur }).reversed() as ArrayList<ProductOccur>
+                    var sortedL = ArrayList(productOccuranceL).sortedWith(compareBy { it.occur }).reversed()
+                    productOccuranceL.clear()
+                    productOccuranceL.addAll(sortedL)
 
                     for (i in 0..productOccuranceL.size - 1) {
                         var objL = suggestProductL.filter { it.product_id.equals(productOccuranceL.get(i).product_id) } as ArrayList<SuggestiveProduct>
@@ -362,7 +393,7 @@ class ShopDtlsMarketAssistFrag : BaseFragment(), View.OnClickListener, OnMapRead
                 }
                 uiThread {
                     if(suggestProductL.size>0){
-                        rvProductSuggest.adapter = AdapterSuggestiveProduct(mContext, finalSuggestProductList)
+                        rvProductSuggest.adapter = AdapterSuggestiveProduct(mContext,finalSuggestProductList )
                         cvSuggestProdRoot.visibility = View.VISIBLE
                     }else{
                         cvSuggestProdRoot.visibility = View.GONE
@@ -386,24 +417,16 @@ class ShopDtlsMarketAssistFrag : BaseFragment(), View.OnClickListener, OnMapRead
                     var productOccuranceL: ArrayList<ProductOccur> = ArrayList()
                     for (i in 0..suggestProductLDistinctId.size - 1) {
                         var proID = suggestProductLDistinctId.get(i).product_id
-                        var totalQty = suggestProductL.filter { it.product_id.equals(proID) }
-                            .map { it.qty.toDouble() }.sum()
-                        productOccuranceL.add(
-                            ProductOccur(
-                                proID,
-                                suggestProductL.count { it.product_id == proID },
-                                totalQty.toString()
-                            )
-                        )
+                        var totalQty = suggestProductL.filter { it.product_id.equals(proID) }.map { it.qty.toDouble() }.sum()
+                        productOccuranceL.add(ProductOccur(proID, suggestProductL.count { it.product_id == proID }, totalQty.toString()))
                     }
-                    productOccuranceL =
-                        ArrayList(productOccuranceL).sortedWith(compareBy { it.totalQty.toDouble() })
-                            .reversed().reversed() as ArrayList<ProductOccur>
+                    var sortedL = ArrayList(productOccuranceL).sortedWith(compareBy { it.totalQty.toDouble() }).reversed().reversed()
+                    productOccuranceL.clear()
+                    productOccuranceL.addAll(sortedL)
 
                     for (i in 0..productOccuranceL.size - 1) {
                         println("tag_ma $i")
-                        var objL =
-                            suggestProductL.filter { it.product_id.equals(productOccuranceL.get(i).product_id) } as ArrayList<SuggestiveProduct>
+                        var objL = suggestProductL.filter { it.product_id.equals(productOccuranceL.get(i).product_id) } as ArrayList<SuggestiveProduct>
                         var totalOrdValue = 0.0
                         var totalOrdQty = 0.0
                         for (j in 0..objL.size - 1) {
@@ -463,53 +486,65 @@ class ShopDtlsMarketAssistFrag : BaseFragment(), View.OnClickListener, OnMapRead
             for(item in dateNameL.distinct()){
                 fL.add(DT(item!!,Collections.frequency(dateNameL,item)))
             }
-            var maxCnt = fL.maxByOrNull{it.cnt}!!.cnt
-            var minCnt = fL.minByOrNull { it.cnt }!!.cnt
+            var maxCnt = 0
+            var minCnt = 0
+            try{
+                 maxCnt = fL.maxByOrNull{it.cnt}!!.cnt
+                 minCnt = fL.minByOrNull { it.cnt }!!.cnt
+            }catch (ex:Exception){
+                maxCnt = 0
+                minCnt = 0
+            }
+
             var maxDates=""
             var minDates=""
             if(maxCnt == minCnt){
                 var maxDL = fL.filter { it.cnt == maxCnt }.map { it.day } as ArrayList<String>
                 for(j in 0..maxDL.size-1){
-                    maxDates = maxDates+maxDL.get(j).toString()+","
+                    maxDates = maxDates+maxDL.get(j).toString()+", "
                 }
                 minDates="N/A"
+                maxDates = maxDates.dropLast(2)
             }else{
                 var maxDL = fL.filter { it.cnt == maxCnt }.map { it.day } as ArrayList<String>
                 var minDL = fL.filter { it.cnt == minCnt }.map { it.day } as ArrayList<String>
                 for(j in 0..maxDL.size-1){
-                    maxDates = maxDates+maxDL.get(j).toString()+","
+                    maxDates = maxDates+maxDL.get(j).toString()+", "
                 }
                 for(j in 0..minDL.size-1){
-                    minDates = minDates+minDL.get(j).toString()+","
+                    minDates = minDates+minDL.get(j).toString()+", "
                 }
+                maxDates = maxDates.dropLast(2)
+                minDates = minDates.dropLast(2)
             }
-            maxDates = maxDates.dropLast(1)
-            minDates = minDates.dropLast(1)
 
-            var visitDay = dateNameL.groupingBy { it }.eachCount().maxByOrNull{ it.value }.toString().split("=").get(0).toString()
-            var avoidDay = dateNameL.groupingBy { it }.eachCount().minByOrNull{ it.value }.toString().split("=").get(0).toString()
+            //var visitDay = dateNameL.groupingBy { it }.eachCount().maxByOrNull{ it.value }.toString().split("=").get(0).toString()
+            //var avoidDay = dateNameL.groupingBy { it }.eachCount().minByOrNull{ it.value }.toString().split("=").get(0).toString()
             //visitDayTV.text = if(visitDay.equals("null")) "N/A" else visitDay
-            visitDayTV.text = maxDates
-            var avoidD = if(avoidDay.equals("null")) "N/A" else avoidDay
+            visitDayTV.text = if(maxDates.equals("")) "N/A" else maxDates
+            //var avoidD = if(avoidDay.equals("null")) "N/A" else avoidDay
             //avoidDayTV.text = if(avoidD.equals(visitDayTV.text.toString())) "N/A" else avoidD
-            avoidDayTV.text = minDates
+            avoidDayTV.text = if(minDates.equals("")) "N/A" else minDates
 
             var shopActivityL30DaysOrdWise: ArrayList<ShopActivityEntity> = AppDatabase.getDBInstance()!!.shopActivityDao().getShopActivityOrderWise(shopObj.shop_id) as ArrayList<ShopActivityEntity>
             var visitTimeL:ArrayList<String> = shopActivityL30DaysOrdWise.map { it.visited_date!!.replace("T"," ").split(" ").get(1).toString() } as ArrayList<String>
 
-            var avgTime = ""
-            for(j in 0..visitTimeL.size-1){
-                avgTime = avgTime+visitTimeL.get(j)+" "
+            if(visitTimeL.size==0){
+                visitBetweenTV.text = "N/A"
+            }else{
+                var avgTime = ""
+                for(j in 0..visitTimeL.size-1){
+                    avgTime = avgTime+visitTimeL.get(j)+" "
+                }
+                avgTime = AppUtils.avgTime(avgTime.dropLast(1)).toString()
+                var avgHr = AppUtils.avgTime(avgTime.dropLast(1)).toString().split(":").get(0).toInt()
+                var avgMin = AppUtils.avgTime(avgTime.dropLast(1)).toString().split(":").get(1).toInt()
+
+                var pref45Min = AppUtils.addORsubMinInTime(-45,"$avgHr:$avgMin")
+                var later45Min = AppUtils.addORsubMinInTime(45,"$avgHr:$avgMin")
+
+                visitBetweenTV.text = "${AppUtils.getCurrentTimeWithMeredian(pref45Min)} to ${AppUtils.getCurrentTimeWithMeredian(later45Min)}"
             }
-            avgTime = AppUtils.avgTime(avgTime.dropLast(1)).toString()
-            var avgHr = AppUtils.avgTime(avgTime.dropLast(1)).toString().split(":").get(0).toInt()
-            var avgMin = AppUtils.avgTime(avgTime.dropLast(1)).toString().split(":").get(1).toInt()
-
-            var pref45Min = AppUtils.addORsubMinInTime(-45,"$avgHr:$avgMin")
-            var later45Min = AppUtils.addORsubMinInTime(45,"$avgHr:$avgMin")
-
-            visitBetweenTV.text = "${AppUtils.getCurrentTimeWithMeredian(pref45Min)} to ${AppUtils.getCurrentTimeWithMeredian(later45Min)}"
-
             hideProgress()
         }catch (ex:Exception){
             ex.printStackTrace()

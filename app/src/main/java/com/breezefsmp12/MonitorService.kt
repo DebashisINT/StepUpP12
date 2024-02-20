@@ -375,6 +375,8 @@ class MonitorService:Service() {
                 return
             }
             val serviceLauncher = Intent(this, LocationFuzedService::class.java)
+            Timber.d("TAG_CHECK_LOC_SERVICE_STATUS")
+
             if (Pref.user_id != null && Pref.user_id!!.isNotEmpty()) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
@@ -386,6 +388,7 @@ class MonitorService:Service() {
                         .setOverrideDeadline(1000)
                         .build()
 
+                    Timber.d("TAG_CHECK_LOC_SERVICE_STATUS")
                     val resultCode = jobScheduler.schedule(jobInfo)
 
                     if (resultCode == JobScheduler.RESULT_SUCCESS) {

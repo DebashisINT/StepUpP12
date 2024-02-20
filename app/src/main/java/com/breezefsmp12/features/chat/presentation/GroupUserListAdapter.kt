@@ -64,6 +64,7 @@ class GroupUserListAdapter(private val mContext: Context, chatUserList: ArrayLis
                         .apply(RequestOptions.placeholderOf(R.drawable.ic_menu_profile_image).error(R.drawable.ic_menu_profile_image))
                         .into(iv_profile_picture)
 
+
                 if (mChatUserList?.get(adapterPosition)?.isSelected!!)
                     tv_user_name.setTextColor(mContext.resources.getColor(R.color.dark_gray))
                 else

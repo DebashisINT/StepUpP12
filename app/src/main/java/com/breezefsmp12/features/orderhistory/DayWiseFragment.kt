@@ -29,6 +29,7 @@ import com.breezefsmp12.base.BaseResponse
 import com.breezefsmp12.base.presentation.BaseActivity
 import com.breezefsmp12.base.presentation.BaseFragment
 import com.breezefsmp12.features.dashboard.presentation.DashboardActivity
+import com.breezefsmp12.features.location.LocationWizard
 import com.breezefsmp12.features.location.UserLocationDataEntity
 import com.breezefsmp12.features.login.presentation.LoginActivity
 import com.breezefsmp12.features.orderhistory.activitiesapi.LocationFetchRepositoryProvider
@@ -50,6 +51,7 @@ import org.json.JSONObject
 import timber.log.Timber
 import java.io.*
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 /**
@@ -244,38 +246,38 @@ class DayWiseFragment : BaseFragment(), View.OnClickListener {
         val repository = LocationFetchRepositoryProvider.provideLocationFetchRepository()
         progress_wheel.spin()
         BaseActivity.compositeDisposable.add(
-                repository.fetchLocationUpdate(fetchLocReq)
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribeOn(Schedulers.io())
-                        .subscribe({ result ->
-                            val shopList = result as FetchLocationResponse
-                            if (shopList.status == "200") {
-                                convertToModelAndSave(shopList.location_details, shopList.visit_distance)
-                                progress_wheel.stopSpinning()
+            repository.fetchLocationUpdate(fetchLocReq)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe({ result ->
+                    val shopList = result as FetchLocationResponse
+                    if (shopList.status == "200") {
+                        convertToModelAndSave(shopList.location_details, shopList.visit_distance)
+                        progress_wheel.stopSpinning()
 //                                (mContext as DashboardActivity).showSnackMessage("SUCCESS")
-                            } else if (shopList.status == NetworkConstant.SESSION_MISMATCH) {
-                                progress_wheel.stopSpinning()
-                                (mContext as DashboardActivity).clearData()
-                                startActivity(Intent(mContext as DashboardActivity, LoginActivity::class.java))
-                                (mContext as DashboardActivity).overridePendingTransition(0, 0)
-                                (mContext as DashboardActivity).finish()
-                            } else if (shopList.status == NetworkConstant.NO_DATA) {
-                                progress_wheel.stopSpinning()
-                                (mContext as DashboardActivity).showSnackMessage(shopList.message!!)
-                                updateList()
-                            } else {
-                                progress_wheel.stopSpinning()
-                                (mContext as DashboardActivity).showSnackMessage(shopList.message!!)
-                                updateList()
-                            }
+                    } else if (shopList.status == NetworkConstant.SESSION_MISMATCH) {
+                        progress_wheel.stopSpinning()
+                        (mContext as DashboardActivity).clearData()
+                        startActivity(Intent(mContext as DashboardActivity, LoginActivity::class.java))
+                        (mContext as DashboardActivity).overridePendingTransition(0, 0)
+                        (mContext as DashboardActivity).finish()
+                    } else if (shopList.status == NetworkConstant.NO_DATA) {
+                        progress_wheel.stopSpinning()
+                        (mContext as DashboardActivity).showSnackMessage(shopList.message!!)
+                        updateList()
+                    } else {
+                        progress_wheel.stopSpinning()
+                        (mContext as DashboardActivity).showSnackMessage(shopList.message!!)
+                        updateList()
+                    }
 //
-                        }, { error ->
-                            progress_wheel.stopSpinning()
-                            (mContext as DashboardActivity).showSnackMessage(getString(R.string.something_went_wrong))
-                            updateList()
+                }, { error ->
+                    progress_wheel.stopSpinning()
+                    (mContext as DashboardActivity).showSnackMessage(getString(R.string.something_went_wrong))
+                    updateList()
 //                            (mContext as DashboardActivity).showSnackMessage("ERROR")
 
-                        })
+                })
         )
     }
 
@@ -378,6 +380,21 @@ class DayWiseFragment : BaseFragment(), View.OnClickListener {
             Timber.d("network_status=====> " + localData.network_status)
             Timber.d("battery_percentage=====> " + localData.battery_percentage)
 
+            //negative distance handle Suman 06-02-2024 mantis id 0027225 begin
+            try{
+                var distReftify = localData.distance.toDouble()
+                if(distReftify<0){
+                    var locL = AppDatabase.getDBInstance()!!.userLocationDataDao().getLocationUpdateForADay(AppUtils.getCurrentDateForShopActi()) as ArrayList<UserLocationDataEntity>
+                    var lastLoc = locL.get(locL.size-1)
+                    var d = LocationWizard.getDistance(localData.latitude.toDouble(),localData.longitude.toDouble(), lastLoc.latitude.toDouble()   ,lastLoc.longitude.toDouble())
+                    localData.distance = d.toString()
+                }
+            }catch (ex:Exception){
+                ex.printStackTrace()
+                localData.distance = "0.0"
+            }
+            //negative distance handle Suman 06-02-2024 mantis id 0027225 end
+
             AppDatabase.getDBInstance()!!.userLocationDataDao().insert(localData)
 
             Timber.d("=======location added to db (Activity)======")
@@ -454,6 +471,16 @@ class DayWiseFragment : BaseFragment(), View.OnClickListener {
 
         (mContext as DashboardActivity).activityLocationList = list
 
+        if(list.size>0 && Pref.IsRouteStartFromAttendance){
+            try{
+                var locL = AppDatabase.getDBInstance()!!.userLocationDataDao().getLocationUpdateForADay(AppUtils.getCurrentDateForShopActi()) as ArrayList<UserLocationDataEntity>
+                list.add(1,locL.get(1))
+            }catch (ex:Exception){
+                ex.printStackTrace()
+            }
+
+        }
+
         dayWiseAdapter = DayWiseAdapter(mContext, list)
         layoutManager = LinearLayoutManager(mContext, LinearLayout.VERTICAL, false)
         dayWiseHistory.layoutManager = layoutManager
@@ -467,8 +494,8 @@ class DayWiseFragment : BaseFragment(), View.OnClickListener {
         when (p0!!.id) {
             R.id.pick_a_date_TV -> {
                 val datePicker = DatePickerDialog(mContext, R.style.DatePickerTheme, date, myCalendar
-                        .get(Calendar.YEAR), myCalendar.get(Calendar.MONTH),
-                        myCalendar.get(Calendar.DAY_OF_MONTH))
+                    .get(Calendar.YEAR), myCalendar.get(Calendar.MONTH),
+                    myCalendar.get(Calendar.DAY_OF_MONTH))
                 datePicker.datePicker.maxDate = Calendar.getInstance(Locale.ENGLISH).timeInMillis
                 datePicker.show()
             }
@@ -816,61 +843,61 @@ class DayWiseFragment : BaseFragment(), View.OnClickListener {
             progress_wheel.spin()
 
             BaseActivity.compositeDisposable.add(
-                    repository.sendLocationUpdate(locationUpdateReq)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
-                            .subscribe({ result ->
-                                val updateShopActivityResponse = result as BaseResponse
+                repository.sendLocationUpdate(locationUpdateReq)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe({ result ->
+                        val updateShopActivityResponse = result as BaseResponse
 
-                                Timber.d("syncLocationActivity (Activity Screen) : RESPONSE : " + updateShopActivityResponse.status + ":" + updateShopActivityResponse.message)
+                        Timber.d("syncLocationActivity (Activity Screen) : RESPONSE : " + updateShopActivityResponse.status + ":" + updateShopActivityResponse.message)
 
-                                if (updateShopActivityResponse.status == NetworkConstant.SUCCESS) {
-                                    doAsync {
+                        if (updateShopActivityResponse.status == NetworkConstant.SUCCESS) {
+                            doAsync {
 
-                                        for (i in 0 until locationListAllId/*locationList*/.size) {
+                                for (i in 0 until locationListAllId/*locationList*/.size) {
 
-                                            //AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploaded(true, locationList[i].locationId.toInt())
+                                    //AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploaded(true, locationList[i].locationId.toInt())
 
-                                            if (syncList != null && syncList.isNotEmpty()) {
+                                    if (syncList != null && syncList.isNotEmpty()) {
 
-                                                if (i == 0) {
-                                                    AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploadedFor5Items(true, syncList[syncList.size - 1].locationId.toInt(), locationListAllId[i].locationId.toInt())
-                                                }else {
-                                                    AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploadedFor5Items(true, locationListAllId[i - 1].locationId.toInt(), locationListAllId[i].locationId.toInt())
-                                                }
-                                            } else {
-                                                if (i == 0) {
-                                                    AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploaded(true, locationListAllId[i].locationId.toInt())
-                                                }else {
-                                                    AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploadedFor5Items(true, locationListAllId[i - 1].locationId.toInt(), locationListAllId[i].locationId.toInt())
-                                                }
-                                            }
+                                        if (i == 0) {
+                                            AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploadedFor5Items(true, syncList[syncList.size - 1].locationId.toInt(), locationListAllId[i].locationId.toInt())
+                                        }else {
+                                            AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploadedFor5Items(true, locationListAllId[i - 1].locationId.toInt(), locationListAllId[i].locationId.toInt())
                                         }
-
-                                        uiThread {
-                                            progress_wheel.stopSpinning()
-                                            AppUtils.isLocationActivityUpdating = false
-
-                                            fetchSortedList()
-                                            initAdapter()
+                                    } else {
+                                        if (i == 0) {
+                                            AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploaded(true, locationListAllId[i].locationId.toInt())
+                                        }else {
+                                            AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploadedFor5Items(true, locationListAllId[i - 1].locationId.toInt(), locationListAllId[i].locationId.toInt())
                                         }
                                     }
-                                } else {
+                                }
+
+                                uiThread {
                                     progress_wheel.stopSpinning()
                                     AppUtils.isLocationActivityUpdating = false
-                                }
 
-                            }, { error ->
-                                AppUtils.isLocationActivityUpdating = false
-                                progress_wheel.stopSpinning()
-                                if (error == null) {
-                                    Timber.d("syncLocationActivity (Activity Screen) : ERROR : " + "UNEXPECTED ERROR IN LOCATION ACTIVITY API")
-                                } else {
-                                    Timber.d("syncLocationActivity (Activity Screen) : ERROR : " + error.localizedMessage)
-                                    error.printStackTrace()
+                                    fetchSortedList()
+                                    initAdapter()
                                 }
+                            }
+                        } else {
+                            progress_wheel.stopSpinning()
+                            AppUtils.isLocationActivityUpdating = false
+                        }
 
-                            })
+                    }, { error ->
+                        AppUtils.isLocationActivityUpdating = false
+                        progress_wheel.stopSpinning()
+                        if (error == null) {
+                            Timber.d("syncLocationActivity (Activity Screen) : ERROR : " + "UNEXPECTED ERROR IN LOCATION ACTIVITY API")
+                        } else {
+                            Timber.d("syncLocationActivity (Activity Screen) : ERROR : " + error.localizedMessage)
+                            error.printStackTrace()
+                        }
+
+                    })
             )
         } else
             AppUtils.isLocationActivityUpdating = false
@@ -952,7 +979,8 @@ class DayWiseFragment : BaseFragment(), View.OnClickListener {
         }
 
         val configValues = JSONObject()
-        configValues.put("min_accuracy", AppUtils.minAccuracy)
+        //configValues.put("min_accuracy", AppUtils.minAccuracy)
+        configValues.put("min_accuracy", Pref.minAccuracy)
         configValues.put("max_accuracy", AppUtils.maxAccuracy)
         configValues.put("min_distance", AppUtils.minDistance)
         configValues.put("max_distance", AppUtils.maxDistance)

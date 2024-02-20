@@ -160,7 +160,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_add_order_icon"
+                    android:drawableStart="@drawable/icon_home_svg"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
@@ -181,6 +181,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="Photo Registration"
+                    android:drawableTint="@color/white"
                     android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible"
@@ -192,6 +193,7 @@
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
                     android:drawableStart="@drawable/ic_attendance_machine"
+                    android:drawableTint="@color/white"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
@@ -240,12 +242,12 @@
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
                     android:drawableStart="@drawable/ic_attendance"
+                    android:drawableTint="@color/white"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="Attendance Clear"
-                    android:drawableTint="@color/white"
                     android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
@@ -255,7 +257,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_bot"
+                    android:drawableStart="@drawable/ic_bot1"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
@@ -274,6 +276,7 @@
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
+                    android:drawableTint="@color/white"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="Distributor Wise Order List"
                     android:textColor="@color/lightest_gray"
@@ -285,7 +288,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_changepas"
+                    android:drawableStart="@drawable/ic_changepas1"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
@@ -299,7 +302,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_add_attendance_icon"
+                    android:drawableStart="@drawable/ic_add_attendance_icon_1"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
@@ -313,7 +316,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_attendance_icon"
+                    android:drawableStart="@drawable/ic_view_attendance"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
@@ -327,7 +330,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_add_attendance_icon"
+                    android:drawableStart="@drawable/ic_add_attendance_icon2"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
@@ -341,7 +344,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_applyleave"
+                    android:drawableStart="@drawable/ic_applyleave1"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
@@ -380,11 +383,26 @@
                     android:visibility="visible" />
 
                 <com.breezefsmp12.widgets.AppCustomTextView
+                    android:id="@+id/contacts_TV"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawableStart="@drawable/ic_userclient"
+                    android:drawablePadding="@dimen/_15sdp"
+                    android:paddingLeft="@dimen/_17sdp"
+                    android:paddingTop="@dimen/_15sdp"
+                    android:paddingRight="@dimen/_17sdp"
+                    android:paddingBottom="@dimen/_7sdp"
+                    android:text="Contacts"
+                    android:textColor="@color/lightest_gray"
+                    android:textSize="@dimen/_12sdp"
+                    android:visibility="visible" />
+
+                <com.breezefsmp12.widgets.AppCustomTextView
                     android:id="@+id/menu_beat_TV"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_nearby_new"
+                    android:drawableStart="@drawable/ic_nearby_new1"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
@@ -435,20 +453,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="Survey"
-                    android:textColor="@color/lightest_gray"
-                    android:textSize="@dimen/_12sdp" />
-
-                <com.breezefsmp12.widgets.AppCustomTextView
-                    android:id="@+id/assigned_lead_TV"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_professional_skills_lead"
-                    android:paddingBottom="@dimen/_7sdp"
-                    android:paddingLeft="@dimen/_17sdp"
-                    android:paddingRight="@dimen/_17sdp"
-                    android:paddingTop="@dimen/_15sdp"
-                    android:text="Assigned Lead"
+                    android:drawableTint="@color/white"
                     android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp" />
 
@@ -456,11 +461,25 @@
                 ‘Task Management’ should be implemented in the menu bar.-->
 
                 <com.breezefsmp12.widgets.AppCustomTextView
+                    android:id="@+id/assigned_lead_TV"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawableStart="@drawable/ic_professional_skills_lead"
+                    android:drawablePadding="@dimen/_15sdp"
+                    android:paddingLeft="@dimen/_17sdp"
+                    android:paddingTop="@dimen/_15sdp"
+                    android:paddingRight="@dimen/_17sdp"
+                    android:paddingBottom="@dimen/_7sdp"
+                    android:text="Assigned Lead"
+                    android:textColor="@color/lightest_gray"
+                    android:textSize="@dimen/_12sdp" />
+
+                <com.breezefsmp12.widgets.AppCustomTextView
                     android:id="@+id/task_management_TV"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_professional_skills_lead"
+                    android:drawableStart="@drawable/ic_professional_skills_lead1"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
@@ -498,6 +517,7 @@
                     android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible"
+                    android:drawableTint="@color/white"
                     android:gravity="center_vertical"/>
 
                 <com.breezefsmp12.widgets.AppCustomTextView
@@ -505,7 +525,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_order_history_icon"
+                    android:drawableStart="@drawable/ic_order_history_icon1"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
@@ -519,7 +539,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_performance"
+                    android:drawableStart="@drawable/ic_performance1"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
@@ -540,6 +560,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/quotation"
+                    android:drawableTint="@color/white"
                     android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp" />
 
@@ -548,7 +569,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_order_icon"
+                    android:drawableStart="@drawable/ic_order_icon1"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
@@ -599,7 +620,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:drawablePadding="@dimen/_15sdp"
-                        android:drawableStart="@drawable/ic_collection"
+                        android:drawableStart="@drawable/ic_collection1"
                         android:paddingBottom="@dimen/_7sdp"
                         android:paddingLeft="@dimen/_17sdp"
                         android:paddingRight="@dimen/_17sdp"
@@ -744,7 +765,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/_15sdp"
-                    android:drawableStart="@drawable/ic_reimbursement_icon"
+                    android:drawableStart="@drawable/ic_reimbursement_icon1"
                     android:paddingBottom="@dimen/_7sdp"
                     android:paddingLeft="@dimen/_17sdp"
                     android:paddingRight="@dimen/_17sdp"
@@ -766,6 +787,7 @@
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/list_of_party"
                     android:textColor="@color/lightest_gray"
+                    android:drawableTint="@color/white"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible"
                     android:gravity="center_vertical"/>
@@ -845,6 +867,7 @@
                     android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible"
+                    android:drawableTint="@color/white"
                     android:gravity="center_vertical"/>
 
                 <com.breezefsmp12.widgets.AppCustomTextView
@@ -992,6 +1015,7 @@
                     android:text="@string/dynamic"
                     android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
+                    android:drawableTint="@color/white"
                     android:visibility="visible"
                     android:gravity="center_vertical"/>
 
@@ -1006,6 +1030,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/map_view"
+                    android:drawableTint="@color/white"
                     android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
@@ -1021,6 +1046,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/share_log"
+                    android:drawableTint="@color/white"
                     android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
@@ -1036,6 +1062,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/share_loc"
+                    android:drawableTint="@color/white"
                     android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
                     android:visibility="visible" />
@@ -1083,6 +1110,7 @@
                     android:text="@string/doc_repo"
                     android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
+                    android:drawableTint="@color/white"
                     android:visibility="visible" />
 
                 <com.breezefsmp12.widgets.AppCustomTextView
@@ -1134,12 +1162,12 @@
                     android:id="@+id/permission_info_TV"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:drawablePadding="@dimen/_15sdp"
                     android:drawableStart="@drawable/ic_permisioninfo_new"
-                    android:paddingBottom="@dimen/_7sdp"
+                    android:drawablePadding="@dimen/_15sdp"
                     android:paddingLeft="@dimen/_17sdp"
-                    android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
+                    android:paddingRight="@dimen/_17sdp"
+                    android:paddingBottom="@dimen/_7sdp"
                     android:text="@string/permission_info"
                     android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp"
@@ -1234,6 +1262,7 @@
                     android:paddingRight="@dimen/_17sdp"
                     android:paddingTop="@dimen/_15sdp"
                     android:text="@string/sync_logout"
+                    android:drawableTint="@color/white"
                     android:textColor="@color/lightest_gray"
                     android:textSize="@dimen/_12sdp" />
 

@@ -4,6 +4,7 @@ package com.breezefsmp12.features.dashboard.presentation
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.annotation.TargetApi
 import android.app.Activity
 import android.app.Dialog
 import android.app.NotificationManager
@@ -11,6 +12,7 @@ import android.app.PendingIntent
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
 import android.content.*
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -19,8 +21,13 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.location.Location
 import android.location.LocationManager
+import android.media.MediaPlayer
+import android.media.RingtoneManager
 import android.net.*
 import android.os.*
+import android.provider.CallLog
+import android.provider.ContactsContract
+import android.provider.ContactsContract.CommonDataKinds
 import android.provider.MediaStore
 import android.provider.Settings
 import android.speech.RecognizerIntent
@@ -45,6 +52,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.work.*
 import com.android.volley.AuthFailureError
 import com.android.volley.Response
@@ -56,6 +64,7 @@ import com.breezefsmp12.*
 import com.breezefsmp12.R
 import com.breezefsmp12.app.*
 import com.breezefsmp12.app.NewFileUtils.browseDocuments
+import com.breezefsmp12.app.NewFileUtils.browsePDFDocuments
 import com.breezefsmp12.app.NewFileUtils.getExtension
 import com.breezefsmp12.app.domain.*
 import com.breezefsmp12.app.types.DashboardType
@@ -119,6 +128,14 @@ import com.breezefsmp12.features.commondialogsinglebtn.AddFeedbackSingleBtnDialo
 import com.breezefsmp12.features.commondialogsinglebtn.CommonDialogSingleBtn
 import com.breezefsmp12.features.commondialogsinglebtn.OnDialogClickListener
 import com.breezefsmp12.features.commondialogsinglebtn.TermsAndConditionsSingleBtnDialog
+import com.breezefsmp12.features.contacts.ContactDtls
+import com.breezefsmp12.features.contacts.ContactGr
+import com.breezefsmp12.features.contacts.ContactsAddFrag
+import com.breezefsmp12.features.contacts.ContactsFrag
+import com.breezefsmp12.features.contacts.SchedulerViewFrag
+import com.breezefsmp12.features.contacts.SchedulerAddFormFrag
+import com.breezefsmp12.features.contacts.TemplateAddFrag
+import com.breezefsmp12.features.contacts.TemplateViewFrag
 import com.breezefsmp12.features.dailyPlan.prsentation.AllShopListFragment
 import com.breezefsmp12.features.dailyPlan.prsentation.DailyPlanListFragment
 import com.breezefsmp12.features.dailyPlan.prsentation.PlanDetailsFragment
@@ -165,6 +182,9 @@ import com.breezefsmp12.features.login.model.alarmconfigmodel.AlarmConfigDataMod
 import com.breezefsmp12.features.login.presentation.LoginActivity
 import com.breezefsmp12.features.logout.presentation.api.LogoutRepositoryProvider
 import com.breezefsmp12.features.logoutsync.presentation.LogoutSyncFragment
+import com.breezefsmp12.features.marketAssist.MarketAssistTabFrag
+import com.breezefsmp12.features.marketAssist.ShopDtlsMarketAssistFrag
+import com.breezefsmp12.features.marketAssist.ShopListMarketAssistFrag
 import com.breezefsmp12.features.marketing.presentation.MarketingPagerFragment
 import com.breezefsmp12.features.meetinglist.prsentation.MeetingListFragment
 import com.breezefsmp12.features.member.MapViewForTeamFrag
@@ -187,6 +207,7 @@ import com.breezefsmp12.features.nearbyshops.multipleattachImage.MultipleImageFr
 import com.breezefsmp12.features.nearbyshops.presentation.BeatListFragment
 import com.breezefsmp12.features.nearbyshops.presentation.NearByShopsListFragment
 import com.breezefsmp12.features.nearbyshops.presentation.NewNearByShopsListFragment
+import com.breezefsmp12.features.nearbyshops.presentation.ShopCallHisFrag
 import com.breezefsmp12.features.nearbyuserlist.presentation.NearbyUserListFragment
 import com.breezefsmp12.features.newcollection.CollectionDetailsStatusFragment
 import com.breezefsmp12.features.newcollection.CollectionShopListFragment
@@ -209,7 +230,9 @@ import com.breezefsmp12.features.performance.GpsStatusFragment
 import com.breezefsmp12.features.performance.PerformanceFragment
 import com.breezefsmp12.features.performance.api.UpdateGpsStatusRepoProvider
 import com.breezefsmp12.features.performance.model.UpdateGpsInputParamsModel
+import com.breezefsmp12.features.performanceAPP.OwnPerformanceFragment
 import com.breezefsmp12.features.performanceAPP.PerformanceAppFragment
+import com.breezefsmp12.features.performanceAPP.allPerformanceFrag
 import com.breezefsmp12.features.permissionList.ViewPermissionFragment
 import com.breezefsmp12.features.photoReg.*
 import com.breezefsmp12.features.privacypolicy.PrivacypolicyWebviewFrag
@@ -226,6 +249,7 @@ import com.breezefsmp12.features.stock.StockListFragment
 import com.breezefsmp12.features.stockAddCurrentStock.AddShopStockFragment
 import com.breezefsmp12.features.stockAddCurrentStock.UpdateShopStockFragment
 import com.breezefsmp12.features.stockAddCurrentStock.ViewStockDetailsFragment
+import com.breezefsmp12.features.stockAddCurrentStock.model.MultipleImageFileUploadonStock
 import com.breezefsmp12.features.stockCompetetorStock.AddCompetetorStockFragment
 import com.breezefsmp12.features.stockCompetetorStock.CompetetorStockFragment
 import com.breezefsmp12.features.stockCompetetorStock.ViewComStockProductDetails
@@ -276,6 +300,7 @@ import com.theartofdev.edmodo.cropper.CropImage
 import com.theartofdev.edmodo.cropper.CropImageView
 import com.themechangeapp.pickimage.PermissionHelper
 import com.themechangeapp.pickimage.PermissionHelper.Companion.REQUEST_CODE_DOCUMENT
+import com.themechangeapp.pickimage.PermissionHelper.Companion.REQUEST_CODE_DOCUMENT_PDF
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_dashboard_new.*
@@ -289,15 +314,11 @@ import org.json.JSONArray
 import org.json.JSONObject
 import timber.log.Timber
 import java.io.*
+import java.sql.Date
 import java.util.*
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
-import android.R.attr.name
-import com.breezefsmp12.app.NewFileUtils.browsePDFDocuments
-import com.breezefsmp12.features.marketAssist.ShopDtlsMarketAssistFrag
-import com.breezefsmp12.features.marketAssist.ShopListMarketAssistFrag
-import com.breezefsmp12.features.stockAddCurrentStock.model.MultipleImageFileUploadonStock
-import com.themechangeapp.pickimage.PermissionHelper.Companion.REQUEST_CODE_DOCUMENT_PDF
+import kotlin.collections.ArrayList
 
 
 /*
@@ -327,6 +348,8 @@ import com.themechangeapp.pickimage.PermissionHelper.Companion.REQUEST_CODE_DOCU
 // REv 20.0 DashboardActivity AppV 4.0.8 saheli    08/05/2023 0026024 :under the 'Assigned Lead' page
 // Rev 21.0 DashboardActivity AppV 4.0.8 saheli    12/05/2023 mantis 26101
 // Rev 22.0 DashboardActivity AppV 4.1.3 Suman 18-05-2023  mantis 26162
+// rev 23.0 DashobaordActivity  AppV 4.1.6  Saheli    19/06/2023 pdf remark field mantis 26139
+// Rev 24.0 DashboardACtivity v 4.1.6 stock optmization mantis 0026391 20-06-2023 saheli
 class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, OnCompleteListener<Void>, GpsStatusDetector.GpsStatusDetectorCallBack {
     override fun onComplete(task: Task<Void>) {
         mPendingGeofenceTask = PendingGeofenceTask.NONE;
@@ -354,6 +377,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
     @SuppressLint("MissingPermission")
     override fun loadFragment(mFragType: FragType, addToStack: Boolean, initializeObject: Any) {
         AppUtils.contx = this
+        Pref.IsLoggedIn = true
 
         drawerLayout.closeDrawers()
 
@@ -376,20 +400,465 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             //println("fcm_token " + token.toString());
             Timber.d("token : " + token.toString())
         })
-        println("load_frag " + mFragType.toString() + "     " + Pref.user_id.toString()+" "+Pref.IsBeatPlanAvailable +" "+Pref.IsShowReimbursementTypeInAttendance);
 
-        //val distance = LocationWizard.getDistance(22.4339117,	87.3366233, 22.52156	,87.3279733)
-        //Pref.isExpenseFeatureAvailable = false
-        Timber.d("dash_frag ends ${AppUtils.getCurrentDateTime()} ${Pref.current_latitude} ${Pref.current_latitude}")
+        //begin Suman 21-09-2023 mantis id 0026837
+        try{
+            val packageName = "com.google.android.apps.maps"
+            val appInfo: ApplicationInfo = this.getPackageManager().getApplicationInfo(packageName, 0)
+            var appstatus = appInfo.enabled
 
-        if (addToStack) {
+            if(!appstatus && !mFragType.equals(FragType.DashboardFragment)){
+                val simpleDialog = Dialog(mContext)
+                simpleDialog.setCancelable(false)
+                simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                simpleDialog.setContentView(R.layout.dialog_ok)
+                val dialogHeader = simpleDialog.findViewById(R.id.dialog_yes_header_TV) as AppCustomTextView
+                dialogHeader.text = "Location will be inappropriate as Google map is disabled. Please go to settings of your phone and Enable Google Map. Thank you."
+                val dialogYes = simpleDialog.findViewById(R.id.tv_dialog_yes) as AppCustomTextView
+                dialogYes.setOnClickListener({ view ->
+                    simpleDialog.cancel()
+                })
+                simpleDialog.show()
+                return
+            }else{
+                println("load_frag " +" gmap app enable")
+            }
+
+            //val pInfo = this.packageManager.getPackageInfo("com.google.android.apps.maps", PackageManager.GET_PERMISSIONS)
+            //val version = pInfo.versionName
+        }catch (ex:Exception){
+            ex.printStackTrace()
+        }
+        //end Suman 21-09-2023 mantis id 0026837
+        if(mFragType.equals(FragType.DashboardFragment) && !mFragType.equals(FragType.LogoutSyncFragment)){
+            Pref.IsAnyPageVisitFromDshboard = false
+            println("dasg_tag if")
+        }else{
+            Pref.IsAnyPageVisitFromDshboard = true
+            println("dasg_tag else")
+        }
+
+   /*     var fgg = getPhoneBookGroups()
+        contactDtls=ArrayList()
+        for(i in 1..fgg.size-1){
+           var ar = getContactsForGroup1(fgg.get(i).gr_id,fgg.get(i).gr_name)
+            var gg = "asd"
+        }*/
+        //getNamePhoneDetails()
+        //initPermissionCheckOne()
+        Pref.MultiVisitIntervalInMinutes = "1"
+       // Pref.IsShowCustomerLocationShare = true
+        //var dist = LocationWizard.getDistance(21.2551583,83.7234367, 21.2095733   ,83.652335)
+
+
+        //var dd = LocationWizard.getDistance(21.2669767, 83.7599163, 21.1971222, 83.7486477)
+
+        println("load_frag " + mFragType.toString() + "     " + Pref.user_id.toString()+" ")
+
+        batteryCheck(mFragType,addToStack,initializeObject)
+        /*if (addToStack) {
             mTransaction.add(R.id.frame_layout_container, getFragInstance(mFragType, initializeObject, true)!!, mFragType.toString())
             mTransaction.addToBackStack(mFragType.toString()).commitAllowingStateLoss()
         } else {
             mTransaction.replace(R.id.frame_layout_container, getFragInstance(mFragType, initializeObject, true)!!, mFragType.toString())
             mTransaction.commitAllowingStateLoss()
+        }*/
+
+    }
+
+
+
+
+    var contactDtls : ArrayList<ContactDtls> = ArrayList()
+    private fun getPhoneBookGroups(): ArrayList<ContactGr> {
+        val groups : ArrayList<ContactGr> = ArrayList()
+
+        val projection = arrayOf(ContactsContract.Groups._ID, ContactsContract.Groups.TITLE)
+        val cursor = contentResolver.query(ContactsContract.Groups.CONTENT_URI, projection, null, null, null)
+        cursor?.use {
+            while (it.moveToNext()) {
+                val groupName = it.getString(it.getColumnIndex(ContactsContract.Groups.TITLE))
+                val groupId = it.getString(it.getColumnIndex(ContactsContract.Groups._ID))
+                if(!groups.map { it.gr_name }.contains(groupName)){
+                    groups.add(ContactGr(groupId,groupName))
+                    println("tag_contact $groupId $groupName")
+                }
+
+            }
+        }
+        return groups
+    }
+
+    /*fun getContactsOfGroup(group: Group): Cursor? {
+        // getting ids of contacts that are in this specific group
+        val where = ((ContactsContract.CommonDataKinds.GroupMembership.GROUP_ROW_ID + "="
+                + group.id) + " AND "
+                + ContactsContract.CommonDataKinds.GroupMembership.MIMETYPE + "='"
+                + ContactsContract.CommonDataKinds.GroupMembership.CONTENT_ITEM_TYPE + "'")
+        val query = context.contentResolver.query(
+            ContactsContract.Data.CONTENT_URI, arrayOf(
+                ContactsContract.CommonDataKinds.GroupMembership.CONTACT_ID
+            ), where, null, ContactsContract.Data.DISPLAY_NAME + " COLLATE LOCALIZED ASC"
+        )
+        var ids = ""
+        query!!.moveToFirst()
+        while (!query.isAfterLast) {
+            ids += "," + query.getString(0)
+            query.moveToNext()
+        }
+        if (ids.length > 0) {
+            ids = ids.substring(1)
         }
 
+        // getting all of information of contacts. it fetches all of number from every one
+        val projection = arrayOf(
+            "_id",
+            "contact_id",
+            "lookup",
+            "display_name",
+            "data1",
+            "photo_id",
+            "data2"
+        )
+        val selection =
+            (("mimetype ='" + ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE + "'"
+                    + " AND account_name='" + group.accountName) + "' AND account_type='" + group.accountType + "'"
+                    + " AND contact_id in (" + ids + ")")
+        return context.contentResolver.query(BASE_URI, projection, selection, null, null)
+    }*/
+
+    private fun initPermissionCheckOne() {
+        var permissionList = arrayOf<String>( Manifest.permission.READ_CALL_LOG, Manifest.permission.WRITE_CALL_LOG,Manifest.permission.READ_CONTACTS)
+        permissionUtils = PermissionUtils(this, object : PermissionUtils.OnPermissionListener {
+            @TargetApi(Build.VERSION_CODES.M)
+            override fun onPermissionGranted() {
+
+                //Toaster.msgShort(this@DashboardActivity,"PG")
+                //var t1 = obtenerDetallesLlamadas(this@DashboardActivity)
+                //var t2 = getNamePhoneDetails()
+                var t4="456"
+            }
+            override fun onPermissionNotGranted() {
+
+            }
+        },permissionList)
+    }
+
+    @SuppressLint("Range")
+
+
+    data class Contact(val id:String="",val name:String="",val number:String="")
+
+    public fun getNamePhoneDetails(): ArrayList<Contact>? {
+        val names:ArrayList<Contact> = ArrayList()
+        val cr = contentResolver
+        val cur = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
+            null, null, null)
+        if (cur!!.count > 0) {
+            while (cur.moveToNext()) {
+                val id = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NAME_RAW_CONTACT_ID))
+                val name = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME))
+                val number = cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                val grr =cur.getString(cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DATA1))
+                names.add(Contact(id , name , number))
+            }
+        }
+        return names
+    }
+
+    fun getContactsForGroup(groupID: String, activity: Activity): HashMap<String, String>? {
+        val dataCursor = activity.contentResolver.query(
+            ContactsContract.Data.CONTENT_URI, arrayOf( // PROJECTION
+                ContactsContract.Data.CONTACT_ID,
+                ContactsContract.Data.DISPLAY_NAME,  // contact name
+                ContactsContract.Data.DATA1 // group
+            ),
+            ContactsContract.Data.MIMETYPE + " = ? " + "AND " +  // SELECTION
+                    ContactsContract.Data.DATA1 + " = ? ", arrayOf( // SELECTION_ARGS
+                ContactsContract.CommonDataKinds.GroupMembership.CONTENT_ITEM_TYPE,
+                groupID
+            ),
+            null
+        )
+        dataCursor!!.moveToFirst()
+        val map = HashMap<String, String>()
+        while (dataCursor.moveToNext()) //
+        {
+            val s0 = dataCursor.getString(0) //contact_id
+            val s1 = dataCursor.getString(1) //contact_name
+            val s2 = dataCursor.getString(2) //group_id
+            Log.d("tag", "contact_id: $s0  contact: $s1   groupID: $s2")
+            map[s0] = s1
+        }
+        return map
+    }
+
+    fun getContactsForGroup1(grId:String,grName:String):ArrayList<ContactDtls>{
+        val groupId: String = grId
+        val cProjection = arrayOf<String>(ContactsContract.Contacts.DISPLAY_NAME, CommonDataKinds.GroupMembership.CONTACT_ID)
+
+        val groupCursor = contentResolver.query(
+            ContactsContract.Data.CONTENT_URI,
+            cProjection,
+            CommonDataKinds.GroupMembership.GROUP_ROW_ID + "= ?" + " AND "
+                    + CommonDataKinds.GroupMembership.MIMETYPE + "='"
+                    + CommonDataKinds.GroupMembership.CONTENT_ITEM_TYPE + "'",
+            arrayOf<String>(groupId.toString()),
+            null
+        )
+        if (groupCursor != null && groupCursor.moveToFirst()) {
+            do {
+                val nameCoumnIndex = groupCursor.getColumnIndex(CommonDataKinds.Phone.DISPLAY_NAME)
+                val name = groupCursor.getString(nameCoumnIndex)
+                val contactId =
+                    groupCursor.getLong(groupCursor.getColumnIndex(CommonDataKinds.GroupMembership.CONTACT_ID))
+                val numberCursor = contentResolver.query(
+                    CommonDataKinds.Phone.CONTENT_URI,
+                    arrayOf<String>(CommonDataKinds.Phone.NUMBER),
+                    CommonDataKinds.Phone.CONTACT_ID + "=" + contactId,
+                    null,
+                    null
+                )
+                if (numberCursor!!.moveToFirst()) {
+                    val numberColumnIndex = numberCursor!!.getColumnIndex(CommonDataKinds.Phone.NUMBER)
+                    do {
+                        val phoneNumber = numberCursor!!.getString(numberColumnIndex)
+                        Log.d("your tag", "contact $name:$phoneNumber")
+                        println("tag_contact for grId ${groupId} contact $name:$phoneNumber")
+                        var ph = phoneNumber.toString().replace(" ","")
+                        if(!contactDtls.map { it.number }.contains(ph)){
+                            contactDtls.add(ContactDtls(grName,name,ph))
+                        }
+                    } while (numberCursor!!.moveToNext())
+                    numberCursor!!.close()
+                }
+            } while (groupCursor.moveToNext())
+            groupCursor.close()
+        }
+        return contactDtls
+    }
+
+    data class PhoneCallDtls(var number:String?="",var type:String?="",var callDate:String?="",var callDateTime:String?="",var callDuration:String?="")
+
+    fun obtenerDetallesLlamadas(context: Context): ArrayList<PhoneCallDtls>? {
+        //public static String obtenerDetallesLlamadas(Context context) {
+        try {
+            val stringBuffer = StringBuffer()
+            val cursor = context.contentResolver.query(
+                CallLog.Calls.CONTENT_URI,
+                null, null, null, CallLog.Calls.DATE + " DESC"
+            )
+            val number = cursor!!.getColumnIndex(CallLog.Calls.NUMBER)
+            val type = cursor.getColumnIndex(CallLog.Calls.TYPE)
+            val date = cursor.getColumnIndex(CallLog.Calls.DATE)
+            val duration = cursor.getColumnIndex(CallLog.Calls.DURATION)
+
+            val phoneCallRecord = ArrayList<PhoneCallDtls>()
+
+            while (cursor.moveToNext()) {
+                val phNumber = cursor.getString(number)
+                val callType = cursor.getString(type)
+                val callDate = cursor.getString(date)
+                val callDayTime = Date(java.lang.Long.valueOf(callDate))
+                var callDateTime = AppUtils.getDateTimeFromTimeStamp(callDate.toLong())
+                val callDuration = cursor.getString(duration)
+                var dir: String? = null
+                val dircode = callType.toInt()
+                when (dircode) {
+                    CallLog.Calls.OUTGOING_TYPE -> dir = "OUTGOING"
+                    CallLog.Calls.INCOMING_TYPE -> dir = "INCOMING"
+                    CallLog.Calls.MISSED_TYPE -> dir = "MISSED"
+                }
+                stringBuffer.append(
+                    "\nPhone Number:--- " + phNumber + " \nCall Type:--- "
+                            + dir + " \nCall Date:--- " + callDayTime
+                            + " \nCall duration in sec :--- " + callDuration
+                )
+                stringBuffer.append("\n----------------------------------")
+
+                try{
+                    val obj = PhoneCallDtls()
+                    obj.number = phNumber
+                    obj.type = dir
+                    obj.callDate = callDate
+                    obj.callDateTime = callDateTime
+                    obj.callDuration = callDuration
+                    phoneCallRecord.add(obj)
+                }catch (ex:Exception){
+                    ex.printStackTrace()
+                }
+
+            }
+            cursor.close()
+            return phoneCallRecord
+            //return stringBuffer.toString();
+        } catch (ex: java.lang.Exception) {
+            ex.printStackTrace()
+        }
+        return null
+    }
+
+
+    fun batteryCheck(mFragType: FragType, addToStack: Boolean, initializeObject: Any){
+        val mTransaction = supportFragmentManager.beginTransaction()
+        mTransaction.setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out, android.R.anim.fade_in, android.R.anim.fade_out)
+        try{
+            val pm = mContext.getSystemService(Context.POWER_SERVICE) as PowerManager
+            var sett = pm.isIgnoringBatteryOptimizations(packageName)
+            if(!mFragType.equals(FragType.DashboardFragment) && sett==false && !mFragType.equals(FragType.LogoutSyncFragment)){
+                val simpleDialog = Dialog(mContext)
+                simpleDialog.setCancelable(false)
+                simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                simpleDialog.setContentView(R.layout.dialog_ok_logout)
+                val dialogHeader = simpleDialog.findViewById(R.id.dialog_yes_header_TV) as AppCustomTextView
+                var msgHead = "App battery Saver is turned on. Please follow the below settings."
+                if(AppUtils.getDeviceName().contains("MI",ignoreCase = true) || AppUtils.getDeviceName().contains("Redmi",ignoreCase = true) ||
+                    AppUtils.getDeviceName().contains("Poco",ignoreCase = true)){
+                    dialogHeader.text = msgHead+" "+"Go to Settings -> Apps -> Manage Apps -> FSM App -> Battery Saver -> No restrictions."
+                }else if(AppUtils.getDeviceName().contains("Vivo",ignoreCase = true)){
+                    dialogHeader.text = msgHead+" "+"Go to Settings -> Battery -> Background Battery Power Consumption Ranking / High Background Power Consumption -> FSM App -> Don't Restrict."
+                }else{
+                    dialogHeader.text = msgHead+" "+"Go to Settings -> Apps -> FSM App -> Battery -> Unrestricted."
+                }
+                val dialogYes = simpleDialog.findViewById(R.id.tv_dialog_yes) as AppCustomTextView
+                dialogYes.setOnClickListener({ view ->
+                    //simpleDialog.cancel()
+                    //callLogout()
+
+                    /*val intent = Intent()
+                    val packageName = packageName
+                    intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                    val uri = Uri.fromParts("package", packageName, null)
+                    intent.data = uri
+                    mContext.startActivity(intent)*/
+                })
+                simpleDialog.show()
+                Handler().postDelayed(Runnable {
+                    val timer = object : CountDownTimer(6 * 1000, 1000) {
+                        override fun onTick(millisUntilFinished: Long) {
+                            dialogYes.text = "Logout in "+(millisUntilFinished / 1000).toString()+" seconds..."
+                        }
+                        override fun onFinish() {
+                            simpleDialog.cancel()
+                            callLogout()
+                            //Toaster.msgShort(this@DashboardActivity,"Logout call")
+                        }
+                    }.start()
+                }, 1000)
+            }
+            else{
+                if (addToStack) {
+                    mTransaction.add(R.id.frame_layout_container, getFragInstance(mFragType, initializeObject, true)!!, mFragType.toString())
+                    mTransaction.addToBackStack(mFragType.toString()).commitAllowingStateLoss()
+                } else {
+                    mTransaction.replace(R.id.frame_layout_container, getFragInstance(mFragType, initializeObject, true)!!, mFragType.toString())
+                    mTransaction.commitAllowingStateLoss()
+                }
+            }
+        }catch (ex:Exception){
+            ex.printStackTrace()
+            if (addToStack) {
+                mTransaction.add(R.id.frame_layout_container, getFragInstance(mFragType, initializeObject, true)!!, mFragType.toString())
+                mTransaction.addToBackStack(mFragType.toString()).commitAllowingStateLoss()
+            } else {
+                mTransaction.replace(R.id.frame_layout_container, getFragInstance(mFragType, initializeObject, true)!!, mFragType.toString())
+                mTransaction.commitAllowingStateLoss()
+            }
+        }
+    }
+
+    fun callLogout(){
+        Pref.IsAutoLogoutFromBatteryCheck = true
+        if(AppUtils.isOnline(this)){
+            Timber.d("Battery optimization in online mode.")
+            (mContext as DashboardActivity).loadFragment(FragType.LogoutSyncFragment, true, "")
+        }else{
+            Timber.d("Battery optimization in offline mode.")
+            try{
+                var  soundUriAlarm = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + this.getPackageName() + "/" + R.raw.beethoven)
+                if (soundUriAlarm == null){
+                    soundUriAlarm = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+                }
+                var player: MediaPlayer = MediaPlayer.create(this, soundUriAlarm)
+                player.isLooping = true
+                player.start()
+                var vibrator : Vibrator = this.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                val pattern = longArrayOf(0, 5, 10, 20, 40, 80, 120, 100, 600, 700, 500, 500, 500)
+                vibrator.vibrate(pattern, 1)
+
+
+                val simpleDialog = Dialog(mContext)
+                simpleDialog.setCancelable(false)
+                simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                simpleDialog.setContentView(R.layout.dialog_ok)
+                val dialogHeader = simpleDialog.findViewById(R.id.dialog_yes_header_TV) as AppCustomTextView
+                dialogHeader.text = "Device is in offline mode. Internet connection is required for auto logout."
+                val dialogYes = simpleDialog.findViewById(R.id.tv_dialog_yes) as AppCustomTextView
+                dialogYes.setOnClickListener({ view ->
+                    simpleDialog.cancel()
+                    player.stop()
+                    vibrator.cancel()
+                })
+                simpleDialog.show()
+            }catch (ex:Exception){
+                ex.printStackTrace()
+            }
+        }
+
+
+        /*val unSyncedList = AppDatabase.getDBInstance()!!.userLocationDataDao().getLocationUpdateForADayNotSyn(AppUtils.convertFromRightToReverseFormat(Pref.login_date!!), false)
+        var distance = 0.0
+        if (unSyncedList != null && unSyncedList.isNotEmpty()) {
+            var totalDistance = 0.0
+            for (i in unSyncedList.indices) {
+                totalDistance += unSyncedList[i].distance.toDouble()
+            }
+            distance = Pref.tempDistance.toDouble() + totalDistance
+        }
+        else{
+            distance = Pref.tempDistance.toDouble()
+        }
+        var location = ""
+        if (Pref.logout_latitude != "0.0" && Pref.logout_longitude != "0.0") {
+            location = LocationWizard.getAdressFromLatlng(this, Pref.logout_latitude.toDouble(), Pref.logout_longitude.toDouble())
+            if (location.contains("http"))
+                location = "Unknown"
+        }
+
+        val repository = LogoutRepositoryProvider.provideLogoutRepository()
+        BaseActivity.compositeDisposable.add(
+            repository.logout(Pref.user_id!!, Pref.session_token!!, Pref.logout_latitude, Pref.logout_longitude,AppUtils.getCurrentDateTime(),
+                distance.toString(), "1", location)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe({ result ->
+                    val logoutResponse = result as BaseResponse
+                    Timber.d("AUTO_LOGOUT : " + "RESPONSE : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + logoutResponse.message)
+                    if (logoutResponse.status == NetworkConstant.SUCCESS) {
+                        Pref.tempDistance = "0.0"
+                        if (unSyncedList != null && unSyncedList.isNotEmpty()) {
+                            for (i in unSyncedList.indices) {
+                                AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploaded(true, unSyncedList[i].locationId)
+                            }
+                        }
+                        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                        notificationManager.cancelAll()
+                        Pref.logout_latitude = "0.0"
+                        Pref.logout_longitude = "0.0"
+                        clearData()
+                        Pref.isAutoLogout = false
+                        Pref.isAddAttendence = false
+                    } else
+                        performLogout()
+                        BaseActivity.isApiInitiated = false
+                        takeActionOnGeofence()
+                }, { error ->
+                        Toaster.msgShort(this, getString(R.string.something_went_wrong))
+                        Timber.d("AUTO_LOGOUT : " + "RESPONSE ERROR: " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                        error.printStackTrace()
+                        performLogout()
+                    })
+        )*/
     }
 
 
@@ -451,7 +920,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             @Throws(AuthFailureError::class)
             override fun getHeaders(): Map<String, String> {
                 val params: MutableMap<String, String> = HashMap()
-                params["Authorization"] = getString(R.string.firebase_key)
+                params["Authorization"] = getString(R.string.PART_1)+getString(R.string.PART_2)+getString(R.string.PART_3)+getString(R.string.PART_4)//getString(R.string.firebase_key)
                 params["Content-Type"] = "application/json"
                 return params
             }
@@ -509,7 +978,10 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
     lateinit var logo: AppCompatImageView
     lateinit var tv_noti_count: AppCustomTextView
     private lateinit var iv_home_icon: ImageView
+    private lateinit var add_scheduler_email_verification: ImageView
+    private lateinit var add_template: ImageView
     private lateinit var nearbyShops: AppCustomTextView
+    private lateinit var contacts_TV: AppCustomTextView
     private lateinit var menuBeatTV: AppCustomTextView// 5.0 DashboardActivity AppV 4.0.6  MenuBeatFrag
     private lateinit var marketAssistTV: AppCustomTextView
     private lateinit var tv_pending_out_loc_menu: AppCustomTextView
@@ -852,6 +1324,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                     }
 
                     val leadActivityList=AppDatabase.getDBInstance()!!.leadActivityDao().getAll(AppUtils.getCurrentDateForShopActi())
+                    Timber.d("lead activity ${leadActivityList.size}")
                     leadActivityList?.forEach {
                         val notification = NotificationUtils(getString(R.string.app_name), "", "", "")
                         //val shop = AppDatabase.getDBInstance()?.addShopEntryDao()?.getShopByIdN(it.shopid)
@@ -960,6 +1433,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
         LocalBroadcastManager.getInstance(this).registerReceiver(fcmReceiver_leave, IntentFilter("FCM_ACTION_RECEIVER_LEAVE"))
         LocalBroadcastManager.getInstance(this).registerReceiver(fcmReceiver_leave_status, IntentFilter("FCM_ACTION_RECEIVER_LEAVE_STATUS"))
         LocalBroadcastManager.getInstance(this).registerReceiver(fcmReceiver_quotation_approval, IntentFilter("FCM_ACTION_RECEIVER_quotation_approval"))
+        LocalBroadcastManager.getInstance(this).registerReceiver(fcm_ACTION_RECEIVER_LEAD, IntentFilter("FCM_ACTION_RECEIVER_LEAD"))
         LocalBroadcastManager.getInstance(this).registerReceiver(idealLocReceiver, IntentFilter("IDEAL_LOC_BROADCAST"))
         LocalBroadcastManager.getInstance(this).registerReceiver(attendNotiReceiver, IntentFilter("IDEAL_ATTEND_BROADCAST"))
         LocalBroadcastManager.getInstance(this).registerReceiver(collectionAlertReceiver, IntentFilter("ALERT_RECIEVER_BROADCAST"))
@@ -1058,6 +1532,12 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             WorkManager.getInstance(this).enqueueUniquePeriodicWork("loc_worker", ExistingPeriodicWorkPolicy.KEEP, request)
         }
         }, 1000)
+
+
+        // In your Application class or MainActivity
+       // FacebookSdk.sdkInitialize(getApplicationContext());
+       // AppEventsLogger.activateApp(application); // For logging app activation events
+
 
     }
     //Start of Rev 18 DashboardActivity AppV 4.0.8 Suman    28/04/2023 worker manager updation 25973
@@ -1312,6 +1792,11 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                                     if (getFragment() != null && getFragment() !is MicroLearningListFragment)
                                         loadFragment(FragType.MicroLearningListFragment, false, "")
                                 }, 500)
+                            }else if (intent.getStringExtra("TYPE").equals("lead_work", ignoreCase = true)) {
+                                Handler().postDelayed(Runnable {
+                                    if (getFragment() != null && getFragment() !is LeadFrag)
+                                        loadFragment(FragType.LeadFrag, false, "")
+                                }, 500)
                             }
                             else if (intent.getStringExtra("TYPE").equals("clearData", ignoreCase = true)) {
                                 isClearData = true
@@ -1425,6 +1910,54 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
     override fun onResume() {
         super.onResume()
 
+        //begin Suman 21-09-2023 mantis id 0026837
+        try{
+            val packageName = "com.google.android.apps.maps"
+            val appInfo: ApplicationInfo = this.getPackageManager().getApplicationInfo(packageName, 0)
+            var appstatus = appInfo.enabled
+
+            if(!appstatus){
+                val simpleDialog = Dialog(mContext)
+                simpleDialog.setCancelable(false)
+                simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                simpleDialog.setContentView(R.layout.dialog_ok)
+                val dialogHeader = simpleDialog.findViewById(R.id.dialog_yes_header_TV) as AppCustomTextView
+                dialogHeader.text = "Location will be inappropriate as Google map is disabled. Please go to settings of your phone and Enable Google Map. Thank you."
+                val dialogYes = simpleDialog.findViewById(R.id.tv_dialog_yes) as AppCustomTextView
+                dialogYes.setOnClickListener({ view ->
+                    simpleDialog.cancel()
+                })
+                simpleDialog.show()
+                return
+            }else{
+                println("load_frag " +" gmap app enable")
+            }
+
+            //val pInfo = this.packageManager.getPackageInfo("com.google.android.apps.maps", PackageManager.GET_PERMISSIONS)
+            //val version = pInfo.versionName
+        }catch (ex:Exception){
+            ex.printStackTrace()
+        }
+        //end Suman 21-09-2023 mantis id 0026837
+
+        println("tag_lifecycle onresume")
+        //if(Settings.Secure.getInt(this.getContentResolver(), Settings.Secure.ADB_ENABLED, 0) == 1 && Pref.IsUsbDebuggingRestricted) {
+        if(Settings.Secure.getInt(this.getContentResolver(), Settings.Secure.DEVELOPMENT_SETTINGS_ENABLED , 0) == 1 && Pref.IsUsbDebuggingRestricted) {
+            val simpleDialog = Dialog(mContext)
+            simpleDialog.setCancelable(false)
+            simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            simpleDialog.setContentView(R.layout.dialog_debugger)
+            val okBtn = simpleDialog.findViewById(R.id.tv_dialog_ok) as AppCustomTextView
+            val tvHeader = simpleDialog.findViewById(R.id.dialog_yes_no_headerTV) as AppCustomTextView
+            tvHeader.text = getString(R.string.app_name)
+            okBtn.setOnClickListener({ view ->
+                simpleDialog.cancel()
+                startActivity(Intent(android.provider.Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS))
+            })
+            simpleDialog.show()
+        }
+
+
         try{
             var launchIntent: Intent? = packageManager.getLaunchIntentForPackage("com.anydesk.anydeskandroid")
             if(launchIntent!=null){
@@ -1467,88 +2000,150 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
 
         callUnreadNotificationApi()
 
-        checkForFingerPrint()
-    }
+            checkForFingerPrint()
 
+
+
+        //battery check onresume
+        if(Pref.IsAnyPageVisitFromDshboard){
+            val pm = mContext.getSystemService(Context.POWER_SERVICE) as PowerManager
+            var sett = pm.isIgnoringBatteryOptimizations(packageName)
+            if(sett==false){
+                val simpleDialog = Dialog(mContext)
+                simpleDialog.setCancelable(false)
+                simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                simpleDialog.setContentView(R.layout.dialog_ok_logout)
+                val dialogHeader = simpleDialog.findViewById(R.id.dialog_yes_header_TV) as AppCustomTextView
+                if(AppUtils.getDeviceName().contains("MI",ignoreCase = true) || AppUtils.getDeviceName().contains("Redmi",ignoreCase = true) ||
+                    AppUtils.getDeviceName().contains("Poco",ignoreCase = true)){
+                    dialogHeader.text = "Go to Settings -> Apps -> Manage Apps -> FSM App -> Battery Saver -> No restrictions."
+                }else if(AppUtils.getDeviceName().contains("Vivo",ignoreCase = true)){
+                    dialogHeader.text = "Go to Settings -> Battery -> Background Battery Power Consumption Ranking / High Background Power Consumption -> FSM App -> Don't Restrict."
+                }else{
+                    dialogHeader.text = "Go to Settings -> Apps -> FSM App -> Battery -> Unrestricted."
+                }
+                val dialogYes = simpleDialog.findViewById(R.id.tv_dialog_yes) as AppCustomTextView
+                dialogYes.setOnClickListener({ view ->
+                    simpleDialog.cancel()
+                    callLogout()
+                })
+                simpleDialog.show()
+                Handler().postDelayed(Runnable {
+                    val timer = object : CountDownTimer(6 * 1000, 1000) {
+                        override fun onTick(millisUntilFinished: Long) {
+                            dialogYes.text = "Logout in "+(millisUntilFinished / 1000).toString()+" seconds..."
+                        }
+                        override fun onFinish() {
+                            simpleDialog.cancel()
+                            callLogout()
+                        }
+                    }.start()
+                }, 1000)
+            }
+        }
+
+    }
 
     fun checkForFingerPrint() {
         try {
-
-            if (checkFingerPrint != null)
-                checkFingerPrint = null
-
-            AppUtils.changeLanguage(this, "en")
-
-            checkFingerPrint = CheckFingerPrint()
-            checkFingerPrint?.checkFingerPrint(this, object : CheckFingerPrint.FingerPrintListener {
-                override fun isFingerPrintSupported(status: Boolean) {
-                    if (status) {
-                        Log.e("DashboardActivity", "========Device support fingerprint===========")
-                    } else {
-                        Log.e("DashboardActivity", "==========Device does not support fingerprint===========")
-                        isFingerPrintSupported = false
+            if(!Pref.isFingerPrintMandatoryForAttendance){
+                AppUtils.changeLanguage(this@DashboardActivity, "en")
+                if (AppUtils.isRevisit!!) {
+                    if (fingerprintDialog != null && fingerprintDialog?.isVisible!!) {
+                        fingerprintDialog?.dismiss()
+                        revisitShop(revisitImage)
+                    }
+                } else {
+                    if (getFragment() != null) {
+                        if (getFragment() is AddAttendanceFragment) {
+                            (getFragment() as AddAttendanceFragment).continueAddAttendance()
+                        } else if (getFragment() is DailyPlanListFragment) {
+                            (getFragment() as DailyPlanListFragment).continueAddAttendance()
+                        } else if (getFragment() is AddShopFragment) {
+                            (getFragment() as AddShopFragment).addShop()
+                        }
                     }
                 }
+                if (getFragment() != null && getFragment() is ChatBotFragment)
+                    AppUtils.changeLanguage(this@DashboardActivity, (getFragment() as ChatBotFragment).language)
+            }else{
 
-                override fun onSuccess(signal: CancellationSignal?) {
+                if (checkFingerPrint != null)
+                    checkFingerPrint = null
 
-                    /*if (signal?.isCanceled!!) {
-                        signal.cancel()
-                    }*/
+                AppUtils.changeLanguage(this, "en")
 
-                    // 15.0 DashboardActivity AppV 4.0.8 Suman    19/04/2023 Dashboard Onresume updation for language 0025874
-                    AppUtils.changeLanguage(this@DashboardActivity, "en")
-                    Log.e("DashboardActivity", "============Fingerprint accepted=============")
-                    // End of Rev 15.0
-
-                    if (AppUtils.isRevisit!!) {
-                        if (fingerprintDialog != null && fingerprintDialog?.isVisible!!) {
-                            fingerprintDialog?.dismiss()
-                            revisitShop(revisitImage)
+                checkFingerPrint = CheckFingerPrint()
+                checkFingerPrint?.checkFingerPrint(this, object : CheckFingerPrint.FingerPrintListener {
+                    override fun isFingerPrintSupported(status: Boolean) {
+                        if (status) {
+                            Log.e("DashboardActivity", "========Device support fingerprint===========")
+                        } else {
+                            Log.e("DashboardActivity", "==========Device does not support fingerprint===========")
+                            isFingerPrintSupported = false
                         }
-                    } else {
-                        if (getFragment() != null) {
-                            if (getFragment() is AddAttendanceFragment) {
-                                (getFragment() as AddAttendanceFragment).continueAddAttendance()
-                            } else if (getFragment() is DailyPlanListFragment) {
-                                (getFragment() as DailyPlanListFragment).continueAddAttendance()
-                            } else if (getFragment() is AddShopFragment) {
-                                (getFragment() as AddShopFragment).addShop()
+                    }
+
+                    override fun onSuccess(signal: CancellationSignal?) {
+
+                        /*if (signal?.isCanceled!!) {
+                            signal.cancel()
+                        }*/
+
+                        // 15.0 DashboardActivity AppV 4.0.8 Suman    19/04/2023 Dashboard Onresume updation for language 0025874
+                        AppUtils.changeLanguage(this@DashboardActivity, "en")
+                        Log.e("DashboardActivity", "============Fingerprint accepted=============")
+                        // End of Rev 15.0
+
+                        if (AppUtils.isRevisit!!) {
+                            if (fingerprintDialog != null && fingerprintDialog?.isVisible!!) {
+                                fingerprintDialog?.dismiss()
+                                revisitShop(revisitImage)
+                            }
+                        } else {
+                            if (getFragment() != null) {
+                                if (getFragment() is AddAttendanceFragment) {
+                                    (getFragment() as AddAttendanceFragment).continueAddAttendance()
+                                } else if (getFragment() is DailyPlanListFragment) {
+                                    (getFragment() as DailyPlanListFragment).continueAddAttendance()
+                                } else if (getFragment() is AddShopFragment) {
+                                    (getFragment() as AddShopFragment).addShop()
+                                }
                             }
                         }
+
+                        if (getFragment() != null && getFragment() is ChatBotFragment)
+                            AppUtils.changeLanguage(this@DashboardActivity, (getFragment() as ChatBotFragment).language)
                     }
 
-                    if (getFragment() != null && getFragment() is ChatBotFragment)
-                        AppUtils.changeLanguage(this@DashboardActivity, (getFragment() as ChatBotFragment).language)
-                }
+                    override fun onError(msg: String) {
+                        Log.e("DashboardActivity", "Fingerprint error=====> $msg")
 
-                override fun onError(msg: String) {
-                    Log.e("DashboardActivity", "Fingerprint error=====> $msg")
+                        // Rev 15.0
+                        if (!Locale.getDefault().language.equals("en", ignoreCase = true))
+                            return
+                        // End of Rev 15.0
+                        when {
+                            msg.equals("Fingerprint operation cancelled.", ignoreCase = true) -> {
+                            }
+                            msg.equals("Fingerprint operation cancelled", ignoreCase = true) -> {
+                            }
+                            msg.equals("Fingerprint operation canceled", ignoreCase = true) -> {
+                            }
+                            msg.equals("Fingerprint operation canceled.", ignoreCase = true) -> {
+                            }
+                            else -> Toaster.msgLong(mContext, msg)
+                        }
 
-                    // Rev 15.0
-                    if (!Locale.getDefault().language.equals("en", ignoreCase = true))
-                        return
-                    // End of Rev 15.0
-                    when {
-                        msg.equals("Fingerprint operation cancelled.", ignoreCase = true) -> {
-                        }
-                        msg.equals("Fingerprint operation cancelled", ignoreCase = true) -> {
-                        }
-                        msg.equals("Fingerprint operation canceled", ignoreCase = true) -> {
-                        }
-                        msg.equals("Fingerprint operation canceled.", ignoreCase = true) -> {
-                        }
-                        else -> Toaster.msgLong(mContext, msg)
+                        if (getFragment() != null && getFragment() is ChatBotFragment)
+                            AppUtils.changeLanguage(this@DashboardActivity, (getFragment() as ChatBotFragment).language)
                     }
 
-                    if (getFragment() != null && getFragment() is ChatBotFragment)
-                        AppUtils.changeLanguage(this@DashboardActivity, (getFragment() as ChatBotFragment).language)
+                })
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    CheckFingerPrint().FingerprintHandler().doAuth()
                 }
-
-            })
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                CheckFingerPrint().FingerprintHandler().doAuth()
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -1898,6 +2493,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             else if (intent.getStringExtra("TYPE").equals("VIDEO", ignoreCase = true)) {
                 if (getFragment() != null && getFragment() !is MicroLearningListFragment)
                     loadFragment(FragType.MicroLearningListFragment, false, "")
+            }else if (intent.getStringExtra("TYPE").equals("lead_work", ignoreCase = true)) {
+                loadFragment(FragType.LeadFrag, false, "")
             }
             else if (intent.getStringExtra("TYPE").equals("clearData", ignoreCase = true)) {
                 isClearData = true
@@ -2100,6 +2697,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
         nearby_shops_TV = findViewById<AppCustomTextView>(R.id.nearby_shops_TV)
         my_orders_TV = findViewById<AppCustomTextView>(R.id.my_orders_TV)
         nearbyShops = findViewById<AppCustomTextView>(R.id.nearby_shop_TV)
+        contacts_TV = findViewById<AppCustomTextView>(R.id.contacts_TV)
         menuBeatTV = findViewById<AppCustomTextView>(R.id.menu_beat_TV)// 5.0 DashboardActivity AppV 4.0.6  MenuBeatFrag
         marketAssistTV = findViewById<AppCustomTextView>(R.id.menu_market_assist_TV)
         tv_pending_out_loc_menu = findViewById<AppCustomTextView>(R.id.tv_pending_out_loc_menu)
@@ -2119,7 +2717,11 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
         nearby_shops_RL = findViewById<RelativeLayout>(R.id.nearby_shops_RL)
         my_orders_RL = findViewById<RelativeLayout>(R.id.my_orders_RL)
         iv_home_icon = findViewById(R.id.iv_home_icon)
+        add_scheduler_email_verification = findViewById(R.id.add_scheduler_email_verification)
+        add_template = findViewById(R.id.add_template)
         iv_home_icon.setOnClickListener(this)
+        add_scheduler_email_verification.setOnClickListener(this)
+        add_template.setOnClickListener(this)
         tv_change_pwd = findViewById(R.id.tv_change_pwd)
         all_team_TV = findViewById(R.id.all_team_TV)
         achv_TV = findViewById(R.id.achv_TV)
@@ -2186,6 +2788,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
         tickTV.setOnClickListener(this)
         logo.setOnClickListener(this)
         nearbyShops.setOnClickListener(this)
+        contacts_TV.setOnClickListener(this)
         marketAssistTV.setOnClickListener(this)
         menuBeatTV.setOnClickListener(this)// 5.0 DashboardActivity AppV 4.0.6  MenuBeatFrag
         tv_pending_out_loc_menu.setOnClickListener(this)
@@ -2602,6 +3205,11 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             nearby_shop_TV.visibility = View.VISIBLE
         else
             nearby_shop_TV.visibility = View.GONE
+
+        if (Pref.IsShowMenuCRMContacts)
+            contacts_TV.visibility = View.VISIBLE
+        else
+            contacts_TV.visibility = View.GONE
 
         if (Pref.IsmanualInOutTimeRequired)
             tv_pending_out_loc_menu.visibility = View.VISIBLE
@@ -3067,6 +3675,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             }
             R.id.logout_TV -> {
                 //performLogout()
+                Pref.IsAutoLogoutFromBatteryCheck = false
                 if (Pref.DayEndMarked == false && Pref.IsShowDayEnd == true && Pref.DayStartMarked) {
                     showSnackMessage("Please mark Day End before logout. Thanks.")
                 } else {
@@ -3305,6 +3914,80 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 }
 
             }
+
+            //code begin by puja 22-01-24
+            R.id.add_scheduler_email_verification -> {
+
+                (getFragment() as SchedulerAddFormFrag).showDialogGmailAuthPic()
+                return
+
+
+               var instructionDialog = Dialog(mContext)
+                instructionDialog!!.setCancelable(false)
+                instructionDialog!!.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                instructionDialog!!.setContentView(R.layout.dialog_gmail_instruction)
+                val tvHeader = instructionDialog!!.findViewById(R.id.dialog_contact_gr_header) as TextView
+                val tv_instruction = instructionDialog!!.findViewById(R.id.tv_instruction) as TextView
+                val tv_save_instruction = instructionDialog!!.findViewById(R.id.tv_save_instruction) as TextView
+                val et_user_gmail_id = instructionDialog!!.findViewById(R.id.et_user_gmail_id) as EditText
+                val et_user_password = instructionDialog!!.findViewById(R.id.et_user_password) as EditText
+                val tv_headerOfSetVerification = instructionDialog!!.findViewById(R.id.tv_headerOfSetVerification) as TextView
+                val rvContactGrName = instructionDialog!!.findViewById(R.id.rv_dialog_cont_gr) as RecyclerView
+                val iv_close = instructionDialog!!.findViewById(R.id.iv_dialog_instruction_close_icon) as ImageView
+                val iv_email_info = instructionDialog!!.findViewById(R.id.iv_email_info) as ImageView
+                val iv_dialog_instruction_copy = instructionDialog!!.findViewById(R.id.iv_dialog_instruction_copy) as ImageView
+                val lin_credentials_gmail = instructionDialog!!.findViewById(R.id.lin_credentials_gmail) as LinearLayout
+                iv_dialog_instruction_copy.visibility= View.GONE
+                iv_email_info.visibility= View.VISIBLE
+
+                iv_dialog_instruction_copy.setOnClickListener {
+                    val clipboard: ClipboardManager? = mContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager?
+                    val clip = ClipData.newPlainText("label", tv_instruction.text.toString().trim())
+                    clipboard!!.setPrimaryClip(clip)
+                    Toaster.msgLong(mContext,"Copied to Clipboard")
+                }
+
+                iv_email_info.setOnClickListener {
+
+                    showInstructionOfTwoStepVerification()
+
+                }
+
+                tv_save_instruction.setOnClickListener {
+                    if (et_user_gmail_id.text.toString().equals("") && et_user_password.text.toString().trim().equals("")) {
+                        Toast.makeText(
+                            mContext,
+                            "Put your credentials",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                    else{
+                        Pref.storeGmailId = et_user_gmail_id.text.toString().trim()
+                        Pref.storeGmailPassword = et_user_password.text.toString().trim()
+                        // After save 2 step verification
+                       // (mContext as DashboardActivity).loadFragment(FragType.SchedulerViewFrag, true, "")
+                        instructionDialog!!.dismiss()
+
+                    }
+                }
+                iv_close.setOnClickListener {
+                    instructionDialog!!.dismiss()
+                }
+                rvContactGrName.visibility=View.GONE
+                lin_credentials_gmail.visibility=View.VISIBLE
+                tv_save_instruction.visibility=View.VISIBLE
+                tv_headerOfSetVerification.visibility=View.VISIBLE
+                tv_instruction.visibility=View.GONE
+                tvHeader.text = "E-mail configuration"
+                instructionDialog!!.show()
+            }
+            //code end by puja 22-01-24
+
+            R.id.add_template -> {
+                (mContext as DashboardActivity).loadFragment(FragType.TemplateViewFrag, true, "")
+            }
+
+
             //19-08-21 nearBy shop visit stop untill daystart
             R.id.nearby_shop_TV -> {
                 isChatBotLocalShop = false
@@ -3337,6 +4020,13 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 }
             }
             // 5.0 DashboardActivity AppV 4.0.6  MenuBeatFrag
+
+            R.id.contacts_TV->{
+                if (!Pref.isAddAttendence)
+                    (mContext as DashboardActivity).checkToShowAddAttendanceAlert()
+                else
+                    loadFragment(FragType.ContactsFrag, false, "")
+            }
             R.id.menu_beat_TV ->{
                 if (!Pref.isAddAttendence) {
                     (mContext as DashboardActivity).checkToShowAddAttendanceAlert()
@@ -3347,7 +4037,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 }
             }
             R.id.menu_market_assist_TV ->{
-                loadFragment(FragType.ShopListMarketAssistFrag, false, "")
+                //loadFragment(FragType.ShopListMarketAssistFrag, true, "")
+                loadFragment(FragType.MarketAssistTabFrag, true, "")
             }
             R.id.tv_pending_out_loc_menu -> {
                 if (!Pref.isAddAttendence) {
@@ -3426,6 +4117,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
 
                     getCurrentFragType() == FragType.NewReturnListFragment -> (getFragment() as NewReturnListFragment).refreshOrderList()
                     getCurrentFragType() == FragType.MapViewForTeamFrag -> (getFragment() as MapViewForTeamFrag).refreshMap()
+                    getCurrentFragType() == FragType.ContactsFrag -> (getFragment() as ContactsFrag).checkModifiedShop()
+
                 }
             }
             R.id.iv_delete_icon -> {
@@ -3956,7 +4649,11 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             }
 
             R.id.tv_performance_teamMenu -> {
-                loadFragment(FragType.PerformanceAppFragment, false, "")
+                if(AppUtils.isOnline(mContext)){
+                    loadFragment(FragType.PerformanceAppFragment, true, "")
+                }else{
+                    loadFragment(FragType.OwnPerformanceFragment, true, "")
+                }
             }
 
         }
@@ -4246,6 +4943,20 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                     mFragment = PerformanceAppFragment()
                 }
                 setTopBarTitle("Performance Insights")
+                setTopBarVisibility(TopBarConfig.BACK)
+            }
+            FragType.OwnPerformanceFragment -> {
+                if (enableFragGeneration) {
+                    mFragment = OwnPerformanceFragment()
+                }
+                setTopBarTitle("Performance Insights")
+                setTopBarVisibility(TopBarConfig.BACK)
+            }
+            FragType.allPerformanceFrag -> {
+                if (enableFragGeneration) {
+                    mFragment = allPerformanceFrag()
+                }
+                setTopBarTitle("All")
                 setTopBarVisibility(TopBarConfig.BACK)
             }
 
@@ -4845,6 +5556,9 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                             setTopBarVisibility(TopBarConfig.BACK)
                     } else
                         setTopBarVisibility(TopBarConfig.GPS)
+                }
+                if(Pref.IsAutoLogoutFromBatteryCheck){
+                    setTopBarVisibility(TopBarConfig.NONE)
                 }
             }
             FragType.ReimbursementFragment -> {
@@ -5738,6 +6452,57 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 setTopBarVisibility(TopBarConfig.HOME)
                 setTopBarVisibility(TopBarConfig.PHOTOREG)
             }
+            FragType.ContactsFrag -> {
+                if (enableFragGeneration) {
+                    mFragment = ContactsFrag()
+                }
+                setTopBarTitle("Contact(s)")
+                setTopBarVisibility(TopBarConfig.CONTACT)
+            }
+            FragType.ContactsAddFrag -> {
+                if (enableFragGeneration) {
+                    mFragment = ContactsAddFrag.getInstance(initializeObject)
+                }
+                //setTopBarTitle("Add Contact")
+                setTopBarVisibility(TopBarConfig.HOME)
+            }
+            FragType.SchedulerViewFrag -> {
+                if (enableFragGeneration) {
+                    mFragment = SchedulerViewFrag.getInstance(initializeObject)
+                }
+                //setTopBarTitle("Add Contact")
+                setTopBarVisibility(TopBarConfig.SCHEDULER_LIST)
+                setTopBarTitle("Scheduler(s)")
+            }
+            FragType.TemplateViewFrag -> {
+                if (enableFragGeneration) {
+                    mFragment = TemplateViewFrag()
+                }
+                setTopBarTitle("Template")
+                setTopBarVisibility(TopBarConfig.HOME_BACK)
+            }
+            FragType.TemplateAddFrag -> {
+                if (enableFragGeneration) {
+                    mFragment = TemplateAddFrag()
+                }
+                setTopBarTitle("Add Template")
+                setTopBarVisibility(TopBarConfig.HOME_BACK)
+            }
+            FragType.SchedulerAddFormFrag -> {
+                if (enableFragGeneration) {
+                    mFragment = SchedulerAddFormFrag.getInstance(initializeObject)
+                }
+                //setTopBarTitle("Add Contact")
+                setTopBarVisibility(TopBarConfig.SCHEDULER)
+                //setTopBarTitle("Add Schedule")
+            }
+            FragType.ShopCallHisFrag -> {
+                if (enableFragGeneration) {
+                    mFragment = ShopCallHisFrag.getInstance(initializeObject)
+                }
+                setTopBarTitle("Call Log History")
+                setTopBarVisibility(TopBarConfig.HOME)
+            }
             FragType.LeaveHome -> {
                 if (enableFragGeneration) {
                     mFragment = LeaveHome.getInstance(initializeObject)
@@ -5819,6 +6584,13 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 setTopBarTitle("Market Assistant")
                 setTopBarVisibility(TopBarConfig.BACK)
             }
+            FragType.MarketAssistTabFrag -> {
+                if (enableFragGeneration) {
+                    mFragment = MarketAssistTabFrag()
+                }
+                setTopBarTitle("Market Assistant")
+                setTopBarVisibility(TopBarConfig.BACK)
+            }
             FragType.ShopDtlsMarketAssistFrag -> {
                 if (enableFragGeneration) {
                     mFragment = ShopDtlsMarketAssistFrag.getInstance(initializeObject)
@@ -5830,7 +6602,12 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 if (enableFragGeneration) {
                     mFragment = OrderProductCartFrag.getInstance(initializeObject)
                 }
-                setTopBarTitle(getString(R.string.view_cart))
+                if(Pref.savefromOrderOrStock){
+                    setTopBarTitle(getString(R.string.view_cart))
+                }else{
+                    setTopBarTitle(getString(R.string.opening_stock))
+                }
+
                 setTopBarVisibility(TopBarConfig.BACK)
             }
             FragType.NeworderScrCartFragment -> {
@@ -5915,13 +6692,35 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
     }
 
     fun setTopBarTitle(title: String) {
-         headerTV.text = title
+         headerTV.text = title+"   "
     }
 
     @RequiresApi(Build.VERSION_CODES.HONEYCOMB_MR1)
     private fun setTopBarVisibility(mTopBarConfig: TopBarConfig) {
         tv_noti_count.visibility = View.GONE
         when (mTopBarConfig) {
+            TopBarConfig.NONE ->{
+                iv_home_icon.visibility = View.GONE
+                iv_search_icon.visibility = View.GONE
+                iv_sync_icon.visibility = View.GONE
+                rl_cart.visibility = View.GONE
+                iv_filter_icon.visibility = View.GONE
+                rl_confirm_btn.visibility = View.GONE
+                iv_list_party.visibility = View.GONE
+                logo.visibility = View.GONE
+                iv_map.visibility = View.GONE
+                iv_settings.visibility = View.GONE
+                ic_calendar.visibility = View.GONE
+                ic_chat_bot.visibility = View.GONE
+                iv_cancel_chat.visibility = View.GONE
+                iv_people.visibility = View.GONE
+                iv_scan.visibility = View.GONE
+                iv_view_text.visibility = View.GONE
+                fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
+
+            }
             TopBarConfig.HOME -> {
                 iv_home_icon.visibility = View.VISIBLE
                 iv_search_icon.visibility = View.GONE
@@ -5940,6 +6739,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 supportActionBar!!.setDisplayHomeAsUpEnabled(false)
                 // Show hamburger
@@ -5965,6 +6766,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 supportActionBar!!.setDisplayHomeAsUpEnabled(false)
                 // Show hamburger
@@ -5990,6 +6793,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 supportActionBar!!.setDisplayHomeAsUpEnabled(false)
                 // Show hamburger
@@ -6015,6 +6820,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 supportActionBar!!.setDisplayHomeAsUpEnabled(false)
                 // Show hamburger
@@ -6042,6 +6849,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 supportActionBar!!.setDisplayHomeAsUpEnabled(false)
                 // Show hamburger
@@ -6073,6 +6882,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 if (isChatFromDrawer) {
                     supportActionBar?.setDisplayHomeAsUpEnabled(false)
@@ -6105,6 +6916,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 supportActionBar!!.setDisplayHomeAsUpEnabled(false)
 
@@ -6136,6 +6949,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 supportActionBar!!.setDisplayHomeAsUpEnabled(false)
 
@@ -6167,6 +6982,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 supportActionBar!!.setDisplayHomeAsUpEnabled(false)
                 // Show hamburger
@@ -6192,6 +7009,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 if (!isChatBotLocalShop) {
                     supportActionBar?.setDisplayHomeAsUpEnabled(false)
@@ -6225,6 +7044,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 if (Pref.isChatBotShow)
                     ic_chat_bot.visibility = View.VISIBLE
@@ -6273,6 +7094,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_people.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.VISIBLE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 if (Pref.isScanQrForRevisit)
                     iv_scan.visibility = View.VISIBLE
@@ -6302,6 +7125,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 if (Pref.isChatBotShow)
                     ic_chat_bot.visibility = View.VISIBLE
@@ -6340,6 +7165,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 supportActionBar!!.setDisplayHomeAsUpEnabled(false)
                 // Show hamburger
@@ -6365,6 +7192,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 if (isMapFromDrawer) {
                     supportActionBar!!.setDisplayHomeAsUpEnabled(false)
@@ -6401,6 +7230,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(false)
@@ -6428,6 +7259,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -6455,6 +7288,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -6482,6 +7317,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -6509,6 +7346,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -6533,6 +7372,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 if (Pref.isChatBotShow)
                     ic_chat_bot.visibility = View.VISIBLE
@@ -6563,6 +7404,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
                 supportActionBar!!.setDisplayHomeAsUpEnabled(false)
@@ -6589,6 +7432,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -6616,6 +7461,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -6643,6 +7490,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -6670,6 +7519,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -6695,6 +7546,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 supportActionBar!!.setDisplayHomeAsUpEnabled(false)
 
@@ -6728,6 +7581,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 if (Pref.isChatBotShow)
                     ic_chat_bot.visibility = View.VISIBLE
@@ -6760,6 +7615,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -6799,6 +7656,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(false)
@@ -6825,6 +7684,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -6851,6 +7712,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 if (!isMemberMap) {
                     supportActionBar?.setDisplayHomeAsUpEnabled(false)
@@ -6884,6 +7747,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 if (Pref.isChatBotShow)
                     ic_chat_bot.visibility = View.VISIBLE
@@ -6918,6 +7783,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_cancel_chat.visibility = View.GONE
                 iv_people.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 if (Pref.willScanVisitingCard) {
                     iv_scan.visibility = View.VISIBLE
@@ -6951,6 +7818,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_cancel_chat.visibility = View.GONE
                 iv_people.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 if (Pref.willScanVisitingCard) {
                     iv_scan.visibility = View.VISIBLE
@@ -6985,6 +7854,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_cancel_chat.visibility = View.GONE
                 iv_people.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
 //                if (Pref.willScanVisitingCard) {
 //                    iv_scan.visibility = View.VISIBLE
@@ -7023,6 +7894,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -7048,6 +7921,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -7075,6 +7950,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -7102,6 +7979,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -7126,6 +8005,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 supportActionBar!!.setDisplayHomeAsUpEnabled(false)
                 // Show hamburger
@@ -7152,6 +8033,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -7176,6 +8059,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 supportActionBar!!.setDisplayHomeAsUpEnabled(false)
                 // Show hamburger
@@ -7203,6 +8088,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 if (isWeatherFromDrawer) {
                     supportActionBar?.setDisplayHomeAsUpEnabled(false)
@@ -7235,6 +8122,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 if (Pref.isChatBotShow)
                     ic_chat_bot.visibility = View.VISIBLE
@@ -7265,6 +8154,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -7289,6 +8180,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 if (isGrp)
                     iv_people.visibility = View.VISIBLE
@@ -7321,6 +8214,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -7348,6 +8243,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -7375,6 +8272,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -7405,6 +8304,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
 
 
                 // Show back button
@@ -7412,6 +8313,162 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 mDrawerToggle.setHomeAsUpIndicator(R.drawable.ic_header_back_arrow)
                 drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
             }
+            TopBarConfig.SCHEDULER_LIST -> {
+                /*  if(CustomStatic.IsFromViewNewOdrScr==false){
+                    rl_confirm_btn.visibility = View.VISIBLE
+                }
+                else{
+                    rl_confirm_btn.visibility = View.GONE
+                }*/
+                rl_confirm_btn.visibility = View.GONE
+                iv_home_icon.visibility = View.VISIBLE
+                mDrawerToggle.isDrawerIndicatorEnabled = false
+                iv_search_icon.visibility = View.VISIBLE
+                iv_sync_icon.visibility = View.GONE
+                rl_cart.visibility = View.GONE
+                iv_filter_icon.visibility = View.GONE
+                logo.visibility = View.GONE
+                iv_list_party.visibility = View.GONE
+                iv_map.visibility = View.GONE
+                iv_settings.visibility = View.GONE
+                ic_calendar.visibility = View.GONE
+                ic_chat_bot.visibility = View.GONE
+                iv_cancel_chat.visibility = View.GONE
+                iv_scan.visibility = View.GONE
+                iv_view_text.visibility = View.GONE
+                fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
+
+
+                // Show back button
+                supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+                mDrawerToggle.setHomeAsUpIndicator(R.drawable.ic_header_back_arrow)
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
+            }
+            TopBarConfig.HOME_BACK -> {
+                /*  if(CustomStatic.IsFromViewNewOdrScr==false){
+                    rl_confirm_btn.visibility = View.VISIBLE
+                }
+                else{
+                    rl_confirm_btn.visibility = View.GONE
+                }*/
+                rl_confirm_btn.visibility = View.GONE
+                iv_home_icon.visibility = View.VISIBLE
+                mDrawerToggle.isDrawerIndicatorEnabled = false
+                iv_search_icon.visibility = View.GONE
+                iv_sync_icon.visibility = View.GONE
+                rl_cart.visibility = View.GONE
+                iv_filter_icon.visibility = View.GONE
+                logo.visibility = View.GONE
+                iv_list_party.visibility = View.GONE
+                iv_map.visibility = View.GONE
+                iv_settings.visibility = View.GONE
+                ic_calendar.visibility = View.GONE
+                ic_chat_bot.visibility = View.GONE
+                iv_cancel_chat.visibility = View.GONE
+                iv_scan.visibility = View.GONE
+                iv_view_text.visibility = View.GONE
+                fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
+
+
+                // Show back button
+                supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+                mDrawerToggle.setHomeAsUpIndicator(R.drawable.ic_header_back_arrow)
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
+            }
+            TopBarConfig.TEMPLATE_LIST -> {
+                /*  if(CustomStatic.IsFromViewNewOdrScr==false){
+                    rl_confirm_btn.visibility = View.VISIBLE
+                }
+                else{
+                    rl_confirm_btn.visibility = View.GONE
+                }*/
+                rl_confirm_btn.visibility = View.GONE
+                iv_home_icon.visibility = View.VISIBLE
+                mDrawerToggle.isDrawerIndicatorEnabled = false
+                iv_search_icon.visibility = View.VISIBLE
+                iv_sync_icon.visibility = View.GONE
+                rl_cart.visibility = View.GONE
+                iv_filter_icon.visibility = View.GONE
+                logo.visibility = View.GONE
+                iv_list_party.visibility = View.GONE
+                iv_map.visibility = View.GONE
+                iv_settings.visibility = View.GONE
+                ic_calendar.visibility = View.GONE
+                ic_chat_bot.visibility = View.GONE
+                iv_cancel_chat.visibility = View.GONE
+                iv_scan.visibility = View.GONE
+                iv_view_text.visibility = View.GONE
+                fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.VISIBLE
+
+
+                // Show back button
+                supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+                mDrawerToggle.setHomeAsUpIndicator(R.drawable.ic_header_back_arrow)
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
+            }
+            TopBarConfig.CONTACT -> {
+                iv_home_icon.visibility = View.VISIBLE
+                iv_search_icon.visibility = View.GONE
+                iv_sync_icon.visibility = View.VISIBLE
+                rl_cart.visibility = View.GONE
+                iv_filter_icon.visibility = View.GONE
+                rl_confirm_btn.visibility = View.GONE
+                iv_list_party.visibility = View.GONE
+                logo.visibility = View.VISIBLE
+                iv_map.visibility = View.GONE
+                iv_settings.visibility = View.GONE
+                ic_calendar.visibility = View.GONE
+                ic_chat_bot.visibility = View.GONE
+                iv_cancel_chat.visibility = View.GONE
+                iv_people.visibility = View.GONE
+                iv_scan.visibility = View.GONE
+                iv_view_text.visibility = View.GONE
+                fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
+
+                supportActionBar!!.setDisplayHomeAsUpEnabled(false)
+                // Show hamburger
+                mDrawerToggle.isDrawerIndicatorEnabled = true
+                toolbar.setNavigationIcon(R.drawable.ic_header_menu_icon)
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
+            }
+            TopBarConfig.SCHEDULER -> {
+                iv_home_icon.visibility = View.VISIBLE
+                add_scheduler_email_verification.visibility = View.VISIBLE
+                iv_search_icon.visibility = View.GONE
+                iv_sync_icon.visibility = View.GONE
+                rl_cart.visibility = View.GONE
+                iv_filter_icon.visibility = View.GONE
+                rl_confirm_btn.visibility = View.GONE
+                iv_list_party.visibility = View.GONE
+                logo.visibility = View.GONE
+                iv_map.visibility = View.GONE
+                iv_settings.visibility = View.GONE
+                ic_calendar.visibility = View.GONE
+                ic_chat_bot.visibility = View.GONE
+                iv_cancel_chat.visibility = View.GONE
+                iv_people.visibility = View.GONE
+                iv_scan.visibility = View.GONE
+                iv_view_text.visibility = View.GONE
+                fl_net_status.visibility = View.GONE
+
+                add_scheduler_email_verification.visibility = View.VISIBLE
+                add_template.visibility = View.GONE
+
+                supportActionBar!!.setDisplayHomeAsUpEnabled(false)
+                // Show hamburger
+                mDrawerToggle.isDrawerIndicatorEnabled = true
+                toolbar.setNavigationIcon(R.drawable.ic_header_menu_icon)
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
+            }
+
             else -> {
                 iv_home_icon.visibility = View.VISIBLE
                 mDrawerToggle.isDrawerIndicatorEnabled = false
@@ -7431,6 +8488,9 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 iv_scan.visibility = View.GONE
                 iv_view_text.visibility = View.GONE
                 fl_net_status.visibility = View.GONE
+                add_scheduler_email_verification.visibility = View.GONE
+                add_template.visibility = View.GONE
+
 
                 // Show back button
                 supportActionBar!!.setDisplayHomeAsUpEnabled(true)
@@ -7728,10 +8788,16 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             }
 
         } else if (getFragment() != null && getFragment() is LogoutSyncFragment) {
-            if (!isForceLogout) {
-                super.onBackPressed()
-                if (getFragment() != null && getFragment() is ChatBotFragment)
-                    (getFragment() as ChatBotFragment).update()
+            if(!Pref.IsAutoLogoutFromBatteryCheck){
+                try{
+                    if (!isForceLogout) {
+                        super.onBackPressed()
+                        if (getFragment() != null && getFragment() is ChatBotFragment)
+                            (getFragment() as ChatBotFragment).update()
+                    }
+                }catch (ex:Exception){
+                    ex.printStackTrace()
+                }
             }
         } else if (getFragment() != null && getFragment() is AddPJPLocationFragment) {
 
@@ -8018,6 +9084,12 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             CustomStatic.IsBackFromNewOptiCart=false
             loadFragment(FragType.DashboardFragment, false, DashboardType.Home)
         }
+        // start 24.0 DashboardACtivity v 4.1.6 stock optmization mantis 0026391 20-06-2023 saheli
+        else if(getFragment() != null && getFragment() is StockListFragment && CustomStatic.IsBackFromNewOptiCart){
+            CustomStatic.IsBackFromNewOptiCart=false
+            loadFragment(FragType.DashboardFragment, false, DashboardType.Home)
+        }
+        // end 24.0 DashboardACtivity v 4.1.6 stock optmization mantis 0026391 20-06-2023 saheli
         /*Date 14-09-2021*/
         else if (getFragment() != null && getFragment() is NewOrderScrOrderDetailsFragment) {
             loadFragment(FragType.DashboardFragment, false, DashboardType.Home)
@@ -8089,7 +9161,25 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             if (getFragment() != null && getFragment() is OrderProductListFrag){
                 (getFragment() as OrderProductListFrag).updateCartSize()
             }
+        }else if(getFragment() != null && getFragment() is ContactsAddFrag){
+            super.onBackPressed()
+            if (getFragment() != null && getFragment() is ContactsFrag){
+                (getFragment() as ContactsFrag).shopContactList("")
+            }
+        }else if(getFragment() != null && getFragment() is TemplateAddFrag){
+            super.onBackPressed()
+            if (getFragment() != null && getFragment() is TemplateViewFrag){
+                (getFragment() as TemplateViewFrag).setData()
+            }
         }
+        else if(getFragment() != null && getFragment() is SchedulerAddFormFrag){
+            super.onBackPressed()
+            if (getFragment() != null && getFragment() is SchedulerViewFrag){
+                (getFragment() as SchedulerViewFrag).callSchedulerList()
+
+            }
+        }
+
         else {
             super.onBackPressed()
 
@@ -8615,7 +9705,9 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
 
                         try {
                             CropImage.activity(contentURI)
-                                    .setAspectRatio(40, 21)
+                                    //.setAspectRatio(40, 21)//mantis id 0027192 Suman date 18-01-2024
+                                    .setAspectRatio(40, 40)//mantis id 0027192 Suman date 18-01-2024
+                                .setCropShape(CropImageView.CropShape.OVAL)//mantis id 0027192 Suman date 18-01-2024
                                     .start(this)
                         } catch (e: Exception) {
                             e.printStackTrace()
@@ -9006,6 +10098,10 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 else if (getCurrentFragType() == FragType.DocumentListFragment) {
                     getCameraImage(data)
                     (getFragment() as DocumentListFragment).setImage(filePath)
+                }
+                else if (getCurrentFragType() == FragType.SchedulerAddFormFrag) {
+                    getCameraImage(data)
+                    (getFragment() as SchedulerAddFormFrag).setImage(filePath)
                 }
                 else if (getCurrentFragType() == FragType.WorkInProgressFragment) {
                     getCameraImage(data)
@@ -9627,6 +10723,10 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                     getGalleryImage(this, data)
                     (getFragment() as DocumentListFragment).setImage(filePath)
                 }
+                else if (getCurrentFragType() == FragType.SchedulerAddFormFrag) {
+                    getGalleryImage(this, data)
+                    (getFragment() as SchedulerAddFormFrag).setImage(filePath)
+                }
                 else if (getCurrentFragType() == FragType.WorkInProgressFragment) {
                     Timber.d("DashboardActivity : " + " , " + " Gallery Image FilePath :" + data!!.data)
                     CropImage.activity(data.data)
@@ -9696,7 +10796,17 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             else if (requestCode == REQUEST_CODE_DOCUMENT) {
                 try {
                     if (data != null && data.data != null) {
-                        filePath = NewFileUtils.getRealPath(this@DashboardActivity, data.data)
+                      //  filePath = NewFileUtils.getRealPath(this@DashboardActivity, data.data)
+                        filePath = NewFileUtils.getFilePathFromUri(this@DashboardActivity, data.data)
+
+
+
+                        //file chooser path begin
+                       /* var customPath = data!!.data!!.path
+                        var customFinalPath = customPath!!.substring(customPath!!.indexOf(":") + 1);
+                        Pref.scheduler_file = customFinalPath*/
+                        //file chooser path end
+
 
                         if (filePath.contains("_.*_")) {
                             showSnackMessage("Invalid file path")
@@ -9740,6 +10850,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                                     getCurrentFragType() == FragType.AddActivityFragment -> addActivityFormDocument(file.length())
                                     getCurrentFragType() == FragType.EditActivityFragment -> editActivityFormDocument(file.length())
                                     getCurrentFragType() == FragType.DocumentListFragment -> addEditDocFormDocument(file.length())
+                                    getCurrentFragType() == FragType.SchedulerAddFormFrag -> addInAddSchedulerFormImageDocFormDocument(file.length())
                                     getCurrentFragType() == FragType.WorkInProgressFragment -> wipDocument(file.length())
                                     getCurrentFragType() == FragType.WorkOnHoldFragment -> wohDocument(file.length())
                                     getCurrentFragType() == FragType.WorkCompletedFragment -> workCompletedDocument(file.length())
@@ -9906,6 +11017,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                                     else if (intent.getStringExtra("TYPE").equals("VIDEO", ignoreCase = true)) {
                                         if (getFragment() != null && getFragment() !is MicroLearningListFragment)
                                             loadFragment(FragType.MicroLearningListFragment, false, "")
+                                    }else if (intent.getStringExtra("TYPE").equals("lead_work", ignoreCase = true)) {
+                                        loadFragment(FragType.LeadFrag, false, "")
                                     }
                                     else if (intent.getStringExtra("TYPE").equals("clearData", ignoreCase = true)) {
                                         isClearData = true
@@ -10208,6 +11321,22 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                             userlocation.meeting = AppDatabase.getDBInstance()!!.addMeetingDao().getMeetingDateWise(AppUtils.getCurrentDateForShopActi()).size.toString()
                             userlocation.network_status = if (AppUtils.isOnline(this@DashboardActivity)) "Online" else "Offline"
                             userlocation.battery_percentage = AppUtils.getBatteryPercentage(this@DashboardActivity).toString()
+
+                            //negative distance handle Suman 06-02-2024 mantis id 0027225 begin
+                            try{
+                                var distReftify = userlocation.distance.toDouble()
+                                if(distReftify<0){
+                                    var locL = AppDatabase.getDBInstance()!!.userLocationDataDao().getLocationUpdateForADay(AppUtils.getCurrentDateForShopActi()) as ArrayList<UserLocationDataEntity>
+                                    var lastLoc = locL.get(locL.size-1)
+                                    var d = LocationWizard.getDistance(userlocation.latitude.toDouble(),userlocation.longitude.toDouble(), lastLoc.latitude.toDouble()   ,lastLoc.longitude.toDouble())
+                                    userlocation.distance = d.toString()
+                                }
+                            }catch (ex:Exception){
+                                ex.printStackTrace()
+                                userlocation.distance = "0.0"
+                            }
+                            //negative distance handle Suman 06-02-2024 mantis id 0027225 end
+
                             AppDatabase.getDBInstance()!!.userLocationDataDao().insertAll(userlocation)
                             Timber.e("location insert data ====> ${userlocation}")
 
@@ -10473,6 +11602,9 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                     (getFragment() as MemberShopListFragment).updateAdapter()
                 else if (getFragment() != null && getFragment() is OfflineShopListFragment)
                     (getFragment() as OfflineShopListFragment).updateAdapter()
+                else if(getFragment() != null && getFragment() is MemberAllShopListFragment){
+                    (getFragment() as MemberAllShopListFragment).updateAdapter()
+                }
             }
         }
     }
@@ -10662,6 +11794,28 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
 
         /*val addShop = AddShopRequest()
         addShop.data = addShopReqData*/
+
+        // contact module
+        try{
+            addShopReqData.address = addShopData!!.address
+            addShopReqData.actual_address = addShopData!!.address
+            addShopReqData.shop_firstName= addShopData!!.crm_firstName
+            addShopReqData.shop_lastName=  addShopData!!.crm_lastName
+            addShopReqData.crm_companyID=  if(addShopData.companyName_id.isNullOrEmpty()) "0" else addShopData.companyName_id
+            addShopReqData.crm_jobTitle=  addShopData.jobTitle
+            addShopReqData.crm_typeID=  if(addShopData.crm_type_ID.isNullOrEmpty()) "0" else addShopData.crm_type_ID
+            addShopReqData.crm_statusID=  if(addShopData.crm_status_ID.isNullOrEmpty()) "0" else addShopData.crm_status_ID
+            addShopReqData.crm_sourceID= if(addShopData.crm_source_ID.isNullOrEmpty()) "0" else addShopData.crm_source_ID
+            addShopReqData.crm_reference=  addShopData.crm_reference
+            addShopReqData.crm_referenceID=  if(addShopData.crm_reference_ID.isNullOrEmpty()) "0" else addShopData.crm_reference_ID
+            addShopReqData.crm_referenceID_type=  addShopData.crm_reference_ID_type
+            addShopReqData.crm_stage_ID=  if(addShopData.crm_stage_ID.isNullOrEmpty()) "0" else addShopData.crm_stage_ID
+            addShopReqData.assign_to=  addShopData.crm_assignTo_ID
+            addShopReqData.saved_from_status=  addShopData.crm_saved_from
+        }catch (ex:Exception){
+            ex.printStackTrace()
+            Timber.d("Logout edit sync err ${ex.message}")
+        }
 
         if (AppUtils.isOnline(mContext)) {
 
@@ -11137,6 +12291,13 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 showSnackMessage("More than " + Pref.maxFileSize + " KB file is not allowed")
         }
     }
+
+    private fun addInAddSchedulerFormImageDocFormDocument(fileSize: Long) {
+        val fileSizeInKB = fileSize / 1024
+        Log.e("Dashboard", "image file size after compression==========> $fileSizeInKB KB")
+
+     }
+
 
     private fun addCollectionDocument(fileSize: Long) {
         val fileSizeInKB = fileSize / 1024
@@ -11630,7 +12791,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
 
         if (Pref.isRevisitCaptureImage) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
-                if(Pref.IsnewleadtypeforRuby && shopNameByID.equals("2")){
+                /*if(Pref.IsnewleadtypeforRuby && shopNameByID.equals("2")){
                     initPermissionCheckRubyCUstomi(shopNameByID)
                 }
                 else if (Pref.IsnewleadtypeforRuby && !shopNameByID.equals("2")){
@@ -11638,7 +12799,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 }
                 else{
                     initPermissionCheck()
-                }
+                }*/
+                initPermissionCheck()
             }
             else{
                 if(Pref.IsnewleadtypeforRuby && shopNameByID.equals("2")){
@@ -12083,6 +13245,20 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
 
     private var permissionUtils: PermissionUtils? = null
     private fun initPermissionCheck() {
+
+        //begin mantis id 26741 Storage permission updation Suman 22-08-2023
+        var permissionList = arrayOf<String>( Manifest.permission.CAMERA)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            permissionList += Manifest.permission.READ_MEDIA_IMAGES
+            permissionList += Manifest.permission.READ_MEDIA_AUDIO
+            permissionList += Manifest.permission.READ_MEDIA_VIDEO
+        }else{
+            permissionList += Manifest.permission.WRITE_EXTERNAL_STORAGE
+            permissionList += Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+//end mantis id 26741 Storage permission updation Suman 22-08-2023
+
         permissionUtils = PermissionUtils(mContext as Activity, object : PermissionUtils.OnPermissionListener {
             override fun onPermissionGranted() {
                 if (!isCodeScan)
@@ -12096,10 +13272,24 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             override fun onPermissionNotGranted() {
                 (mContext as DashboardActivity).showSnackMessage(getString(R.string.accept_permission))
             }
-
-        }, arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+// mantis id 26741 Storage permission updation Suman 22-08-2023
+        },permissionList)// arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
     }
     private fun initPermissionCheckRubyCUstomi(shopNameByID: String) {
+
+        //begin mantis id 26741 Storage permission updation Suman 22-08-2023
+        var permissionList = arrayOf<String>( Manifest.permission.CAMERA)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            permissionList += Manifest.permission.READ_MEDIA_IMAGES
+            permissionList += Manifest.permission.READ_MEDIA_AUDIO
+            permissionList += Manifest.permission.READ_MEDIA_VIDEO
+        }else{
+            permissionList += Manifest.permission.WRITE_EXTERNAL_STORAGE
+            permissionList += Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+//end mantis id 26741 Storage permission updation Suman 22-08-2023
+
         permissionUtils = PermissionUtils(mContext as Activity, object : PermissionUtils.OnPermissionListener {
             override fun onPermissionGranted() {
                 if (!isCodeScan)
@@ -12117,8 +13307,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             override fun onPermissionNotGranted() {
                 (mContext as DashboardActivity).showSnackMessage(getString(R.string.accept_permission))
             }
-
-        }, arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+// mantis id 26741 Storage permission updation Suman 22-08-2023
+        },permissionList)// arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
     }
 
     fun captureImage() {
@@ -12494,6 +13684,21 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                 Timber.d("network_status=====> " + localData.network_status)
                 Timber.d("battery_percentage=====> " + localData.battery_percentage)
 
+                //negative distance handle Suman 06-02-2024 mantis id 0027225 begin
+                try{
+                    var distReftify = localData.distance.toDouble()
+                    if(distReftify<0){
+                        var locL = AppDatabase.getDBInstance()!!.userLocationDataDao().getLocationUpdateForADay(AppUtils.getCurrentDateForShopActi()) as ArrayList<UserLocationDataEntity>
+                        var lastLoc = locL.get(locL.size-1)
+                        var d = LocationWizard.getDistance(localData.latitude.toDouble(),localData.longitude.toDouble(), lastLoc.latitude.toDouble()   ,lastLoc.longitude.toDouble())
+                        localData.distance = d.toString()
+                    }
+                }catch (ex:Exception){
+                    ex.printStackTrace()
+                    localData.distance = "0.0"
+                }
+                //negative distance handle Suman 06-02-2024 mantis id 0027225 end
+
                 AppDatabase.getDBInstance()!!.userLocationDataDao().insert(localData)
 
                 Timber.d("=====================location added to db (Dashboard)======================")
@@ -12542,6 +13747,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                     .build()
 
             val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+            Timber.d("TAG_CHECK_LOC_SERVICE_STATUS")
             val resultCode = jobScheduler.schedule(jobInfo)
 
             if (resultCode == JobScheduler.RESULT_SUCCESS) {
@@ -12551,6 +13757,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             }
         } else {
             val myIntent = Intent(this, LocationFuzedService::class.java)
+            Timber.d("TAG_CHECK_LOC_SERVICE_STATUS")
             val bundle = Bundle();
             bundle.putString("ACTION", "UPDATE_FENCE")
             myIntent.putExtras(bundle)
@@ -12760,6 +13967,20 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
     }
 
     private fun initCameraPermissionCheck() {
+
+        //begin mantis id 26741 Storage permission updation Suman 22-08-2023
+        var permissionList = arrayOf<String>( Manifest.permission.CAMERA)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            permissionList += Manifest.permission.READ_MEDIA_IMAGES
+            permissionList += Manifest.permission.READ_MEDIA_AUDIO
+            permissionList += Manifest.permission.READ_MEDIA_VIDEO
+        }else{
+            permissionList += Manifest.permission.WRITE_EXTERNAL_STORAGE
+            permissionList += Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+//end mantis id 26741 Storage permission updation Suman 22-08-2023
+
         permissionUtils = PermissionUtils(this, object : PermissionUtils.OnPermissionListener {
             override fun onPermissionGranted() {
                 captureFrontImage()
@@ -12768,8 +13989,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             override fun onPermissionNotGranted() {
                 showSnackMessage(getString(R.string.accept_permission))
             }
-
-        }, arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+// mantis id 26741 Storage permission updation Suman 22-08-2023
+        },permissionList)// arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
     }
 
     private fun uploadSelfie(file: File) {
@@ -12827,14 +14048,12 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
         override fun onReceive(context: Context, intent: Intent) {
 
             try {
-
                 if (getFragment() != null) {
                     if (getFragment() is OfflineAllShopListFragment)
                         (getFragment() as OfflineAllShopListFragment).updateUi()
                     else if (getFragment() is OfflineShopListFragment)
                         (getFragment() as OfflineShopListFragment).updateUi()
                 }
-
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -12932,6 +14151,12 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
         }
     }
 
+
+    private val fcm_ACTION_RECEIVER_LEAD = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            logo.startAnimation(AnimationUtils.loadAnimation(mContext, R.anim.shake))
+        }
+    }
 
     // 8.0 DashboardActivity AppV 4.0.6 Suman 23-01-2023  Auto mail from notification flow of quotation 25614
     private fun getQutoDtlsBeforePDF(quto_no: String){
@@ -13353,7 +14578,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             billing.spacingAfter = 2f
             document.add(billing)
 
-            val product_tolerance_of_thickness = Paragraph("Product Tolerance of Thickness          :     " + addQuotEditResult.product_tolerance_of_thickness, font2Big)
+        /*    val product_tolerance_of_thickness = Paragraph("Product Tolerance of Thickness          :     " + addQuotEditResult.product_tolerance_of_thickness, font2Big)
             product_tolerance_of_thickness.alignment = Element.ALIGN_LEFT
             product_tolerance_of_thickness.spacingAfter = 2f
             document.add(product_tolerance_of_thickness)
@@ -13361,7 +14586,16 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             val product_tolerance_of_coating = Paragraph("Tolerance of Coating Thickness          :     " + addQuotEditResult.tolerance_of_coating_thickness, font2Big)
             product_tolerance_of_coating.alignment = Element.ALIGN_LEFT
             product_tolerance_of_coating.spacingAfter = 6f
-            document.add(product_tolerance_of_coating)
+            document.add(product_tolerance_of_coating)*/
+
+            // rev 23.0 DashobaordActivity  AppV 4.1.6  Saheli    19/06/2023 pdf remark field mantis 26139
+
+            val remarks = Paragraph("Remarks                                              :     " + addQuotEditResult.Remarks, font2Big)
+            remarks.alignment = Element.ALIGN_LEFT
+            remarks.spacingAfter = 6f
+            document.add(remarks)
+
+            // end 23.0 rev mantis 26139 PDF remarks field added saheli v DashobaordActivity  AppV 4.1.6 19-06-2023
 
 
             val end = Paragraph("Anticipating healthy business relation with your esteemed organization.", grayFront)
@@ -13554,15 +14788,13 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
 
             var m = Mail()
             var toArr = arrayOf("")
-            m = Mail("suman.bachar@indusnet.co.in", "dqridqtwsqxatmyt")
-            toArr = arrayOf("suman.bachar@indusnet.co.in","suman.roy@indusnet.co.in")
-            /*if(Pref.IsShowQuotationFooterforEurobond){
+            if(Pref.IsShowQuotationFooterforEurobond){
                 m = Mail("eurobondacp02@gmail.com", "nuqfrpmdjyckkukl")
                 toArr = arrayOf("sales1@eurobondacp.com", "sales@eurobondacp.com")
             }else{
-                m = Mail("suman.bachar@indusnet.co.in", "dqridqtwsqxatmyt")
+                //m = Mail("suman.bachar@indusnet.co.in", "dqridqtwsqxatmyt")
                 toArr = arrayOf("saheli.bhattacharjee@indusnet.co.in","suman.bachar@indusnet.co.in","suman.roy@indusnet.co.in")
-            }*/
+            }
             Timber.d("quto_mail auto mail sending...")
             m.setTo(toArr)
             m.setFrom("TEAM");
@@ -14062,7 +15294,7 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
             @Throws(AuthFailureError::class)
             override fun getHeaders(): Map<String, String> {
                 val params: MutableMap<String, String> = HashMap()
-                params["Authorization"] = getString(R.string.firebase_key)
+                params["Authorization"] = getString(R.string.PART_1)+getString(R.string.PART_2)+getString(R.string.PART_3)+getString(R.string.PART_4)//getString(R.string.firebase_key)
                 params["Content-Type"] = "application/json"
                 return params
             }
@@ -14879,6 +16111,22 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
                     userlocation.updateDateTime = AppUtils.getCurrentDateTime()
                     userlocation.network_status = if (AppUtils.isOnline(this)) "Online" else "Offline"
                     userlocation.battery_percentage = AppUtils.getBatteryPercentage(this).toString()
+
+                    //negative distance handle Suman 06-02-2024 mantis id 0027225 begin
+                    try{
+                        var distReftify = userlocation.distance.toDouble()
+                        if(distReftify<0){
+                            var locL = AppDatabase.getDBInstance()!!.userLocationDataDao().getLocationUpdateForADay(AppUtils.getCurrentDateForShopActi()) as ArrayList<UserLocationDataEntity>
+                            var lastLoc = locL.get(locL.size-1)
+                            var d = LocationWizard.getDistance(userlocation.latitude.toDouble(),userlocation.longitude.toDouble(), lastLoc.latitude.toDouble()   ,lastLoc.longitude.toDouble())
+                            userlocation.distance = d.toString()
+                        }
+                    }catch (ex:Exception){
+                        ex.printStackTrace()
+                        userlocation.distance = "0.0"
+                    }
+                    //negative distance handle Suman 06-02-2024 mantis id 0027225 end
+
                     AppDatabase.getDBInstance()!!.userLocationDataDao().insertAll(userlocation)
 
                     Timber.e("=====Shop auto revisit data added=======")
@@ -15011,6 +16259,48 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
         } catch (a: ActivityNotFoundException) {
             a.printStackTrace()
         }
+    }
+
+    private fun showInstructionOfTwoStepVerification() {
+
+        var instructionDialog = Dialog(mContext)
+        instructionDialog!!.setCancelable(false)
+        instructionDialog!!.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        instructionDialog!!.setContentView(R.layout.dialog_gmail_instruction_only)
+        val tvHeader = instructionDialog!!.findViewById(R.id.dialog_contact_gr_header) as TextView
+        val tv_instruction = instructionDialog!!.findViewById(R.id.tv_instruction) as TextView
+        val tv_save_instruction = instructionDialog!!.findViewById(R.id.tv_save_instruction) as TextView
+        val iv_dialog_instruction_copy = instructionDialog!!.findViewById(R.id.iv_dialog_instruction_copy) as ImageView
+        val iv_close = instructionDialog!!.findViewById(R.id.iv_dialog_instruction_close_icon) as ImageView
+
+
+
+        val tv_ulink = instructionDialog!!.findViewById(R.id.tv_ulink) as TextView
+        tv_ulink.setOnClickListener {
+            var youtubeID = "dM_DlzyeWW8"
+            val intentApp = Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + youtubeID))
+            val intentBrowser = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=" + youtubeID))
+            try {
+                this.startActivity(intentApp)
+            } catch (ex: ActivityNotFoundException) {
+                this.startActivity(intentBrowser)
+            }
+        }
+
+        tv_save_instruction.setOnClickListener {
+            instructionDialog.dismiss()
+        }
+        iv_close.setOnClickListener {
+            instructionDialog.dismiss()
+        }
+        iv_dialog_instruction_copy.setOnClickListener {
+            val clipboard: ClipboardManager? = mContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager?
+            val clip = ClipData.newPlainText("label", tv_instruction.text.toString().trim())
+            clipboard!!.setPrimaryClip(clip)
+            Toaster.msgLong(mContext,"Copied to Clipboard")
+        }
+        tvHeader.text = "E-mail configuration"
+        instructionDialog!!.show()
     }
 
 

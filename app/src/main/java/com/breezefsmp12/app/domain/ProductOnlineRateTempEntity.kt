@@ -29,4 +29,11 @@ class ProductOnlineRateTempEntity {
     @ColumnInfo(name = "isRateShow")
     var isRateShow: Boolean = false
 
+    @ColumnInfo(name = "Qty_per_Unit")
+    var Qty_per_Unit: Double? = null
+    @ColumnInfo(name = "Scheme_Qty")
+    var Scheme_Qty: Double? = null
+   @ColumnInfo(name = "Effective_Rate")
+    var Effective_Rate: Double? = null
+
 }

@@ -3,9 +3,12 @@ package com.breezefsmp12.features.billing.presentation
 import android.Manifest
 import android.app.Activity
 import android.app.DatePickerDialog
+import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -28,6 +31,7 @@ import com.breezefsmp12.app.AppDatabase
 import com.breezefsmp12.app.NetworkConstant
 import com.breezefsmp12.app.Pref
 import com.breezefsmp12.app.domain.*
+import com.breezefsmp12.app.types.FragType
 import com.breezefsmp12.app.utils.AppUtils
 import com.breezefsmp12.app.utils.ImagePickerManager
 import com.breezefsmp12.app.utils.InputFilterDecimal
@@ -73,6 +77,7 @@ import kotlin.collections.ArrayList
  * Created by Saikat on 19-02-2019.
  */
 // 1.0 AddBillingFragment AppV 4.0.6 saheli 12-01-2023 multiple contact Data added on Api called
+// 2.0 AddBillingFragment AppV 4.2.2 Suman 16-10-2023 mantis id 26908
 class AddBillingFragment : BaseFragment(), View.OnClickListener {
 
     private lateinit var mContext: Context
@@ -315,6 +320,20 @@ class AddBillingFragment : BaseFragment(), View.OnClickListener {
     }
 
     private fun initPermissionCheck() {
+
+        //begin mantis id 26741 Storage permission updation Suman 22-08-2023
+        var permissionList = arrayOf<String>( Manifest.permission.CAMERA)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            permissionList += Manifest.permission.READ_MEDIA_IMAGES
+            permissionList += Manifest.permission.READ_MEDIA_AUDIO
+            permissionList += Manifest.permission.READ_MEDIA_VIDEO
+        }else{
+            permissionList += Manifest.permission.WRITE_EXTERNAL_STORAGE
+            permissionList += Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+//end mantis id 26741 Storage permission updation Suman 22-08-2023
+
         permissionUtils = PermissionUtils(mContext as Activity, object : PermissionUtils.OnPermissionListener {
             override fun onPermissionGranted() {
                 showPictureDialog()
@@ -324,7 +343,7 @@ class AddBillingFragment : BaseFragment(), View.OnClickListener {
                 (mContext as DashboardActivity).showSnackMessage(getString(R.string.accept_permission))
             }
 
-        }, arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+        },permissionList)// arrayOf<String>(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
     }
 
     fun onRequestPermission(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -554,6 +573,15 @@ class AddBillingFragment : BaseFragment(), View.OnClickListener {
         addShopData.isShopDuplicate=shop.isShopDuplicate
 
         addShopData.purpose=shop.purpose
+        //start AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+        try {
+            addShopData.FSSAILicNo = shop.FSSAILicNo
+        }catch (ex:Exception){
+            ex.printStackTrace()
+            addShopData.FSSAILicNo = ""
+        }
+//end AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+
 
         addShopData.GSTN_Number=shop.gstN_Number
         addShopData.ShopOwner_PAN=shop.shopOwner_PAN
@@ -1516,6 +1544,16 @@ class AddBillingFragment : BaseFragment(), View.OnClickListener {
 
     fun onConfirmClick() {
 
+        //begin 2.0 AddBillingFragment AppV 4.2.2 Suman 16-10-2023 mantis id 26908
+        var ordAmt = 0.0
+        try{
+            var ordDtls = AppDatabase.getDBInstance()!!.orderDetailsListDao().getSingleOrder(order!!.order_id!!)
+            ordAmt = ordDtls.amount.toString().toDouble()
+        }catch (ex:Exception){
+            ex.printStackTrace()
+        }
+        //end 2.0 AddBillingFragment AppV 4.2.2 Suman 16-10-2023 mantis id 26908
+
         val list = AppDatabase.getDBInstance()!!.billingDao().getDataOrderIdWise(order?.order_id!!)
         var isInvoiceNoAvailable = false
 
@@ -1527,6 +1565,21 @@ class AddBillingFragment : BaseFragment(), View.OnClickListener {
             (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_enter_invoice_amount))
         else if (Pref.willAttachmentCompulsory && TextUtils.isEmpty(/*tv_attachment.text.toString().trim()*/ dataPath))
             (mContext as DashboardActivity).showSnackMessage(getString(R.string.error_select_attachment))
+        else if(ordAmt<et_invoice_amount.text.toString().trim().toDouble()){//begin 2.0 AddBillingFragment AppV 4.2.2 Suman 16-10-2023 mantis id 26908
+            AppUtils.hideSoftKeyboard(mContext as DashboardActivity)
+            //(mContext as DashboardActivity).showSnackMessage("Invoice value is more than Order value. Cannot Proceed.")
+            val simpleDialog = Dialog(mContext)
+            simpleDialog.setCancelable(false)
+            simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            simpleDialog.setContentView(R.layout.dialog_ok)
+            val dialogHeader = simpleDialog.findViewById(R.id.dialog_yes_header_TV) as AppCustomTextView
+            dialogHeader.text = "Invoice value is more than Order value. Cannot Proceed."
+            val dialogYes = simpleDialog.findViewById(R.id.tv_dialog_yes) as AppCustomTextView
+            dialogYes.setOnClickListener({ view ->
+                simpleDialog.cancel()
+            })
+            simpleDialog.show()
+        }//end 2.0 AddBillingFragment AppV 4.2.2 Suman 16-10-2023 mantis id 26908
         else {
             if (list != null && list.isNotEmpty()) {
 

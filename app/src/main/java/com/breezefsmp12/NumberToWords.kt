@@ -16,8 +16,24 @@ public class NumberToWords{
                 "zero", "ten", "twenty", "thirty", "forty", "fifty",
                 "sixty", "seventy", "eighty", "ninety"
             )
+            val num = number.toInt()
+            val fraction = ((number - num) * 100).toInt()
+
             if (number == 0) {
                 return "zero"
+            }
+                else {
+                    val fractionWords = if (fraction < 20) {
+                        unitsArray[fraction]
+                    } else {
+                        val unit = fraction % 10
+                        tensArray[fraction / 10] + if (unit > 0) {
+                            " " + unitsArray[unit]
+                        } else {
+                            ""
+                        }
+                    }
+                convertToWords(num,unitsArray,tensArray) + " rupees and " + fractionWords + " paisa"
             }
             // add minus before conversion if the number is less than 0
             if (number < 0) {
@@ -61,6 +77,21 @@ public class NumberToWords{
                 }
             }
             return words
+        }
+
+        fun convertToWords(number: Int, unitsArray: Array<String>, tensArray: Array<String>): String {
+            return when {
+                number < 20 -> unitsArray[number]
+                number < 100 -> {
+                    val unit = number % 10
+                    tensArray[number / 10] + if (unit > 0) {
+                        " " + unitsArray[unit]
+                    } else {
+                        ""
+                    }
+                }
+                else -> "Number out of range"
+            }
         }
     }
 }

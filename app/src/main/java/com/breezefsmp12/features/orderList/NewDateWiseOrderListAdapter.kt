@@ -30,6 +30,7 @@ class NewDateWiseOrderListAdapter(context: Context, userLocationDataEntity: Arra
                                   private val onDownloadClick: (OrderDetailsListEntity) -> Unit,
                                   private val onCollectionClick: (OrderDetailsListEntity) -> Unit,
                                   private val onLocationClick: (OrderDetailsListEntity) -> Unit,
+                                  private val onLocationshareClick: (OrderDetailsListEntity) -> Unit,
                                   private val onCreateQRClick: (OrderDetailsListEntity) -> Unit) :
         RecyclerView.Adapter<NewDateWiseOrderListAdapter.MyViewHolder>() {
 
@@ -110,6 +111,12 @@ class NewDateWiseOrderListAdapter(context: Context, userLocationDataEntity: Arra
                 } else
                     itemView.email_icon.visibility = View.GONE
 
+                if (Pref.IsShowCustomerLocationShare) {
+                        itemView.locationshare_icon.visibility = View.VISIBLE
+                } else {
+                    itemView.locationshare_icon.visibility = View.GONE
+                }
+
                 /*if (Pref.isCollectioninMenuShow)
                     itemView.collection_icon.visibility = View.VISIBLE
                 else
@@ -181,6 +188,10 @@ class NewDateWiseOrderListAdapter(context: Context, userLocationDataEntity: Arra
 
                 itemView.location_icon.setOnClickListener {
                     onLocationClick(userLocationDataEntity[adapterPosition])
+                }
+
+                itemView.locationshare_icon.setOnClickListener {
+                    onLocationshareClick(userLocationDataEntity[adapterPosition])
                 }
 
                 itemView.iv_create_qr.setOnClickListener {

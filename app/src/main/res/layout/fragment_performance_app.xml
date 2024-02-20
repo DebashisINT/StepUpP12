@@ -11,7 +11,7 @@
         android:clickable="true"
         android:focusable="true"
         android:orientation="horizontal"
-        android:weightSum="2">
+        android:weightSum="3">
 
         <com.breezefsmp12.widgets.AppCustomTextView
             android:id="@+id/ownPerformace_TV_frag_performace_app"
@@ -23,7 +23,7 @@
             android:focusable="true"
             android:gravity="center"
             android:paddingStart="@dimen/_20sdp"
-            android:text="Own Performance"
+            android:text="Own"
             android:drawableLeft="@drawable/ic_customer"
             android:drawablePadding="-20dp"
             android:drawableTint="@color/white"
@@ -43,7 +43,25 @@
             android:drawableTint="@color/white"
             android:gravity="center"
             android:paddingStart="@dimen/_20sdp"
-            android:text="Team Performance"
+            android:text="Team"
+            android:textStyle="bold"
+            android:textSize="@dimen/_11sdp"
+            android:textColor="@drawable/selector_text_color_white_performance" />
+
+
+        <com.breezefsmp12.widgets.AppCustomTextView
+            android:id="@+id/all_TV_frag_performace_app"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/_40sdp"
+            android:layout_weight="1"
+            android:background="@drawable/selected_performance_bg"
+            android:clickable="true"
+            android:focusable="true"
+            android:drawableLeft="@drawable/ic_team_icon"
+            android:drawableTint="@color/white"
+            android:gravity="center"
+            android:paddingStart="@dimen/_20sdp"
+            android:text="All"
             android:textStyle="bold"
             android:textSize="@dimen/_11sdp"
             android:textColor="@drawable/selector_text_color_white_performance" />

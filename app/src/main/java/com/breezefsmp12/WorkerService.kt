@@ -54,6 +54,8 @@ class WorkerService(context: Context,workParm:WorkerParameters):Worker(context,w
                 return
             }
             val serviceLauncher = Intent(AppUtils.contx, LocationFuzedService::class.java)
+            Timber.d("TAG_CHECK_LOC_SERVICE_STATUS")
+
             if (Pref.user_id != null && Pref.user_id!!.isNotEmpty()) {
                 Timber.d("serviceStatusActionable")
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -74,7 +76,8 @@ class WorkerService(context: Context,workParm:WorkerParameters):Worker(context,w
                         Timber.d("===================== doWork serviceStatusActionable Job not scheduled  " + AppUtils.getCurrentDateTime() + "====================================")
                     }
                 } else
-                    AppUtils.contx!!.startService(serviceLauncher)
+                    Timber.d("TAG_CHECK_LOC_SERVICE_STATUS")
+                AppUtils.contx!!.startService(serviceLauncher)
             } else {
                 AppUtils.contx!!.stopService(serviceLauncher)
 

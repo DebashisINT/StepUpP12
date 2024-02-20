@@ -211,7 +211,7 @@ class OfflineAllShopAdapter(private val context: Context, private val teamShopLi
                     }
                 }
 
-
+                iconWrapper_rl.visibility = View.GONE
 
 
             }

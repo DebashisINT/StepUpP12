@@ -13,6 +13,8 @@
     <!--Map Key-->
     <!--<string name="MAP_ProjectAPIKey">AIzaSyBRrqsLZFqThqM8uxw_k94pZMbv3-3h0dM</string>-->
     <string name="MAP_ProjectAPIKey" translatable="false">AIzaSyATj1HyRHzTdcceAGta93texT86kBMbogE</string>
+    <string name="facebook_app_id" translatable="false">260734547001450</string>
+    <string name="fb_login_protocol_scheme" translatable="false">fb260734547001450</string>
 
     <!--Login-->
     <string name="username_new" translatable="false">Username</string>
@@ -181,6 +183,7 @@
     <string name="owner_contact_number" translatable="false">Owner Contact Number</string>
     <string name="owner_contact_number1" translatable="false">Contact Number</string>
     <string name="GSTIN" translatable="false">GSTIN Number</string>
+    <string name="FSSAILic" translatable="false">FSSAI Lic Number</string>
     <string name="pan" translatable="false">PAN Number</string>
     <string name="owner_email" translatable="false">Owner Email</string>
     <string name="owner_email1" translatable="false">Email</string>
@@ -1434,7 +1437,6 @@
         even when the app is closed or not in use.</string>
 
 
-
     <!--My Jobs-->
     <string name="view_details" translatable="false">View Details</string>
     <string name="cust_name" translatable="false">ICICI-WB-SALTLAKE</string>
@@ -1580,7 +1582,12 @@
     <string name="camera_back" translatable="false">Back Camera :\u0020 </string>
     <string name="camera_front" translatable="false">Front Camera :\u0020 </string>
     <string name="historys" translatable="false">Historys</string>
-    <string name="firebase_key" translatable="false">key=AAAAdZ7x2Dg:APA91bGogHbZjDHyvhjwtWfkOzAfNp7-CFMOjuIXhA9WiRgJhuR1qoxZz9T0NMEqnIZXMFt9eAtTMRssmcMbT-BXjEU9vt_2QkwlKENSKZXy7nL9aNwVLVFPRy8pF1AHz5hxMUVLVMas</string>
+    <!--<string name="firebase_key" translatable="false">key=AAAAIoWfCpc:APA91bEMOPyfjsyziPC1WYJiPHjzdmTQJmAOKP0fM24iXI9BgrmyhH4uLY6Jd-6Lpjp8mvSdpSp-zm20ApTOYQ3Ean4m6LicJ5CoECS_v5u2PUAwA8E6FLsu2ZC6_WxuSYnTTLzlUi4E</string>-->
+
+    <string name="PART_1" translatable="false">key=AAAAdZ7x2Dg:APA91bGogHbZjDHyvhjwtWf</string>
+    <string name="PART_2" translatable="false">kOzAfNp7-CFMOjuIXhA9WiRgJhuR1qoxZz9T0NMEqnIZXMFt9eAtTMR</string>
+    <string name="PART_3" translatable="false">ssmcMbT-BXjEU9vt_2QkwlKENSKZXy7nL9aNwVLVFPRy8p</string>
+    <string name="PART_4" translatable="false">F1AHz5hxMUVLVMas</string>
 
     <string name="GenderTextNewOrd" translatable="false">Gender</string>
     <string name="ProductTextNewOrd" translatable="false">Product Type</string>

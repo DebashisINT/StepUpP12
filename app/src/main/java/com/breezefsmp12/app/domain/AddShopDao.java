@@ -6,12 +6,15 @@ import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
 
-import java.util.Date;
 import java.util.List;
 
 import static com.breezefsmp12.app.AppConstant.SHOP_TABLE;
 
+import com.breezefsmp12.features.marketAssist.ChurnShopL;
 import com.breezefsmp12.features.marketAssist.ShopDtls;
+import com.breezefsmp12.features.marketAssist.ShopLastVisit;
+import com.breezefsmp12.features.performanceAPP.NoOrderTakenList;
+import com.breezefsmp12.features.performanceAPP.ShopDtlsCustom;
 
 /**
  * Created by sayantan.sarkar on 2/11/17.
@@ -72,6 +75,15 @@ public interface AddShopDao {
     @Query("Select * from shop_detail where shop_id=:shopId")
     AddShopDBModelEntity getShopByIdN(String shopId);
 
+    @Query("Select * from shop_detail where shop_id=:shopId and owner_contact_number=:owner_contact_number")
+    List<AddShopDBModelEntity> getShopByIdPhone(String shopId,String owner_contact_number);
+
+    @Query("Select owner_contact_number from shop_detail")
+    List<String> getAllOwnerContact();
+
+    @Query("Select * from shop_detail where owner_contact_number=:owner_contact_number")
+    List<AddShopDBModelEntity> getShopByPhone(String owner_contact_number);
+
     @Query("Select * from shop_detail where shop_id=:shopId")
     List<AddShopDBModelEntity> getShopByIdList(String shopId);
 
@@ -125,6 +137,9 @@ public interface AddShopDao {
     @Query("update shop_detail set isUploaded=:isUploaded where shop_id=:shopId")
     void updateIsUploaded(Boolean isUploaded, String shopId);
 
+    @Query("update shop_detail set companyName_id=:companyName_id where shop_id=:shopId")
+    void updateCompanyID(String companyName_id,String shopId);
+
     @Query("update shop_detail set isEditUploaded=:isEditUploaded where shop_id=:shopId")
     void updateIsEditUploaded(int isEditUploaded, String shopId);
 
@@ -148,10 +163,14 @@ public interface AddShopDao {
     @Query("Select * from shop_detail where owner_contact_number=:contactNum")
     List<AddShopDBModelEntity> getDuplicateShopData(String contactNum);
 
+    @Query("Select * from shop_detail where owner_contact_number=:contactNum and shop_id!=:shop_id")
+    List<AddShopDBModelEntity> getDuplicateShopData(String contactNum,String shop_id);
+
     @Query("Select * from shop_detail where shop_name LIKE '%' || :shopNameorNum  || '%' OR owner_contact_number LIKE '%' || :shopNameorNum  || '%' ")
     List<AddShopDBModelEntity> getShopBySearchData(String shopNameorNum);
 
     @Query("Select * from shop_detail where shop_name LIKE '%' || :shopNameorNum  || '%' OR owner_contact_number LIKE '%' || :shopNameorNum  ||  '%' OR owner_name LIKE '%' || :shopNameorNum  || '%' ")
+   // @Query("Select * from shop_detail where shop_name LIKE '%' || :shopNameorNum )
     List<AddShopDBModelEntity> getShopBySearchDataNew(String shopNameorNum);
 
 
@@ -302,6 +321,77 @@ public interface AddShopDao {
             "case when shop_detail.party_status_id IS NULL then '' else shop_detail.party_status_id END as party_status_id\n" +
             "from shop_detail left JOIN shop_type_list\n" +
             "on shop_detail.type = shop_type_list.shoptype_id left join beat_list\n" +
-            "on shop_detail.beat_id = beat_list.beat_id")
+            "on shop_detail.beat_id = beat_list.beat_id order by shop_name")
     List<ShopDtls> getShopForMarketAssist();
+
+    @Query("select shop_id,shop_name,address,owner_name,owner_contact_number,shopLat,shopLong,\n" +
+            "case when shop_type_list.shoptype_name IS NULL then '' else shop_type_list.shoptype_name END as shopType,\n" +
+            "case when beat_list.name  IS NULL then '' else beat_list.name END as beatName,\n" +
+            "case when shop_detail.retailer_id IS NULL then '' else shop_detail.retailer_id END as retailer_id,\n" +
+            "case when shop_detail.party_status_id IS NULL then '' else shop_detail.party_status_id END as party_status_id,lastVisitedDate,0 as tag1,0 as tag2,0 as tag3,0 as tag4,0 as tag5,0 as tag6," +
+            "'' as lastPurchaseAge,'' as lastVisitAge,'' as avgShopOrdAmt,'' as avgTimeSinceFirstOrd,'' as shopVisitAvg,'' as orderBehav \n" +
+            "from shop_detail left JOIN shop_type_list\n" +
+            "on shop_detail.type = shop_type_list.shoptype_id left join beat_list\n" +
+            "on shop_detail.beat_id = beat_list.beat_id order by shop_name")
+    List<ChurnShopL> getShopForChurn();
+
+    @Query("select shop_id,shop_name,owner_contact_number,address,case when owner_name IS NULL then '' else owner_name END as owner_name,type, JULIANDAY(date())- JULIANDAY(added_date) as age_since_party_creation_count," +
+            " date(added_date) as dateAdded,lastVisitedDate from shop_detail where shop_id not in (\n" +
+            "select shopid from shop_activity \n" +
+            ") and isOwnshop = 1")
+    List<ShopDtlsCustom>  getShopDtlsCUstom();
+
+    @Query("select shop_id,shop_name,owner_contact_number,address,case when owner_name IS NULL then '' else owner_name END as owner_name,type, JULIANDAY(date())- JULIANDAY(added_date) as age_since_party_creation_count," +
+            " date(added_date) as dateAdded,lastVisitedDate from shop_detail where isOwnshop = 1 order by upper(trim(shop_name))")
+    List<ShopDtlsCustom>  getShopDtlsCUstom1();
+
+    @Query("Select shop_id,shop_name,owner_contact_number,address,case when owner_name IS NULL then '' else owner_name END as owner_name," +
+            "type, JULIANDAY(date())- JULIANDAY(added_date) as age_since_party_creation_count from shop_detail where shop_id=:shopId")
+    NoOrderTakenList getCustomShopDtls(String shopId);
+
+
+    @Query("select shop_id,lastVisitedDate,'' as lastVIsitAge,totalVisitCount from shop_detail")
+    List<ShopLastVisit> getShopListLastVisit();
+
+    @Query("select shop_id,lastVisitedDate,'' as lastVIsitAge,totalVisitCount from shop_detail where shop_id=:shop_id ")
+    ShopLastVisit getShopListLastVisitByShop(String shop_id);
+
+    @Query("select lastVisitedDate from shop_detail where shop_id=:shop_id")
+    String getShopListLastVisit(String shop_id);
+
+    @Query("Select * from shop_detail where type=:type and assigned_to_dd_id=:assigned_to_dd_id and lower(shop_name)=:shop_name")
+    List<AddShopDBModelEntity> getShopsAccordingToTypeDD(String type,String assigned_to_dd_id,String shop_name);
+
+    @Query("select * from shop_detail where shop_name=:shop_name and owner_contact_number=:owner_contact_number")
+    List<AddShopDBModelEntity> getCustomData(String shop_name,String owner_contact_number);
+
+    @Query("select * from shop_detail where type='99' and isOwnshop = 1 and shopStatusUpdate = 1 order by shop_name COLLATE NOCASE ASC")
+    List<AddShopDBModelEntity> getContatcShops();
+
+    @Query("select * from shop_detail where type = '99' order by added_date desc")
+    List<AddShopDBModelEntity> getContatcShopsByAddedDate();
+
+    @Query("select * from shop_detail where type = '99' order by shop_name COLLATE NOCASE ASC")
+    List<AddShopDBModelEntity> getContatcShopsByName();
+
+    @Query("select * from shop_detail where type = '99' and isUploaded=:isUploaded")
+    List<AddShopDBModelEntity> getContatcUnsyncList(Boolean isUploaded);
+
+    @Query("delete from shop_detail where type='99'")
+    void del99();
+
+    @Query("Select owner_contact_number from shop_detail where length(owner_contact_number) = 10")
+    List<String> getOwnerContactL();
+
+    @Query("select '' || '+91' || owner_contact_number as owner_contact_number from shop_detail where length(owner_contact_number) = 10")
+    List<String> getOwnerContactLWithPrefix();
+
+    @Query("update shop_detail\n" +
+            "set jobTitle=:jobTitle, owner_email=:ownerEmailId, owner_contact_number=:ownerContactNumber, address=:address, pin_code=:pinCode, shopLat=:shopLat, shopLong=:shopLong, crm_assignTo=:crm_assignTo, crm_assignTo_ID=:crm_assignTo_ID, crm_type=:crm_type, crm_type_ID=:crm_type_ID, crm_status=:crm_status, crm_source=:crm_source, crm_source_ID=:crm_source_ID, remarks=:remarks, amount=:amount, crm_stage=:crm_stage, crm_stage_ID=:crm_stage_ID, crm_reference=:crm_reference, crm_reference_ID=:crm_reference_ID, crm_reference_ID_type=:crm_reference_ID_type, crm_saved_from=:crm_saved_from, isEditUploaded=:isEditUploaded" +
+            " where shop_id =:shopId ")
+    public int updateContactDtls(String shopId,String jobTitle,String ownerEmailId,String ownerContactNumber,String address,String pinCode,Double shopLat,Double shopLong,
+                                 String crm_assignTo,String crm_assignTo_ID,String crm_type,String crm_type_ID,String crm_status,String crm_source,String crm_source_ID,
+                                 String remarks,String amount,String crm_stage,String crm_stage_ID,
+                                 String crm_reference,String crm_reference_ID,String crm_reference_ID_type,String crm_saved_from,int isEditUploaded);
+
 }

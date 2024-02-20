@@ -39,6 +39,7 @@ class UpdateShopStatusDialog: DialogFragment(), View.OnClickListener {
     companion object {
 
         private lateinit var mHeader: String
+        private lateinit var mBody: String
         private lateinit var mLeftBtn: String
         private lateinit var mRightBtn: String
         private lateinit var mSelType: String
@@ -46,7 +47,7 @@ class UpdateShopStatusDialog: DialogFragment(), View.OnClickListener {
         private var mIsCancelable: Boolean = true
         private lateinit var mListener: OnDSButtonClickListener
 
-        fun getInstance(header: String, leftCancel: String, rightOk: String, isCancelable: Boolean,selectedType:String, usrId:String,listener: OnDSButtonClickListener): UpdateShopStatusDialog {
+        fun getInstance(header: String, leftCancel: String, rightOk: String, isCancelable: Boolean,selectedType:String, usrId:String,bodyText:String="",listener: OnDSButtonClickListener): UpdateShopStatusDialog {
             val cardFragment = UpdateShopStatusDialog()
             mHeader = header
             mLeftBtn = leftCancel
@@ -55,6 +56,7 @@ class UpdateShopStatusDialog: DialogFragment(), View.OnClickListener {
             mSelType=selectedType
             muserIdForTypeUpdate=usrId
             mListener = listener
+            mBody = bodyText
             return cardFragment
         }
     }
@@ -83,8 +85,9 @@ class UpdateShopStatusDialog: DialogFragment(), View.OnClickListener {
         dialogOk.text=mRightBtn
         dialogCancel.text= mLeftBtn
 
-        dialogHeader.text="Select Type for\n"+mHeader
-        tv_ds_type_dropdown.hint = "Select Shop Status"
+        dialogHeader.text="Select status for\n"+mHeader
+        //tv_ds_type_dropdown.hint = "Select Shop Status"
+        tv_ds_type_dropdown.hint = mBody
         selType.text=mSelType
         tv_ds_type_dropdown.setOnClickListener(this)
         dialogCancel.setOnClickListener(this)

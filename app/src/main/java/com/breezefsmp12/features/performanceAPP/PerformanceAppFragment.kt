@@ -25,6 +25,7 @@ class PerformanceAppFragment : BaseFragment(), View.OnClickListener {
     private lateinit var mContext: Context
     private lateinit var ownPerformanceTab: AppCustomTextView
     private lateinit var teamPerformanceTab: AppCustomTextView
+    private lateinit var allPerformanceTab: AppCustomTextView
     private lateinit var performanceTabPagerAdapter: PerformanceTabPagerAdapter
     private lateinit var performanceViewPager: ViewPager
 
@@ -33,11 +34,7 @@ class PerformanceAppFragment : BaseFragment(), View.OnClickListener {
         mContext = context
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
         val view = inflater.inflate(R.layout.fragment_performance_app, container, false)
         initView(view)
@@ -50,12 +47,13 @@ class PerformanceAppFragment : BaseFragment(), View.OnClickListener {
         ownPerformanceTab = view.findViewById(R.id.ownPerformace_TV_frag_performace_app)
         teamPerformanceTab = view.findViewById(R.id.teamPerformace_TV_frag_performace_app)
         performanceViewPager = view.findViewById(R.id.performance_vp_frag_performance_app)
-
+        allPerformanceTab = view.findViewById(R.id.all_TV_frag_performace_app)
         ownPerformanceTab.setOnClickListener(this)
         teamPerformanceTab.setOnClickListener(this)
+        allPerformanceTab.setOnClickListener(this)
         performanceTabPagerAdapter = PerformanceTabPagerAdapter(fragmentManager)
         performanceViewPager.currentItem = 0
-        isPerformanceWise(true)
+        isPerformanceWise("0")
         performanceViewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
 
             override fun onPageScrollStateChanged(state: Int) {
@@ -71,9 +69,14 @@ class PerformanceAppFragment : BaseFragment(), View.OnClickListener {
 
             override fun onPageSelected(position: Int) {
                if (position == 0) {
-                    isPerformanceWise(true)
-                } else {
-                    isPerformanceWise(false)
+                    isPerformanceWise("0")
+                }  else if(position == 1){
+                   isPerformanceWise("1")
+               }
+               else if(position == 2){
+                   isPerformanceWise("2")
+               }else {
+                    isPerformanceWise("0")
                 }
             }
 
@@ -93,23 +96,39 @@ class PerformanceAppFragment : BaseFragment(), View.OnClickListener {
     override fun onClick(p0: View?) {
         when (p0!!.id) {
             R.id.ownPerformace_TV_frag_performace_app -> {
-                isPerformanceWise(true)
+                isPerformanceWise("0")
                 performanceViewPager.currentItem = 0
             }
             R.id.teamPerformace_TV_frag_performace_app -> {
-                isPerformanceWise(false)
+                isPerformanceWise("1")
                 performanceViewPager.currentItem = 1
+            }
+            R.id.all_TV_frag_performace_app -> {
+                isPerformanceWise("2")
+                performanceViewPager.currentItem = 2
             }
         }
     }
 
-    fun isPerformanceWise(isperformanceWise: Boolean) {
-        if (isperformanceWise) {
+    fun isPerformanceWise(isperformanceWise: String) {
+        if (isperformanceWise.equals("0")) {
             ownPerformanceTab.isSelected = true
             teamPerformanceTab.isSelected = false
-        } else {
+            allPerformanceTab.isSelected = false
+        }
+        else if (isperformanceWise.equals("2")){
+            ownPerformanceTab.isSelected = false
+            teamPerformanceTab.isSelected = false
+            allPerformanceTab.isSelected = true
+        }
+        else if (isperformanceWise.equals("1")){
             ownPerformanceTab.isSelected = false
             teamPerformanceTab.isSelected = true
+            allPerformanceTab.isSelected = false
+        }else {
+            ownPerformanceTab.isSelected = true
+            teamPerformanceTab.isSelected = false
+            allPerformanceTab.isSelected = false
         }
     }
 }

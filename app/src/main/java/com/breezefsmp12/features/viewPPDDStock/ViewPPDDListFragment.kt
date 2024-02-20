@@ -309,6 +309,15 @@ class ViewPPDDListFragment : BaseFragment(), View.OnClickListener {
             shopObj.user_id = Pref.user_id
             shopObj.orderValue = 0
             shopObj.lastVisitedDate = AppUtils.getCurrentDate()
+            //start AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+            try {
+                shopObj.FSSAILicNo = shop_list[i].FSSAILicNo
+            }catch (ex:Exception){
+                ex.printStackTrace()
+                shopObj.FSSAILicNo = ""
+            }
+//end AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+
 
             if (shop_list[i].entity_code == null)
                 shopObj.entity_code = ""

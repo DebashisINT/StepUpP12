@@ -78,6 +78,7 @@ import com.google.android.gms.location.LocationRequest
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
+import kotlinx.android.synthetic.main.fragment_add_shop.FSSAILic_EDT
 import net.alexandroid.gps.GpsStatusDetector
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
@@ -94,6 +95,7 @@ import kotlin.collections.ArrayList
 // 2.0 BaseActivity AppV 4.0.7  Saheli    16/02/2023 mantis autologout issue 25678
 // 3.0 BaseActivity AppV 4.0.7  Saheli    20/02/2023 mantis gps with list issue 0025685
 // 4.0 BaseActivity AppV 4.0.7 Saheli    02/03/2023 Timber Log Implementation
+// 5.0 BaseActivity AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
 open class BaseActivity : AppCompatActivity(), GpsStatusDetector.GpsStatusDetectorCallBack {
 
     private val mRegistry = LifecycleRegistry(this)
@@ -174,12 +176,12 @@ open class BaseActivity : AppCompatActivity(), GpsStatusDetector.GpsStatusDetect
         } /*else
             Pref.isAutoLogout = false*/
 
-//        Pref.isAutoLogout=true
+      //  Pref.isAutoLogout=true
         if (Pref.isAutoLogout) {
             //Pref.isAddAttendence = false
             //Pref.DayStartMarked = false
             //Pref.DayEndMarked = false
-
+            Timber.d("MID: 26980 ${Pref.isAutoLogout}")
             performLogout()
             //syncShopList()
             //uploadShopRevisitData()
@@ -249,22 +251,31 @@ open class BaseActivity : AppCompatActivity(), GpsStatusDetector.GpsStatusDetect
     private fun performLogout() {
 
         if (autoLogoutDialog == null) {
+            Timber.d("MID: 26980 performLogout if")
             autoLogoutDialog = CommonDialogSingleBtn.getInstance(AppUtils.hiFirstNameText()+"!", "Final logout for the date ${AppUtils.convertLoginTimeToAutoLogoutTimeFormat(Pref.login_date!!)} is pending. Click Ok to complete final logout.", getString(R.string.ok), object : OnDialogClickListener {
 
                 override fun onOkClick() {
+
 
                     val list = AppDatabase.getDBInstance()!!.gpsStatusDao().getDataSyncStateWise(false)
 
 
                     if (AppUtils.isOnline(this@BaseActivity)) {
+                        Timber.d("MID: 26980 isOnline if")
 
                         if (list != null && list.isNotEmpty()) {
+                            Timber.d("MID: 26980 isOnline getDataSyncStateWise if")
+
                             i = 0
                             callUpdateGpsStatusApi(list)
                         } else {
+                            Timber.d("MID: 26980 isOnline getDataSyncStateWise else")
+
                             checkToCallLocationSync()
                         }
                     } else {
+                        Timber.d("MID: 26980 isOnline else")
+
                         Toaster.msgShort(this@BaseActivity, getString(R.string.no_internet))
                         performLogout()
                     }
@@ -275,9 +286,15 @@ open class BaseActivity : AppCompatActivity(), GpsStatusDetector.GpsStatusDetect
             //if (autoLogoutDialog?.dialog != null && !autoLogoutDialog?.dialog?.isShowing!!)
             autoLogoutDialog?.show(supportFragmentManager, "CommonDialogSingleBtn")
         } else {
-            if (autoLogoutDialog?.dialog != null && !autoLogoutDialog?.dialog?.isShowing!!)
+            Timber.d("MID: 26980 performLogout else")
+            if (autoLogoutDialog?.dialog != null && !autoLogoutDialog?.dialog?.isShowing!!) {
+                Timber.d("MID: 26980 autoLogoutDialog if")
+
                 autoLogoutDialog?.show(supportFragmentManager, "CommonDialogSingleBtn")
+            }
             else {
+                Timber.d("MID: 26980 autoLogoutDialog else")
+
                 if (autoLogoutDialog?.dialog == null)
                     autoLogoutDialog?.show(supportFragmentManager, "CommonDialogSingleBtn")
             }
@@ -286,11 +303,19 @@ open class BaseActivity : AppCompatActivity(), GpsStatusDetector.GpsStatusDetect
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private fun checkToCallLocationSync() {
+
         val locationList = AppDatabase.getDBInstance()!!.userLocationDataDao().getLocationNotUploaded(false)
-        if (locationList != null && locationList.isNotEmpty())
+        Timber.d("MID: 26980 checkToCallLocationSync getLocationNotUploaded ")
+
+        if (locationList != null && locationList.isNotEmpty()) {
+
+            Timber.d("MID: 26980 checkToCallLocationSync in method block locationList")
+
             syncLocationActivity(locationList)
-        else
+        }
+        else {
             initiateLogoutApi()
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -321,6 +346,7 @@ open class BaseActivity : AppCompatActivity(), GpsStatusDetector.GpsStatusDetect
         val apiLocationList: MutableList<UserLocationDataEntity> = ArrayList()
 
         val syncList = AppDatabase.getDBInstance()!!.userLocationDataDao().getLocationUpdateForADayNotSyn(AppUtils.convertFromRightToReverseFormat(Pref.login_date!!), true)
+        Timber.e("MID: 26980 ${syncList.size} after data putting on getLocationUpdateForADayNotSyn ")
 
 //        for (i in 0 until list.size) {
 //            if (list[i].latitude == null || list[i].longitude == null)
@@ -385,6 +411,8 @@ open class BaseActivity : AppCompatActivity(), GpsStatusDetector.GpsStatusDetect
             fiveMinsRowGap = 10
 
         for (i in 0 until allLocationList.size) {
+            Timber.d("MID: 26980 allLocationList.size forloop")
+
             if (allLocationList[i].latitude == null || allLocationList[i].longitude == null)
                 continue
 
@@ -392,11 +420,14 @@ open class BaseActivity : AppCompatActivity(), GpsStatusDetector.GpsStatusDetect
 
             if (i == 0) {
                 apiLocationList.add(allLocationList[i])
+                Timber.d("MID: 26980 add apiLocationList")
+
             }
 
             distanceCovered += allLocationList[i].distance.toDouble()
 
             if (!TextUtils.isEmpty(allLocationList[i].home_duration)) {
+
                 Timber.e("Home Duration (Location Fuzed Service)=================> ${allLocationList[i].home_duration}")
                 Timber.e("Time (Location Fuzed Service)=================> ${allLocationList[i].time}")
                 val arr = allLocationList[i].home_duration?.split(":".toRegex())?.toTypedArray()
@@ -409,9 +440,11 @@ open class BaseActivity : AppCompatActivity(), GpsStatusDetector.GpsStatusDetect
                 try {
 
                     val timeStamp_ = allLocationList[i].timestamp.toLong()
+                    Timber.d("MID: 26980 allLocationList index try ")
 
                     if (i % fiveMinsRowGap == 0) {
                         allLocationList[i].distance = distanceCovered.toString()
+                        Timber.d("MID: 26980 allLocationList index distance ")
 
                         if (timeStamp != 0L) {
                             val hh = timeStamp / 3600
@@ -429,9 +462,14 @@ open class BaseActivity : AppCompatActivity(), GpsStatusDetector.GpsStatusDetect
                 } catch (e: Exception) {
                     e.printStackTrace()
 
+                    Timber.d("MID: 26980 allLocationList index exception ")
+
                     allLocationList[i].distance = distanceCovered.toString()
 
                     if (timeStamp != 0L) {
+
+                        Timber.d("MID: 26980 timestamp if ")
+
                         val hh = timeStamp / 3600
                         timeStamp %= 3600
                         val mm = timeStamp / 60
@@ -440,6 +478,9 @@ open class BaseActivity : AppCompatActivity(), GpsStatusDetector.GpsStatusDetect
                         allLocationList[i].home_duration = AppUtils.format(hh) + ":" + AppUtils.format(mm) + ":" + AppUtils.format(ss)
                     }
                     apiLocationList.add(allLocationList[i])
+
+                    Timber.d("MID: 26980 allLocationList index add to apiLocationList")
+
                     distanceCovered = 0.0
                 }
             }
@@ -468,14 +509,20 @@ open class BaseActivity : AppCompatActivity(), GpsStatusDetector.GpsStatusDetect
                 locationData.home_duration = apiLocationList[i].home_duration
                 locationList.add(locationData)
 
+                Timber.e("MID: 26980 locationData add to locationList=================> ${locationList.size}")
+
 
                 val locationDataAll = LocationData()
                 locationDataAll.locationId = apiLocationList[i].locationId.toString()
                 locationListAllId.add(locationDataAll)
+                Timber.e("MID: 26980 locationDataAll add to locationListAllId=================> ${locationListAllId.size}")
+
             }
         }
 
         if (locationList.size > 0) {
+
+            Timber.e("MID: 26980 locationList.size if")
 
             locationUpdateReq.location_details = locationList
             val repository = LocationUpdateRepositoryProviders.provideLocationUpdareRepository()
@@ -497,24 +544,43 @@ open class BaseActivity : AppCompatActivity(), GpsStatusDetector.GpsStatusDetect
 
                                 if (updateShopActivityResponse.status == NetworkConstant.SUCCESS) {
 
+                                    Timber.e("MID: 26980 updateShopActivityResponse status & success is true")
+
                                     doAsync {
 
                                         for (i in 0 until locationListAllId/*locationList*/.size) {
+
+                                            Timber.e("MID: 26980 locationListAllId.size for loop")
 
                                             //AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploaded(true, locationList[i].locationId.toInt())
 
                                             if (syncList != null && syncList.isNotEmpty()) {
 
-                                                if (i == 0)
+                                                Timber.e("MID: 26980 sendLocationUpdate api calling syncList is not null if")
+
+                                                if (i == 0) {
                                                     AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploadedFor5Items(true, syncList[syncList.size - 1].locationId.toInt(), locationListAllId[i].locationId.toInt())
-                                                else
+                                                    Timber.e("MID: 26980 sendLocationUpdate api calling updateIsUploadedFor5Items syncList ")
+                                                }
+
+                                                else {
                                                     AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploadedFor5Items(true, locationListAllId[i - 1].locationId.toInt(), locationListAllId[i].locationId.toInt())
+                                                    Timber.e("MID: 26980 sendLocationUpdate api calling updateIsUploadedFor5Items locationListAllId ")
+                                                }
 
                                             } else {
-                                                if (i == 0)
+
+                                                Timber.e("MID: 26980 sendLocationUpdate api calling syncList is not null else")
+
+                                                if (i == 0) {
                                                     AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploaded(true, locationListAllId[i].locationId.toInt())
-                                                else
+                                                    Timber.e("MID: 26980 sendLocationUpdate api calling updateIsUploaded locationListAllId with position")
+
+                                                } else {
                                                     AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploadedFor5Items(true, locationListAllId[i - 1].locationId.toInt(), locationListAllId[i].locationId.toInt())
+                                                    Timber.e("MID: 26980 sendLocationUpdate api calling updateIsUploaded locationListAllId with position-1 ")
+
+                                                }
                                             }
                                         }
 
@@ -522,18 +588,30 @@ open class BaseActivity : AppCompatActivity(), GpsStatusDetector.GpsStatusDetect
                                             AppUtils.isLocationActivityUpdating = false
                                             getProgressInstance().dismissDialog()
                                             initiateLogoutApi()
+                                            Timber.e("MID: 26980 sendLocationUpdate api calling initiateLogoutApi calling in uiThread")
+
                                         }
                                     }
                                 } else {
+
+                                    Timber.e("MID: 26980 updateShopActivityResponse status & success is false")
+
                                     AppUtils.isLocationActivityUpdating = false
                                     getProgressInstance().dismissDialog()
                                     initiateLogoutApi()
+                                    Timber.e("MID: 26980 sendLocationUpdate updateShopActivityResponse status & success is false block initiateLogoutApi calling")
+
                                 }
 
                             }, { error ->
+
+                                Timber.e("MID: 26980 sendLocationUpdate sendLocationUpdate api calling error block execute ")
+
                                 AppUtils.isLocationActivityUpdating = false
                                 getProgressInstance().dismissDialog()
                                 initiateLogoutApi()
+
+                                Timber.e("MID: 26980 sendLocationUpdate sendLocationUpdate api calling in error block initiateLogoutApi calling ")
 
                                 if (error == null) {
 //                                    XLog.d("syncLocationActivity Logout : ERROR : " + "UNEXPECTED ERROR IN LOCATION ACTIVITY API")
@@ -547,6 +625,8 @@ open class BaseActivity : AppCompatActivity(), GpsStatusDetector.GpsStatusDetect
             )
         } else {
             Timber.e("=======locationList is empty (Auto Logout)=========")
+            Timber.e("MID: 26980 locationList.size else")
+
             AppUtils.isLocationActivityUpdating = false
             initiateLogoutApi()
         }
@@ -555,11 +635,18 @@ open class BaseActivity : AppCompatActivity(), GpsStatusDetector.GpsStatusDetect
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun initiateLogoutApi() {
+
+        Timber.e("MID: 26980 under initiateLogoutApi block")
+
         getProgressInstance().showDialogForLoading(this@BaseActivity)
         Pref.logout_time = "11:59 PM"
         if(Pref.DayStartMarked && Pref.IsShowDayStart){
+
+            Timber.e("MID: 26980 under initiateLogoutApi block DayStartMarked & IsShowDayStart is true if block ")
             singleLocationEnd()
         }else{
+            Timber.e("MID: 26980 under initiateLogoutApi block DayStartMarked & IsShowDayStart is true if block ")
+
             calllogoutApi(Pref.user_id!!, Pref.session_token!!)
         }
     }
@@ -815,10 +902,19 @@ private fun calllogoutApi(user_id: String, session_id: String) {
 
         val unSyncedList = AppDatabase.getDBInstance()!!.userLocationDataDao().getLocationUpdateForADayNotSyn(AppUtils.convertFromRightToReverseFormat(Pref.login_date!!), false)
 
+        Timber.e("MID: 26980 ${unSyncedList.size} data insert this getLocationUpdateForADayNotSyn ")
+
         if (unSyncedList != null && unSyncedList.isNotEmpty()) {
+
+            Timber.e("MID: 26980 ${unSyncedList.size} is not null")
+
             var totalDistance = 0.0
+
             for (i in unSyncedList.indices) {
                 totalDistance += unSyncedList[i].distance.toDouble()
+
+                Timber.e("MID: 26980 getiing calculate totalDistance from unSyncedList.indices for loop")
+
             }
 
             distance = Pref.tempDistance.toDouble() + totalDistance
@@ -830,6 +926,8 @@ private fun calllogoutApi(user_id: String, session_id: String) {
 
         if (Pref.logout_latitude != "0.0" && Pref.logout_longitude != "0.0") {
             location = LocationWizard.getAdressFromLatlng(this, Pref.logout_latitude.toDouble(), Pref.logout_longitude.toDouble())
+
+            Timber.e("MID: 26980 getAdressFromLatlng method getinng logout lat long")
 
             if (location.contains("http"))
                 location = "Unknown"
@@ -875,12 +973,16 @@ private fun calllogoutApi(user_id: String, session_id: String) {
                             Timber.d("AUTO_LOGOUT : " + "RESPONSE : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + logoutResponse.message)
                             if (logoutResponse.status == NetworkConstant.SUCCESS) {
 
+                                Timber.e("MID: 26980 logout api calling success true block")
+
                                 Pref.tempDistance = "0.0"
                                 //Pref.prevOrderCollectionCheckTimeStamp = 0L
 
                                 if (unSyncedList != null && unSyncedList.isNotEmpty()) {
                                     for (i in unSyncedList.indices) {
                                         AppDatabase.getDBInstance()!!.userLocationDataDao().updateIsUploaded(true, unSyncedList[i].locationId)
+                                        Timber.e("MID: 26980 logout api calling success block updateIsUploaded calling")
+
                                     }
                                 }
 
@@ -895,6 +997,7 @@ private fun calllogoutApi(user_id: String, session_id: String) {
                                 Pref.isAddAttendence = false
                             } else
                                 performLogout()
+                            Timber.e("MID: 26980 logout api calling success false block")
 
                             BaseActivity.isApiInitiated = false
                             takeActionOnGeofence()
@@ -902,6 +1005,8 @@ private fun calllogoutApi(user_id: String, session_id: String) {
                         },
                                 { error ->
                                     //
+                                    Timber.e("MID: 26980 logout api calling error block")
+
                                     Toaster.msgShort(this@BaseActivity, getString(R.string.something_went_wrong))
 //                                    XLog.d("AUTO_LOGOUT : " + "RESPONSE ERROR: " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
                                     Timber.d("AUTO_LOGOUT : " + "RESPONSE ERROR: " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
@@ -957,6 +1062,8 @@ fun clearData() {
 
 
                 try {
+                    Timber.e("MID: 26980 logout api calling error block")
+
                     val intent = Intent(this@BaseActivity, ToastBroadcastReceiver::class.java)
                     //intent.setAction(MyReceiver.ACTION_ALARM_RECEIVER)
 //                    val pendingIntent = PendingIntent.getBroadcast(this@BaseActivity, 1, intent, PendingIntent.FLAG_CANCEL_CURRENT)
@@ -1091,13 +1198,23 @@ fun checkGPSAvailability() {
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 fun serviceStatusActionable() {
     try {
+        Timber.d("serviceStatusActionable try block" )
+
         if (Pref.IsLeavePressed == true && Pref.IsLeaveGPSTrack == false) {
             return
         }
         val serviceLauncher = Intent(this, LocationFuzedService::class.java)
+        Timber.d("TAG_CHECK_LOC_SERVICE_STATUS")
+
         if (Pref.user_id != null && Pref.user_id!!.isNotEmpty()) {
+
+            Timber.e("MID: 26980 in serviceStatusActionable method if user_id is not null")
+
             startMonitorService()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+                Timber.e("MID: 26980 in serviceStatusActionable method if user_id is not null, SDK_VERSION is above 26")
+
                 val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
                 val componentName = ComponentName(this, LocationJobService::class.java)
                 val jobInfo = JobInfo.Builder(12, componentName)
@@ -1107,7 +1224,10 @@ fun serviceStatusActionable() {
                         .setOverrideDeadline(1000)
                         .build()
 
+                Timber.d("TAG_CHECK_LOC_SERVICE_STATUS")
                 val resultCode = jobScheduler.schedule(jobInfo)
+
+                Timber.e("MID: 26980 in serviceStatusActionable method if user_id is not null $resultCode")
 
                 if (resultCode == JobScheduler.RESULT_SUCCESS) {
 //                    XLog.d("===============================Job scheduled (Base Activity) " + AppUtils.getCurrentDateTime() + "============================")
@@ -1117,6 +1237,10 @@ fun serviceStatusActionable() {
                     Timber.d("=====================Job not scheduled (Base Activity) " + AppUtils.getCurrentDateTime() + "====================================")
                 }
             } else {
+
+                Timber.e("MID: 26980 in serviceStatusActionable method if user_id is not null, SDK_VERSION is less 26")
+                Timber.d("TAG_CHECK_LOC_SERVICE_STATUS")
+
                 startService(serviceLauncher)
                 startMonitorService()
             }
@@ -1126,6 +1250,8 @@ fun serviceStatusActionable() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
                 jobScheduler.cancelAll()
+                Timber.e("MID: 26980 in serviceStatusActionable method if user_id is null,Job scheduler cancel (Base Activity)")
+
 //                XLog.d("===============================Job scheduler cancel (Base Activity)" + AppUtils.getCurrentDateTime() + "============================")
                 Timber.d("===============================Job scheduler cancel (Base Activity)" + AppUtils.getCurrentDateTime() + "============================")
                 /*if (AppUtils.mGoogleAPIClient != null) {
@@ -1142,7 +1268,11 @@ fun serviceStatusActionable() {
             Timber.d("===========Service alarm is stopped (Base Activity)================")
         }
     } catch (e: Exception) {
+        Timber.d("serviceStatusActionable catch block" )
+
         e.printStackTrace()
+        Timber.d("serviceStatusActionable catch block ${e.localizedMessage}" )
+
     }
 }
 
@@ -1298,6 +1428,9 @@ fun stopLocationService() {
 fun isMonitorServiceRunning(): Boolean {
     val activityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
     if (activityManager != null) {
+
+        Timber.e("MID: 26980 in r method if activityManager is null,servicesList (Base Activity)")
+
         val servicesList = activityManager.getRunningServices(Int.MAX_VALUE)
         for (serviceInfo in servicesList) {
             if (MonitorService::class.java.getName() == serviceInfo.service.className) {
@@ -2443,8 +2576,37 @@ val revisitStatusList : MutableList<ShopRevisitStatusRequestData> = ArrayList()
 
             addShopData.purpose=mAddShopDBModelEntity.purpose
 
+//start AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+            try {
+                addShopData.FSSAILicNo = mAddShopDBModelEntity.FSSAILicNo
+            }catch (ex:Exception){
+                ex.printStackTrace()
+                addShopData.FSSAILicNo = ""
+            }
+//end AppV 4.2.2 tufan    20/09/2023 FSSAI Lic No Implementation 26813
+
             addShopData.GSTN_Number=mAddShopDBModelEntity.gstN_Number
             addShopData.ShopOwner_PAN=mAddShopDBModelEntity.shopOwner_PAN
+
+            //contact shop sync
+            try{
+                addShopData.actual_address = mAddShopDBModelEntity.address
+                addShopData.shop_firstName=  mAddShopDBModelEntity.crm_firstName
+                addShopData.shop_lastName=  mAddShopDBModelEntity.crm_lastName
+                addShopData.crm_companyID=  if(mAddShopDBModelEntity.companyName_id.equals("")) "0" else mAddShopDBModelEntity.companyName_id
+                addShopData.crm_jobTitle=  mAddShopDBModelEntity.jobTitle
+                addShopData.crm_typeID=  if(mAddShopDBModelEntity.crm_type_ID.equals("")) "0" else mAddShopDBModelEntity.crm_type_ID
+                addShopData.crm_statusID=  if(mAddShopDBModelEntity.crm_status_ID.equals("")) "0" else mAddShopDBModelEntity.crm_status_ID
+                addShopData.crm_sourceID= if(mAddShopDBModelEntity.crm_source_ID.equals("")) "0" else mAddShopDBModelEntity.crm_source_ID
+                addShopData.crm_reference=  mAddShopDBModelEntity.crm_reference
+                addShopData.crm_referenceID=  if(mAddShopDBModelEntity.crm_reference_ID.equals("")) "0" else mAddShopDBModelEntity.crm_reference_ID
+                addShopData.crm_referenceID_type=  mAddShopDBModelEntity.crm_reference_ID_type
+                addShopData.crm_stage_ID=  if(mAddShopDBModelEntity.crm_stage_ID.equals("")) "0" else mAddShopDBModelEntity.crm_stage_ID
+                addShopData.assign_to=  mAddShopDBModelEntity.crm_assignTo_ID
+                addShopData.saved_from_status=  mAddShopDBModelEntity.crm_saved_from
+            }catch (ex:Exception){
+                ex.printStackTrace()
+            }
 
 
             callAddShopApi(addShopData, mAddShopDBModelEntity.shopImageLocalPath, shopList, true,

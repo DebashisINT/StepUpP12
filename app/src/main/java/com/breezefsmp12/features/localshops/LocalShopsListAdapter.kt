@@ -59,6 +59,9 @@ import org.jetbrains.anko.uiThread
  * Created by riddhi on 2/1/18.
  */
 // 1.0 LocalShopsListAdapter  AppV 4.0.6  Suman   31/01/2023 Retailer/Entity show from room db mantis_id 25636
+//Begin 2.0 Pref v 4.1.6 Tufan 07/09/2023 mantis 26785 Multi visit Interval in Minutes Against the Same Shop
+
+
 class LocalShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>, val listener: LocalShopListClickListener,private val getSize: (Int) -> Unit) :
         RecyclerView.Adapter<LocalShopsListAdapter.MyViewHolder>(), Filterable {
     private val layoutInflater: LayoutInflater
@@ -227,22 +230,67 @@ class LocalShopsListAdapter(context: Context, list: List<AddShopDBModelEntity>, 
 
             itemView.visit_rl.setOnClickListener(View.OnClickListener {
                 if (Pref.isMultipleVisitEnable) {
-                    val list_ = AppDatabase.getDBInstance()!!.shopActivityDao().getShopForDay(list[adapterPosition].shop_id, AppUtils.getCurrentDateForShopActi())
-                    /*if (list_ == null || list_.isEmpty())
-                        listener.visitShop(list[adapterPosition])
-                    else {
-                        var isDurationCalculated = false
-                        for (i in list_.indices) {
-                            isDurationCalculated = list_[i].isDurationCalculated
-                            if (!list_[i].isDurationCalculated)
-                                break
 
-                        }
+             //Begin 2.0 Pref v 4.1.6 Tufan 07/09/2023 mantis 26785 Work
+                    var sId = list[adapterPosition].shop_id
+                    var dt = AppUtils.getCurrentDateForShopActi()
+                    val multipleVisitShopList = AppDatabase.getDBInstance()!!.shopActivityDao().getMultipleVisitShopByShopId(list[adapterPosition].shop_id, AppUtils.getCurrentDateForShopActi())
+                    if(multipleVisitShopList.size >0 ){
+                        var duration = AppUtils.geTimeDuration(multipleVisitShopList[0].visited_date!!,AppUtils.getCurrentISODateTime())
+                        if(duration.toInt() > Pref.MultiVisitIntervalInMinutes.toInt()){
+                            val list_ = AppDatabase.getDBInstance()!!.shopActivityDao().getShopForDay(list[adapterPosition].shop_id, AppUtils.getCurrentDateForShopActi())
+                            /*if (list_ == null || list_.isEmpty())
+                                listener.visitShop(list[adapterPosition])
+                            else {
+                                var isDurationCalculated = false
+                                for (i in list_.indices) {
+                                    isDurationCalculated = list_[i].isDurationCalculated
+                                    if (!list_[i].isDurationCalculated)
+                                        break
 
-                        if (isDurationCalculated)
+                                }
+
+                                if (isDurationCalculated)
+                                    listener.visitShop(list[adapterPosition])
+                            }*/
                             listener.visitShop(list[adapterPosition])
-                    }*/
-                    listener.visitShop(list[adapterPosition])
+                        }else{
+                            var durationAfter =  Pref.MultiVisitIntervalInMinutes.toInt() - duration.toInt()
+                            if(Pref.MultiVisitIntervalInMinutes.toInt() == duration.toInt()){
+                                durationAfter = 1
+                            }
+                            val simpleDialog = Dialog(context)
+                            simpleDialog.setCancelable(false)
+                            simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                            simpleDialog.setContentView(R.layout.dialog_ok)
+                            val dialogHeader = simpleDialog.findViewById(R.id.dialog_yes_header_TV) as AppCustomTextView
+                            dialogHeader.text = "Please try after ${durationAfter} minutes"
+                            val dialogYes = simpleDialog.findViewById(R.id.tv_dialog_yes) as AppCustomTextView
+                            dialogYes.setOnClickListener({ view ->
+                                simpleDialog.cancel()
+                            })
+                            simpleDialog.show()
+                        }
+                      }else{
+                        val list_ = AppDatabase.getDBInstance()!!.shopActivityDao().getShopForDay(list[adapterPosition].shop_id, AppUtils.getCurrentDateForShopActi())
+                        /*if (list_ == null || list_.isEmpty())
+                            listener.visitShop(list[adapterPosition])
+                        else {
+                            var isDurationCalculated = false
+                            for (i in list_.indices) {
+                                isDurationCalculated = list_[i].isDurationCalculated
+                                if (!list_[i].isDurationCalculated)
+                                    break
+
+                            }
+
+                            if (isDurationCalculated)
+                                listener.visitShop(list[adapterPosition])
+                        }*/
+                        listener.visitShop(list[adapterPosition])
+                      }
+             //End 2.0 Pref v 4.1.6 Tufan 07/09/2023 mantis 26785 Multi visit Interval in Minutes Against the Same Shop
+
                 }
                 else {
                     var objL =  AppDatabase.getDBInstance()!!.shopActivityDao().getDurationCalculatedVisitedShopForADay(AppUtils.getCurrentDateForShopActi(), false)

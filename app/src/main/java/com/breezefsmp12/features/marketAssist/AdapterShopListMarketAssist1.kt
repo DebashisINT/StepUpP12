@@ -56,9 +56,7 @@ class AdapterShopListMarketAssist1(var mContext: Context, var mList:ArrayList<Sh
         fun bindItems(){
 
             val m = random.nextInt(9 - 1) + 1
-            itemView.tv_row_shop_list_ma_name_pref1.setBackgroundTintList(
-                ColorStateList.valueOf(
-                    Color.parseColor(colorCodeL.get(m))))
+            //itemView.tv_row_shop_list_ma_name_pref1.setBackgroundTintList( ColorStateList.valueOf( Color.parseColor(colorCodeL.get(m))))
 
             itemView.tv_row_shop_list_ma_name_pref1.text = mList.get(adapterPosition).shop_name.get(0).toString()
             itemView.tv_row_shop_list_ma_name1.text = mList.get(adapterPosition).shop_name

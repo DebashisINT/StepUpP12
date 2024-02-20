@@ -51,7 +51,8 @@
         <com.breezefsmp12.widgets.AppCustomTextView
             android:id="@+id/dialog_cancel_order_header_TV"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/_40sdp"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/_40sdp"
             android:gravity="center"
             android:text="Do you want to go back ?"
             android:textColor="@color/colorPrimary"

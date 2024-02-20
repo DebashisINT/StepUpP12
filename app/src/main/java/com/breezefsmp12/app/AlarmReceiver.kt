@@ -99,6 +99,7 @@ class AlarmReceiver : BroadcastReceiver() {
                                     .setOverrideDeadline(1000)
                                     .build()
 
+                            Timber.d("TAG_CHECK_LOC_SERVICE_STATUS")
                             val resultCode = jobScheduler.schedule(jobInfo)
 
                             if (resultCode == JobScheduler.RESULT_SUCCESS) {
@@ -108,6 +109,7 @@ class AlarmReceiver : BroadcastReceiver() {
                             }
                         } else {
                             val serviceLauncher = Intent(context, LocationFuzedService::class.java)
+                            Timber.d("TAG_CHECK_LOC_SERVICE_STATUS")
                             context.startService(serviceLauncher)
                         }
                     }

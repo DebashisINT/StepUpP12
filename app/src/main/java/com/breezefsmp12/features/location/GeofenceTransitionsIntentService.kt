@@ -35,7 +35,7 @@ class GeofenceTransitionsIntentService : IntentService("GeofenceTransitionsInten
 
     override fun onHandleIntent(intent: Intent?) {
 
-        Timber.d("Geofence: GeofenceTransitionsJobIntentService : ENTRY")
+        Timber.d("Geofence: GeofenceTransitionsIntentService : ENTRY")
         val geofencingEvent = GeofencingEvent.fromIntent(intent!!)
         if (geofencingEvent!!.hasError()) {
 //            val errorMessage = GeofenceErrorMessages.getErrorString(this,
@@ -56,7 +56,7 @@ class GeofenceTransitionsIntentService : IntentService("GeofenceTransitionsInten
             // Get the transition details as a String.
             val geofenceTransitionDetails = getGeofenceTransitionDetails(geofenceTransition,
                     triggeringGeofences!!)
-            triggeringGeofences?.forEach {
+            triggeringGeofences.forEach {
                 //                it.requestId
                 // Send notification and log the transition details.
                 Timber.d("=====================Geofence=======================")
@@ -66,16 +66,18 @@ class GeofenceTransitionsIntentService : IntentService("GeofenceTransitionsInten
                         if (!TextUtils.isEmpty(Pref.user_id) && !Pref.isAutoLogout)
                             sendNotification(it.requestId)
                     }
+
                     Geofence.GEOFENCE_TRANSITION_EXIT -> {
                         Timber.d("Geofence: GeofenceTransitionsJobIntentService : EXIT")
                         cancelNotification(it.requestId)
                         endShopDuration(it.requestId)
                     }
+
                     Geofence.GEOFENCE_TRANSITION_DWELL -> {
                         Timber.d("Geofence: GeofenceTransitionsJobIntentService : DWELL")
                         if (!TextUtils.isEmpty(Pref.user_id) && !Pref.isAutoLogout)
                             sendNotification(it.requestId)
-//                        calculateShopDuration(it.requestId)
+    //                        calculateShopDuration(it.requestId)
                     }
                 }
             }

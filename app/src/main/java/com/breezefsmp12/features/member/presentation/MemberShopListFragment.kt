@@ -589,7 +589,8 @@ class MemberShopListFragment : BaseFragment(), View.OnClickListener {
                 (mContext as DashboardActivity).isBack = true
                 (mContext as DashboardActivity).loadFragment(FragType.QuotationListFragment, true, addShopData.shop_id)
             }
-        },{
+        },
+            {
             if(Pref.IsFeedbackHistoryActivated){
                 if (!AppUtils.isOnline(mContext)) {
                     (mContext as DashboardActivity).showSnackMessage(getString(R.string.no_internet))
