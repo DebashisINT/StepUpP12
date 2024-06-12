@@ -110,7 +110,9 @@
         <item name="android:textColorPrimary">@color/black</item>
     </style>
 
-
+    <style name="SmallerCalendarText" parent="@android:style/TextAppearance.Small">
+        <item name="android:textSize">14dp</item>
+    </style>
 
 
     <!--    &lt;!&ndash; The beef: background color for Action Bar overflow menu &ndash;&gt;-->

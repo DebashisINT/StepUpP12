@@ -186,7 +186,7 @@
                     android:visibility="visible"
                     android:padding="@dimen/_5sdp" />
 
-                <com.breezefsmp12.widgets.AppCustomTextView
+                <com.ptwelvebreeze.widgets.AppCustomTextView
                     android:id="@+id/tv_noti_count"
                     android:layout_width="@dimen/_15sdp"
                     android:layout_height="@dimen/_15sdp"
@@ -236,7 +236,7 @@
                     android:paddingBottom="@dimen/_5sdp"
                     android:src="@drawable/icon_cart3" />
 
-                <com.breezefsmp12.widgets.AppCustomTextView
+                <com.ptwelvebreeze.widgets.AppCustomTextView
                     android:id="@+id/tv_cart_count"
                     android:layout_width="@dimen/_15sdp"
                     android:layout_height="@dimen/_15sdp"
@@ -264,7 +264,7 @@
             android:visibility="gone"
             android:background="@drawable/rounded_corner_cyan_bg">
 
-            <com.breezefsmp12.widgets.AppCustomTextView
+            <com.ptwelvebreeze.widgets.AppCustomTextView
                 android:id="@+id/tv_confirm_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -352,14 +352,26 @@
             android:contentDescription="@null"
             android:visibility="gone"/>-->
 
-        <RelativeLayout
+
+        <LinearLayout
+            android:orientation="horizontal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:layout_centerVertical="true">
 
-
-            <com.breezefsmp12.widgets.AppCustomTextView
+            <ImageView
+                android:visibility="gone"
+                android:id="@+id/iv_leaderboard"
+                android:layout_width="@dimen/_35sdp"
+                android:layout_height="@dimen/_35sdp"
+                android:padding="@dimen/_5sdp"
+                android:layout_centerVertical="true"
+                android:layout_toLeftOf="@id/rl_cart"
+                android:src="@drawable/first_icon"
+                android:contentDescription="@null"
+               />
+            <com.ptwelvebreeze.widgets.AppCustomTextView
                 android:id="@+id/tv_header"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -372,7 +384,7 @@
                 android:textColor="@color/white"
                 android:textSize="@dimen/_12sdp" />
 
-        </RelativeLayout>
+        </LinearLayout>
 
 
         <LinearLayout
@@ -425,7 +437,7 @@
 
         </LinearLayout>
 
-        <com.breezefsmp12.app.MaterialSearchView
+        <com.ptwelvebreeze.app.MaterialSearchView
             android:id="@+id/search_view"
             style="@style/MaterialSearchViewStyle"
             android:layout_width="match_parent"

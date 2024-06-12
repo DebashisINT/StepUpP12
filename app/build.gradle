@@ -21,13 +21,15 @@ android {
     compileSdkVersion 33
     //buildToolsVersion "32.0.0"
     defaultConfig {
-        applicationId "com.breezefsmp12"
+        applicationId "com.ptwelvebreeze"
         minSdkVersion 26
         targetSdkVersion 33
 //        versionCode 120
 //        versionName "4.1.5"
-        versionCode 115
+        versionCode 131
+        //versionCode 132
         versionName "5.0.1"
+        //versionName "5.0.2"
         //versionName "2.3.0"
         vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
@@ -60,9 +62,9 @@ android {
                 def formattedDate = new Date().format('dd-MM-yyyy')
                 def versionName = variant.versionName
 /*
-                outputFileName = "breezefsmp12-Breeze_${flavor}_${formattedDate}_v_${versionName}.apk"
+                outputFileName = "ptwelvebreeze-Breeze_${flavor}_${formattedDate}_v_${versionName}.apk"
 */
-                outputFileName = "breezefsmp12-Breeze_${formattedDate}_v_${versionName}.apk"
+                outputFileName = "ptwelvebreeze-Breeze_${formattedDate}_v_${versionName}.apk"
             }
         }
     }
@@ -293,7 +295,8 @@ dependencies {
     // Recommended: Add the Google Analytics SDK.
     implementation 'com.google.firebase:firebase-analytics:19.0.0'
 
-    implementation 'com.github.HBiSoft:HBRecorder:2.0.5'   // update 2.0.0 to 2.0.5 mantis 0025673
+    //Mantis- 27419 by puja screen recorder off 07.05.2024 v4.2.7
+   // implementation 'com.github.HBiSoft:HBRecorder:2.0.5'   // update 2.0.0 to 2.0.5 mantis 0025673
 
     implementation 'com.android.volley:volley:1.2.1'
 

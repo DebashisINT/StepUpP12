@@ -41,7 +41,7 @@
                 android:minWidth="@dimen/_55sdp"
                 android:gravity="center"
                 android:singleLine="true"
-                android:text="Add Template"
+                android:text="Define / ViewTemplate"
                 android:textColor="@color/black_custom_light"
                 android:textSize="@dimen/_11sdp" />
 
@@ -65,8 +65,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center">
-                <include layout="@layout/empty_page_layout"/>
+                <include layout="@layout/empty_page_layout1"/>
             </LinearLayout>
+
+            <ImageView
+                android:layout_width="@dimen/_50sdp"
+                android:layout_height="@dimen/_50sdp"
+                android:layout_gravity="center_horizontal"/>
 
 
             <com.pnikosis.materialishprogress.ProgressWheel
@@ -78,7 +83,7 @@
                 wheel:matProg_barColor="@color/default_text_color"
                 wheel:matProg_progressIndeterminate="true" />
 
-            <com.breezefsmp12.app.widgets.MovableFloatingActionButton
+            <com.ptwelvebreeze.app.widgets.MovableFloatingActionButton
                 android:id="@+id/fab_frag_add_schedule_in_contact"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

@@ -20,7 +20,7 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="@color/white"
+                app:cardBackgroundColor="#F1EEEE"
                 app:cardElevation="@dimen/_3sdp"
                 app:cardCornerRadius="@dimen/_8sdp"
                 app:cardUseCompatPadding="true">
@@ -54,17 +54,17 @@
                             android:id="@+id/tv_template_name"
                             android:layout_width="match_parent"
                             android:layout_height="@dimen/_40sdp"
-                            android:background="@color/transparent"
+                            android:background="@color/white"
+                            android:padding="@dimen/_3sdp"
                             android:hint="Enter Template Name"
                             android:textColor="@color/black"
-                            android:layout_marginLeft="@dimen/_3sdp"
-                            android:layout_marginRight="@dimen/_3sdp"
                             android:singleLine="true"
                             android:textSize="@dimen/_12sdp"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/_5sdp"
+                    android:visibility="gone"
                     android:background="@color/default_text_color"></LinearLayout>
 
                 </LinearLayout>
@@ -74,7 +74,7 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="@color/white"
+                app:cardBackgroundColor="#F1EEEE"
                 app:cardElevation="@dimen/_3sdp"
                 app:cardCornerRadius="@dimen/_8sdp"
                 android:layout_marginTop="@dimen/_5sdp"
@@ -156,17 +156,17 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:minHeight="@dimen/_200sdp"
-                        android:background="@color/transparent"
+                        android:background="@drawable/curve_border_bg"
                         android:hint="Enter Template Description"
                         android:gravity="start|top"
+                        android:padding="@dimen/_5sdp"
                         android:textColor="@color/black"
-                        android:textSize="@dimen/_12sdp"
-                        android:layout_marginLeft="@dimen/_3sdp"
-                        android:layout_marginRight="@dimen/_3sdp"/>
+                        android:textSize="@dimen/_12sdp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/_7sdp"
+                        android:visibility="gone"
                         android:background="@color/default_text_color">
 
                     </LinearLayout>

@@ -34,7 +34,7 @@
             android:id="@+id/container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            tools:context="org.tensorflow.breezefsmp12.CameraActivity" />
+            tools:context="org.tensorflow.ptwelvebreeze.CameraActivity" />
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"

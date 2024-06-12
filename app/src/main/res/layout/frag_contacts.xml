@@ -65,7 +65,7 @@
                     android:padding="@dimen/_5sdp"
                     app:cardElevation="@dimen/_5sdp">
 
-                    <com.breezefsmp12.widgets.AppCustomEditText
+                    <com.ptwelvebreeze.widgets.AppCustomEditText
                         android:id="@+id/et_frag_contacts_search"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -157,6 +157,46 @@
                     android:orientation="horizontal"
                     android:gravity="center"
                     android:layout_gravity="right">
+
+                    <LinearLayout
+                        android:visibility="gone"
+                        android:id="@+id/iv_frag_APICheckTest"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:layout_marginLeft="@dimen/_3sdp"
+                        android:layout_marginRight="@dimen/_3sdp"
+                        android:layout_marginTop="@dimen/_3sdp"
+                        android:layout_marginBottom="@dimen/_3sdp">
+
+                        <ImageView
+                            android:layout_width="@dimen/_23sdp"
+                            android:layout_height="@dimen/_23sdp"
+                            android:layout_gravity="center"
+                            android:background="@drawable/ic_whatsapp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:minWidth="@dimen/_55sdp"
+                            android:gravity="center"
+                            android:singleLine="true"
+                            android:text="Whatsapp Api"
+                            android:textColor="@color/black_custom_light"
+                            android:textSize="@dimen/_9sdp" />
+
+                    </LinearLayout>
+
+                    <View
+                        android:visibility="visible"
+                        android:layout_width="@dimen/_1sdp"
+                        android:layout_height="@dimen/_25sdp"
+                        android:layout_gravity="center"
+                        android:background="@color/gray_50"
+                        android:layout_marginLeft="@dimen/_2sdp"
+                        android:layout_marginRight="@dimen/_2sdp"/>
+
 
                     <LinearLayout
                         android:id="@+id/iv_frag_contacts_dialog"
@@ -289,7 +329,7 @@
         </LinearLayout>
 
 
-        <com.breezefsmp12.app.widgets.MovableFloatingActionButton
+        <com.ptwelvebreeze.app.widgets.MovableFloatingActionButton
             android:id="@+id/fab_frag_contacts_add_contacts"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -334,7 +374,7 @@
             android:id="@+id/tv_frag_add_cont_noData"
             android:layout_width="wrap_content"
             android:layout_gravity="center"
-            android:text="No Contact(s) Available"
+            android:text="No CRM Available"
             android:visibility="gone"
             android:gravity="center"
             android:textColor="@color/blue"

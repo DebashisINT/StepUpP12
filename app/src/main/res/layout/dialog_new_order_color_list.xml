@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <com.breezefsmp12.widgets.AppCustomTextView
+        <com.ptwelvebreeze.widgets.AppCustomTextView
             android:id="@+id/tv_dialog_color_list_header"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -40,7 +40,7 @@
         android:focusableInTouchMode="true"
         android:visibility="visible" />
 
-    <com.breezefsmp12.widgets.AppCustomEditText
+    <com.ptwelvebreeze.widgets.AppCustomEditText
         android:id="@+id/et_dialog_color_search"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

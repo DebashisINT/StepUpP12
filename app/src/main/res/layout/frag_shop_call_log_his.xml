@@ -17,7 +17,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="@dimen/_35sdp"
+            android:layout_height="@dimen/_45sdp"
             android:orientation="horizontal"
             android:layout_gravity="center"
             android:layout_marginTop="@dimen/_2sdp"
@@ -35,8 +35,8 @@
 
                 <TextView
                     android:id="@+id/tv_frag_shop_call_his_shop_initial"
-                    android:layout_width="@dimen/_30sdp"
-                    android:layout_height="@dimen/_30sdp"
+                    android:layout_width="@dimen/_40sdp"
+                    android:layout_height="@dimen/_40sdp"
                     android:background="@color/default_text_color"
                     android:gravity="center"
                     android:text="A"
@@ -212,16 +212,14 @@
                 android:layout_height="match_parent"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
 
-            <TextView
-                android:id="@+id/tv_frag_call_his_noData"
-                android:layout_width="wrap_content"
-                android:layout_gravity="center"
-                android:text="No data available."
-                android:visibility="gone"
-                android:gravity="center"
-                android:textColor="@color/blue"
-                android:textSize="@dimen/_13sdp"
-                android:layout_height="wrap_content" />
+
+            <LinearLayout
+                android:id="@+id/ll_no_data_root"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center">
+                <include layout="@layout/empty_page_layout"/>
+            </LinearLayout>
 
             <com.pnikosis.materialishprogress.ProgressWheel
                 android:id="@+id/progress_wheel_frag_shop_Call_his"
@@ -232,7 +230,7 @@
                 wheel:matProg_barColor="@color/default_text_color"
                 wheel:matProg_progressIndeterminate="true" />
 
-            <com.breezefsmp12.app.widgets.MovableFloatingActionButton
+            <com.ptwelvebreeze.app.widgets.MovableFloatingActionButton
                 android:id="@+id/fab_frag_call_his_share"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

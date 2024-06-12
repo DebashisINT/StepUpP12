@@ -1,36 +1,26 @@
 {
   "project_info": {
-    "project_number": "505177823288",
-    "project_id": "stepupp12-5aeeb",
-    "storage_bucket": "stepupp12-5aeeb.appspot.com"
+    "project_number": "107662885067",
+    "project_id": "breeze-p12",
+    "storage_bucket": "breeze-p12.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:505177823288:android:f41d7ed47c0755abd1aecd",
+        "mobilesdk_app_id": "1:107662885067:android:0d51e2e84e9782ca799b4e",
         "android_client_info": {
-          "package_name": "com.breezefsmp12"
+          "package_name": "com.ptwelvebreeze"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "505177823288-iu058q6oluk8m94oliu4hmc529vi5jlm.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDNAg19agPJ65sSRESOALRI9QuW4IUjSKU"
+          "current_key": "AIzaSyDlVm2JC3sgEloEuBYehetWF8Uy3nTDd08"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "505177823288-iu058q6oluk8m94oliu4hmc529vi5jlm.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

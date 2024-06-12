@@ -378,7 +378,16 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:background="@color/stock_text_popup_color_light">
+                    android:background="@color/white">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/_20sdp"
+                        android:text="Schedule At :"
+                        android:layout_marginLeft="@dimen/_5sdp"
+                        android:layout_marginTop="@dimen/_3sdp"
+                        android:textSize="@dimen/_11sdp"
+                        android:textColor="@color/black"/>
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -392,9 +401,13 @@
                             android:layout_height="match_parent"
                             android:theme="@style/DefaultNumberPickerTheme1"/>
 
-                        <Space
+                        <TextView
                             android:layout_width="@dimen/_15sdp"
-                            android:layout_height="@dimen/_5sdp"/>
+                            android:layout_height="match_parent"
+                            android:text=":"
+                            android:textSize="@dimen/_18sdp"
+                            android:gravity="center"
+                            android:textColor="@color/black"/>
 
                         <NumberPicker
                             android:id="@+id/np_frag_schedule_add_form_min"
@@ -434,7 +447,8 @@
                     android:layout_height="@dimen/_250sdp"
                     app:mcv_selectionColor="@color/deep_maroon"
                     app:mcv_showOtherDates="out_of_range"
-                    android:background="@color/stock_text_popup_color_light"/>
+                    app:mcv_dateTextAppearance="@style/SmallerCalendarText"
+                    android:background="@color/white"/>
             </androidx.cardview.widget.CardView>
 
             <Switch

@@ -8,13 +8,13 @@
 
     <ImageView
         android:id="@+id/logo_new"
-        android:layout_width="@dimen/_195sdp"
-        android:layout_height="@dimen/_90sdp"
+        android:layout_width="@dimen/_215sdp"
+        android:layout_height="@dimen/_120sdp"
         android:src="@drawable/breezelogo"
         android:layout_marginTop="@dimen/_170sdp"
         android:layout_centerHorizontal="true" />
 
-    <com.breezefsmp12.widgets.AppCustomTextView
+    <com.ptwelvebreeze.widgets.AppCustomTextView
         android:visibility="gone"
         android:id="@+id/Logo_name_TV"
         android:layout_width="wrap_content"
@@ -39,8 +39,8 @@
         android:id="@+id/progress_wheel"
         android:layout_width="80dp"
         android:layout_height="80dp"
+        android:layout_marginTop="@dimen/_300sdp"
         android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
         wheel:matProg_barColor="@color/default_text_color"
         wheel:matProg_progressIndeterminate="true" />
 

@@ -9,17 +9,24 @@
         android:orientation="vertical"
         android:gravity="center">
 
-        <ImageView
+        <LinearLayout
             android:layout_width="@dimen/_180sdp"
             android:layout_height="@dimen/_180sdp"
-            android:background="@drawable/image_empty_file"/>
+            android:gravity="center">
+
+            <ImageView
+                android:layout_width="@dimen/_145sdp"
+                android:layout_height="@dimen/_145sdp"
+                android:background="@drawable/image_empty_file"/>
+
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tv_empty_page_msg_head"
             android:layout_width="match_parent"
             android:layout_height="@dimen/_30sdp"
             android:text="No Data"
-            android:textSize="@dimen/_16sdp"
+            android:textSize="@dimen/_15sdp"
             android:textColor="@color/color_3"
             android:gravity="center|bottom"/>
 
@@ -28,7 +35,7 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/_30sdp"
             android:text="No Data"
-            android:textSize="@dimen/_12sdp"
+            android:textSize="@dimen/_11sdp"
             android:textColor="@color/color_3"
             android:gravity="center|top"/>
 

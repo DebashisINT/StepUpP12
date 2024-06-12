@@ -170,7 +170,7 @@
 
         </LinearLayout>
 
-        <com.breezefsmp12.widgets.AppCustomTextView
+        <com.ptwelvebreeze.widgets.AppCustomTextView
             android:id="@+id/upload_TVfrag_multiple_image_stock"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
